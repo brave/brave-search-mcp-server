@@ -31,7 +31,7 @@
     "format:check": "prettier --check \"src/**/*.ts\""
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.13.3",
+    "@modelcontextprotocol/sdk": "1.15.1",
     "commander": "14.0.0",
     "express": "5.1.0",
     "zod": "3.25.67"
