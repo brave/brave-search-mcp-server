@@ -37,6 +37,7 @@
     "dotenv": "^17.2.1",
     "express": "5.1.0",
     "global-agent": "^3.0.0",
+    "undici": "^7.13.0",
     "zod": "3.25.76"
   },
   "devDependencies": {

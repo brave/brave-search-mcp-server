@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-import { bootstrap } from 'global-agent';
-if (process.env.HTTP_PROXY || process.env.HTTPS_PROXY) {
-  bootstrap();
+import { setGlobalDispatcher, ProxyAgent } from 'undici';
+const proxy = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
+if (proxy) {
+  setGlobalDispatcher(new ProxyAgent({ uri: proxy }));
 }
 import { getOptions } from './config.js';
 import { stdioServer, httpServer } from './protocols/index.js';
