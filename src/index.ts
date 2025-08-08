@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+import { bootstrap } from 'global-agent';
+if (process.env.HTTP_PROXY || process.env.HTTPS_PROXY) {
+  bootstrap();
+}
 import { getOptions } from './config.js';
 import { stdioServer, httpServer } from './protocols/index.js';
 
