@@ -1,6 +1,8 @@
+
 import type { Endpoints } from './types.js';
 import config from '../config.js';
 import { checkRateLimit, log, stringify } from '../utils.js';
+import { parse as parseUrl } from 'node:url';
 
 const typeToPathMap: Record<keyof Endpoints, string> = {
   images: '/res/v1/images/search',
@@ -82,8 +84,34 @@ async function issueRequest<T extends keyof Endpoints>(
 
   // Issue Request
   const urlWithParams = url.toString() + '?' + queryParams.toString();
+
   const headers = { ...defaultRequestHeaders, ...requestHeaders } as Headers;
-  const response = await fetch(urlWithParams, { headers });
+
+  // --- NO_PROXY support ---
+  // If a proxy is set (e.g., HTTP_PROXY/HTTPS_PROXY), but the host matches NO_PROXY, bypass the proxy.
+  // undici/fetch does not handle NO_PROXY automatically in Node.js.
+  // See: https://github.com/nodejs/undici/issues/2020
+  let agent;
+  const noProxy = process.env.NO_PROXY || process.env.no_proxy;
+  if (noProxy) {
+    const { hostname } = parseUrl(urlWithParams);
+    const patterns = noProxy.split(',').map(s => s.trim()).filter(Boolean);
+    const isNoProxy = patterns.some(pattern => {
+      if (!hostname) return false;
+      if (pattern === '*') return true;
+      if (pattern === hostname) return true;
+      if (pattern.startsWith('.') && hostname.endsWith(pattern)) return true;
+      // IPv6/IPv4 exact match
+      if (hostname.replace(/^\[|\]$/g, '') === pattern.replace(/^\[|\]$/g, '')) return true;
+      return false;
+    });
+    if (isNoProxy) {
+      // undici/fetch: pass agent: null to bypass proxy agent
+      agent = null;
+    }
+  }
+
+  const response = await fetch(urlWithParams, { headers, ...(agent !== undefined ? { agent } : {}) });
 
   await log('debug', `Received response from ${urlWithParams}`);
 
