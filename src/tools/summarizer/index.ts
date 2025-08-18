@@ -1,9 +1,7 @@
 import type { CallToolResult, ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 import { summarizerQueryParams, type SummarizerQueryParams } from './params.js';
 import API from '../../BraveAPI/index.js';
-import { type QueryParams as WebQueryParams } from '../web/params.js';
 import { SummarizerSearchApiResponse } from './types.js';
-import ClientLogger from '../../ClientLogger.js';
 
 export const name = 'brave_summarizer';
 
@@ -82,7 +80,6 @@ const pollForSummary = async (
         result = response;
       }
     } catch (error) {
-      await ClientLogger.log('error', `Error polling for summarizer results: ${error}`);
       await new Promise((resolve) => setTimeout(resolve, pollInterval));
     }
 

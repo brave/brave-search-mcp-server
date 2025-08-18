@@ -33,7 +33,7 @@
     "inspector:stdio": "npx @modelcontextprotocol/inspector --transport stdio"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.17.2",
+    "@modelcontextprotocol/sdk": "1.17.3",
     "commander": "14.0.0",
     "dotenv": "^17.2.1",
     "express": "5.1.0",

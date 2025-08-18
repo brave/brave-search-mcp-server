@@ -1,26 +1,36 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import tools from './tools/index.js';
-import ClientLogger, { maybeRegisterCustomSetLevelRequestHandler } from './ClientLogger.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { SetLevelRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 
-export const mcpServer = new McpServer(
-  {
-    version: '0.1.0',
-    name: 'brave-search-mcp-server',
-    title: 'Brave Search MCP Server',
-  },
-  {
-    capabilities: {
-      logging: {},
-      tools: { listChanged: false },
+export default function createMcpServer(): McpServer {
+  const mcpServer = new McpServer(
+    {
+      version: '0.1.0',
+      name: 'brave-search-mcp-server',
+      title: 'Brave Search MCP Server',
     },
-    instructions: `Use this server to search the Web for various types of data via the Brave Search API.`,
+    {
+      capabilities: {
+        logging: {},
+        tools: { listChanged: false },
+      },
+      instructions: `Use this server to search the Web for various types of data via the Brave Search API.`,
+    }
+  );
+
+  try {
+    mcpServer.server.assertCanSetRequestHandler(SetLevelRequestSchema.shape.method.value);
+    mcpServer.server.setRequestHandler(SetLevelRequestSchema, () => ({}));
+  } catch (error) {
+    /**
+     * An error here signifies native-handling of the SetLevel request.
+     * See https://github.com/modelcontextprotocol/typescript-sdk/issues/871.
+     */
   }
-);
 
-ClientLogger.setServer(mcpServer);
-// https://github.com/modelcontextprotocol/typescript-sdk/issues/871
-maybeRegisterCustomSetLevelRequestHandler(mcpServer.server);
+  for (const tool of Object.values(tools)) {
+    mcpServer.tool(tool.name, tool.description, tool.inputSchema, tool.annotations, tool.execute);
+  }
 
-for (const tool of Object.values(tools)) {
-  mcpServer.tool(tool.name, tool.description, tool.inputSchema, tool.annotations, tool.execute);
+  return mcpServer;
 }

@@ -1,7 +1,6 @@
 import type { Endpoints } from './types.js';
 import config from '../config.js';
 import { stringify } from '../utils.js';
-import ClientLogger from '../ClientLogger.js';
 
 const typeToPathMap: Record<keyof Endpoints, string> = {
   images: '/res/v1/images/search',
@@ -31,8 +30,6 @@ async function issueRequest<T extends keyof Endpoints>(
   // Determine URL, and setup parameters
   const url = new URL(`https://api.search.brave.com${typeToPathMap[endpoint]}`);
   const queryParams = new URLSearchParams();
-
-  await ClientLogger.log('info', `Preparing to issue request to ${url.toString()}`);
 
   // TODO (Sampson): Move param-construction/validation to modules
   for (const [key, value] of Object.entries(parameters)) {
@@ -79,14 +76,10 @@ async function issueRequest<T extends keyof Endpoints>(
     }
   }
 
-  await ClientLogger.log('debug', `Using parameters: ${queryParams.toString()}`);
-
   // Issue Request
   const urlWithParams = url.toString() + '?' + queryParams.toString();
   const headers = { ...defaultRequestHeaders, ...requestHeaders } as Headers;
   const response = await fetch(urlWithParams, { headers });
-
-  await ClientLogger.log('debug', `Received response from ${urlWithParams}`);
 
   // Handle Error
   if (!response.ok) {
@@ -99,15 +92,12 @@ async function issueRequest<T extends keyof Endpoints>(
       errorMessage += `\n${await response.text()}`;
     }
 
-    await ClientLogger.log('error', errorMessage);
-
     // TODO (Sampson): Setup proper error handling, updating state, etc.
     throw new Error(errorMessage);
   }
 
   // Return Response
   const responseBody = await response.json();
-  await ClientLogger.log('debug', `Returning response: ${stringify(responseBody, true)}`);
 
   return responseBody as Endpoints[T]['response'];
 }

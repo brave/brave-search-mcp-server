@@ -6,7 +6,6 @@ import type {
 import params, { type QueryParams } from './params.js';
 import API from '../../BraveAPI/index.js';
 import { stringify } from '../../utils.js';
-import ClientLogger from '../../ClientLogger.js';
 
 export const name = 'brave_image_search';
 
@@ -45,7 +44,6 @@ export const execute = async (params: QueryParams) => {
 };
 
 async function fetchImage(url: string): Promise<{ mimeType: string; data: string } | null> {
-  await ClientLogger.log('info', `Fetching image data from ${url}`);
   try {
     const response = await fetch(url);
     const buffer = await response.arrayBuffer();
@@ -54,7 +52,6 @@ async function fetchImage(url: string): Promise<{ mimeType: string; data: string
       mimeType: response.headers.get('content-type') ?? 'image/jpeg',
     };
   } catch (error) {
-    await ClientLogger.log('error', `Error fetching image data from ${url}: ${error}`);
     return null;
   }
 }

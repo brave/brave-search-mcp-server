@@ -10,20 +10,14 @@ async function main() {
     process.exit(1);
   }
 
-  // default to http server
-  if (!options.transport || options.transport === 'http') {
-    httpServer.start();
-    return;
-  }
-
   // stdio requires explicit request
   if (options.transport === 'stdio') {
     await stdioServer.start();
     return;
   }
 
-  console.error('Invalid transport');
-  process.exit(1);
+  // default to http server
+  httpServer.start();
 }
 
 main().catch((error) => {
