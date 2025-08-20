@@ -44,13 +44,21 @@ export interface ImageResult {
 interface Thumbnail {
   /** The served URL of the image. */
   src?: string;
+  /** The width of the thumbnail. */
+  width?: number;
+  /** The height of the thumbnail. */
+  height?: number;
 }
 
-interface Properties {
+export interface Properties {
   /** The image URL. */
   url?: string;
   /** The lower resolution placeholder image URL. */
   placeholder?: string;
+  /** The width of the image. */
+  width?: number;
+  /** The height of the image. */
+  height?: number;
 }
 
 interface MetaUrl {

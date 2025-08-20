@@ -1,5 +1,5 @@
 import type { QueryParams as WebQueryParams } from '../tools/web/params.js';
-import type { QueryParams as ImageQueryParams } from '../tools/images/params.js';
+import type { QueryParams as ImageQueryParams } from '../tools/images/schemas/input.js';
 import type { QueryParams as VideoQueryParams } from '../tools/videos/params.js';
 import type { QueryParams as NewsQueryParams } from '../tools/news/params.js';
 import type { LocalPoisParams, LocalDescriptionsParams } from '../tools/local/params.js';
