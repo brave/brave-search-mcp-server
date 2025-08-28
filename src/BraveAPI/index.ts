@@ -18,6 +18,15 @@ const defaultRequestHeaders: Record<string, string> = {
   'X-Subscription-Token': config.braveApiKey,
 };
 
+const isValidGoggleURL = (url: string) => {
+  try {
+    // Only allow HTTPS URLs
+    return new URL(url).protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
 async function issueRequest<T extends keyof Endpoints>(
   endpoint: T,
   parameters: Endpoints[T]['params'],
@@ -46,7 +55,7 @@ async function issueRequest<T extends keyof Endpoints>(
       }
     }
 
-    // Handle result_filter parameter
+    // Handle `result_filter` parameter
     if (key === 'result_filter') {
       // Handle special behavior of 'summary' parameter:
       // Requires `result_filter` to be empty, or only contain 'summarizer'
@@ -60,14 +69,15 @@ async function issueRequest<T extends keyof Endpoints>(
       continue;
     }
 
-    // Handle goggles parameters
+    // Handle `goggles` parameter(s)
     if (key === 'goggles') {
       if (typeof value === 'string') {
         queryParams.set(key, value);
-      } else if (Array.isArray(value) && value.length > 0) {
-        queryParams.set(key, value.join(','));
+      } else if (Array.isArray(value)) {
+        for (const url of value.filter(isValidGoggleURL)) {
+          queryParams.append(key, url);
+        }
       }
-
       continue;
     }
 
