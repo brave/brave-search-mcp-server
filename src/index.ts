@@ -10,14 +10,13 @@ async function main() {
     process.exit(1);
   }
 
-  // stdio requires explicit request
-  if (options.transport === 'stdio') {
-    await stdioServer.start();
+  // default to stdio server unless http is explicitly requested
+  if (options.transport === 'http') {
+    httpServer.start();
     return;
   }
 
-  // default to http server
-  httpServer.start();
+  await stdioServer.start();
 }
 
 main().catch((error) => {

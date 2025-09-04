@@ -25,7 +25,7 @@ type Configuration = {
 };
 
 const state: Configuration & { ready: boolean } = {
-  transport: 'http',
+  transport: 'stdio',
   port: 8080,
   host: '0.0.0.0',
   braveApiKey: process.env.BRAVE_API_KEY ?? '',
@@ -37,7 +37,11 @@ export function getOptions(): Configuration | false {
   const program = new Command()
     .option('--brave-api-key <string>', 'Brave API key', process.env.BRAVE_API_KEY ?? '')
     .option('--logging-level <string>', 'Logging level', process.env.BRAVE_MCP_LOG_LEVEL ?? 'info')
-    .option('--transport <stdio|http>', 'transport type', process.env.BRAVE_MCP_TRANSPORT ?? 'http')
+    .option(
+      '--transport <stdio|http>',
+      'transport type',
+      process.env.BRAVE_MCP_TRANSPORT ?? 'stdio'
+    )
     .option(
       '--port <number>',
       'desired port for HTTP transport',

@@ -33,7 +33,7 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
     "inspector": "npx @modelcontextprotocol/inspector",
-    "inspector:stdio": "npx @modelcontextprotocol/inspector --transport stdio"
+    "inspector:http": "npx @modelcontextprotocol/inspector --transport http"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.17.4",

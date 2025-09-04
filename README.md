@@ -1,6 +1,6 @@
 # Brave Search MCP Server
 
-An MCP server implementation that integrates the Brave Search API, providing comprehensive search capabilities including web search, local business search, image search, video search, news search, and AI-powered summarization. This project supports both HTTP and STDIO transports, with HTTP as the default mode.
+An MCP server implementation that integrates the Brave Search API, providing comprehensive search capabilities including web search, local business search, image search, video search, news search, and AI-powered summarization. This project supports both STDIO and HTTP transports, with STDIO as the default mode.
 
 ## Tools
 
@@ -99,7 +99,7 @@ Generates AI-powered summaries from web search results using Brave's summarizati
 The server supports the following environment variables:
 
 - `BRAVE_API_KEY`: Your Brave Search API key (required)
-- `BRAVE_MCP_TRANSPORT`: Transport mode ("http" or "stdio", default: "http")
+- `BRAVE_MCP_TRANSPORT`: Transport mode ("http" or "stdio", default: "stdio")
 - `BRAVE_MCP_PORT`: HTTP server port (default: 8080)
 - `BRAVE_MCP_HOST`: HTTP server host (default: "0.0.0.0")
 - `BRAVE_MCP_LOG_LEVEL`: Desired logging level("debug", "info", "notice", "warning", "error", "critical", "alert", or "emergency", default: "info")
@@ -111,7 +111,7 @@ node dist/index.js [options]
 
 Options:
   --brave-api-key <string>    Brave API key
-  --transport <stdio|http>    Transport type (default: http)
+  --transport <stdio|http>    Transport type (default: stdio)
   --port <number>             HTTP server port (default: 8080)
   --host <string>             HTTP server host (default: 0.0.0.0)
 ```
@@ -145,7 +145,7 @@ Add this to your `claude_desktop_config.json`:
   "mcpServers": {
     "brave-search": {
       "command": "npx",
-      "args": ["-y", "@brave/brave-search-mcp-server", "--transport", "stdio"],
+      "args": ["-y", "@brave/brave-search-mcp-server", "--transport", "http"],
       "env": {
         "BRAVE_API_KEY": "YOUR_API_KEY_HERE"
       }
@@ -283,7 +283,7 @@ node dist/index.js
 npx @modelcontextprotocol/inspector node dist/index.js
 ```
 
-For STDIO mode testing, add `--transport stdio` to the arguments in the Inspector UI.
+STDIO is the default mode. For HTTP mode testing, add `--transport http` to the arguments in the Inspector UI.
 
 ### Testing via Smithery.AI
 
