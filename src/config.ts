@@ -2,6 +2,8 @@ import { LoggingLevel, LoggingLevelSchema } from '@modelcontextprotocol/sdk/type
 import { Command } from 'commander';
 import dotenv from 'dotenv';
 import { z } from 'zod';
+import tools from './tools/index.js';
+
 dotenv.config({ debug: false, quiet: true });
 
 // Config schema for Smithery.ai
@@ -22,6 +24,8 @@ type Configuration = {
   host: string;
   braveApiKey: string;
   loggingLevel: LoggingLevel;
+  enabledTools: string[];
+  disabledTools: string[];
 };
 
 const state: Configuration & { ready: boolean } = {
@@ -31,7 +35,17 @@ const state: Configuration & { ready: boolean } = {
   braveApiKey: process.env.BRAVE_API_KEY ?? '',
   loggingLevel: 'info',
   ready: false,
+  enabledTools: [],
+  disabledTools: [],
 };
+
+const toolNames = Object.values(tools).map((tool) => tool.name);
+
+export function isToolPermittedByUser(toolName: string): boolean {
+  return state.enabledTools.length > 0
+    ? state.enabledTools.includes(toolName)
+    : state.disabledTools.includes(toolName) === false;
+}
 
 export function getOptions(): Configuration | false {
   const program = new Command()
@@ -41,6 +55,16 @@ export function getOptions(): Configuration | false {
       '--transport <stdio|http>',
       'transport type',
       process.env.BRAVE_MCP_TRANSPORT ?? 'stdio'
+    )
+    .option(
+      '--enabled-tools <names...>',
+      'tools to enable',
+      process.env.BRAVE_MCP_ENABLED_TOOLS?.split(' ') ?? []
+    )
+    .option(
+      '--disabled-tools <names...>',
+      'tools to disable',
+      process.env.BRAVE_MCP_DISABLED_TOOLS?.split(' ') ?? []
     )
     .option(
       '--port <number>',
@@ -57,6 +81,20 @@ export function getOptions(): Configuration | false {
 
   const options = program.opts();
 
+  // Validate tool inclusion configuration
+  const { enabledTools, disabledTools } = options;
+
+  if (enabledTools.length > 0 && disabledTools.length > 0) {
+    console.error('Error: --enabled-tools and --disabled-tools cannot be used together');
+    return false;
+  }
+
+  if ([...enabledTools, ...disabledTools].some((t) => !toolNames.includes(t))) {
+    console.error(`Invalid tool name used. Must be one of: ${toolNames.join(', ')}`);
+    return false;
+  }
+
+  // Validate all other options
   if (!['stdio', 'http'].includes(options.transport)) {
     console.error(
       `Invalid --transport value: '${options.transport}'. Must be one of: stdio, http.`
@@ -98,6 +136,8 @@ export function getOptions(): Configuration | false {
   state.port = options.port;
   state.host = options.host;
   state.loggingLevel = options.loggingLevel;
+  state.enabledTools = options.enabledTools;
+  state.disabledTools = options.disabledTools;
   state.ready = true;
 
   return options as Configuration;

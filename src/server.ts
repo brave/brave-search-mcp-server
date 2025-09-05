@@ -2,7 +2,7 @@ import tools from './tools/index.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { SetLevelRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import pkg from '../package.json' with { type: 'json' };
-
+import { isToolPermittedByUser } from './config.js';
 import { type SmitheryConfig, setOptions } from './config.js';
 export { configSchema } from './config.js';
 
@@ -39,6 +39,8 @@ export default function createMcpServer(options?: CreateMcpServerOptions): McpSe
   }
 
   for (const tool of Object.values(tools)) {
+    // The user may have enabled/disabled this tool at runtime
+    if (!isToolPermittedByUser(tool.name)) continue;
     tool.register(mcpServer);
   }
 
