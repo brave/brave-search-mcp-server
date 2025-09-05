@@ -1,7 +1,23 @@
 import { LoggingLevel, LoggingLevelSchema } from '@modelcontextprotocol/sdk/types.js';
 import { Command } from 'commander';
 import dotenv from 'dotenv';
+import { z } from 'zod';
 dotenv.config({ debug: false, quiet: true });
+
+// Config schema for Smithery.ai
+export const configSchema = z.object({
+  transport: z.enum(['stdio', 'http']).default('stdio').describe('Transport type').optional(),
+  port: z.number().default(8080).describe('Port').optional(),
+  host: z.string().default('0.0.0.0').describe('Host').optional(),
+  braveApiKey: z.string().describe('Your API key'),
+  loggingLevel: z
+    .enum(LoggingLevelSchema.options)
+    .default('info')
+    .describe('Desired logging level')
+    .optional(),
+});
+
+export type SmitheryConfig = z.infer<typeof configSchema>;
 
 type Configuration = {
   transport: 'stdio' | 'http';
@@ -84,6 +100,10 @@ export function getOptions(): Configuration | false {
   state.ready = true;
 
   return options as Configuration;
+}
+
+export function setOptions(options: SmitheryConfig) {
+  return Object.assign(state, options);
 }
 
 export default state;

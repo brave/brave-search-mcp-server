@@ -3,7 +3,16 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { SetLevelRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import pkg from '../package.json' with { type: 'json' };
 
-export default function createMcpServer(): McpServer {
+import { type SmitheryConfig, setOptions } from './config.js';
+export { configSchema } from './config.js';
+
+type CreateMcpServerOptions = {
+  config: SmitheryConfig;
+};
+
+export default function createMcpServer(options?: CreateMcpServerOptions): McpServer {
+  if (options?.config) setOptions(options.config);
+
   const mcpServer = new McpServer(
     {
       version: pkg.version,

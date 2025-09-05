@@ -17,6 +17,7 @@
     "url": "https://github.com/brave/brave-search-mcp-server.git"
   },
   "type": "module",
+  "module": "dist/server.js",
   "bin": {
     "brave-search-mcp-server": "dist/index.js"
   },
@@ -25,6 +26,8 @@
   ],
   "scripts": {
     "build": "tsc && shx chmod +x dist/*.js",
+    "smithery:build": "npx @smithery/cli build",
+    "smithery:dev": "npx @smithery/cli dev",
     "prepare": "npm run format && npm run build",
     "watch": "tsc --watch",
     "format": "prettier --write \"src/**/*.ts\"",
@@ -40,10 +43,12 @@
     "zod": "3.25.76"
   },
   "devDependencies": {
+    "@smithery/cli": "1.2.22",
     "@types/express": "5.0.3",
     "@types/node": "24.3.0",
     "prettier": "3.6.2",
     "shx": "0.4.0",
+    "tsx": "4.20.5",
     "typescript": "5.9.2"
   }
 }
