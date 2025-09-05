@@ -50,5 +50,8 @@
     "shx": "0.4.0",
     "tsx": "4.20.5",
     "typescript": "5.9.2"
+  },
+  "overrides": {
+    "formdata-node": "6.0.3"
   }
 }
