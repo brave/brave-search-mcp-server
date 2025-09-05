@@ -285,6 +285,11 @@ npx @modelcontextprotocol/inspector node dist/index.js
 
 For STDIO mode testing, add `--transport stdio` to the arguments in the Inspector UI.
 
+### Testing via Smithery.AI
+
+1. Establish and acquire a smithery.ai account and API key
+2. Run `npm run install`, `npm run smithery:build`, and lastly `npm run smithery:dev` to begin testing
+
 ### Available Scripts
 
 - `npm run build`: Build the TypeScript project
@@ -292,6 +297,11 @@ For STDIO mode testing, add `--transport stdio` to the arguments in the Inspecto
 - `npm run format`: Format code with Prettier
 - `npm run format:check`: Check code formatting
 - `npm run prepare`: Format and build (runs automatically on npm install)
+
+- `npm run inspector`: Launch an instance of MCP Inspector
+- `npm run inspector:stdio`: Launch a instance of MCP Inspector, configured for STDIO
+- `npm run smithery:build`: Build the project for smithery.ai
+- `npm run smithery:dev`: Launch the development environment for smithery.ai
 
 ### Docker Compose
 
