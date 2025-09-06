@@ -2,6 +2,7 @@ import type { ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 import params, { type QueryParams } from './params.js';
 import API from '../../BraveAPI/index.js';
 import { stringify } from '../../utils.js';
+import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 export const name = 'brave_news_search';
 
@@ -51,10 +52,24 @@ export const execute = async (params: QueryParams) => {
   };
 };
 
+export const register = (mcpServer: McpServer) => {
+  mcpServer.registerTool(
+    name,
+    {
+      title: name,
+      description: description,
+      inputSchema: params.shape,
+      annotations: annotations,
+    },
+    execute
+  );
+};
+
 export default {
   name,
   description,
   annotations,
   inputSchema: params.shape,
   execute,
+  register,
 };

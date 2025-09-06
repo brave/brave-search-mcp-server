@@ -39,7 +39,7 @@ export default function createMcpServer(options?: CreateMcpServerOptions): McpSe
   }
 
   for (const tool of Object.values(tools)) {
-    mcpServer.tool(tool.name, tool.description, tool.inputSchema, tool.annotations, tool.execute);
+    tool.register(mcpServer);
   }
 
   return mcpServer;

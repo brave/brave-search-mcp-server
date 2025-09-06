@@ -4,6 +4,7 @@ import API from '../../BraveAPI/index.js';
 import type { ImageResult } from './types.js';
 import OutputSchema, { SimplifiedImageResultSchema } from './schemas/output.js';
 import { z } from 'zod';
+import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 export const name = 'brave_image_search';
 
@@ -38,6 +39,20 @@ export const execute = async (params: QueryParams) => {
   };
 };
 
+export const register = (mcpServer: McpServer) => {
+  mcpServer.registerTool(
+    name,
+    {
+      title: name,
+      description: description,
+      inputSchema: params.shape,
+      outputSchema: OutputSchema.shape,
+      annotations: annotations,
+    },
+    execute
+  );
+};
+
 function simplifySchemaForLLM(
   result: ImageResult
 ): z.infer<typeof SimplifiedImageResultSchema> | null {
@@ -61,5 +76,7 @@ export default {
   description,
   annotations,
   inputSchema: params.shape,
+  outputSchema: OutputSchema.shape,
   execute,
+  register,
 };

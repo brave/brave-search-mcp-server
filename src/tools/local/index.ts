@@ -9,7 +9,8 @@ import type { CallToolResult, ToolAnnotations } from '@modelcontextprotocol/sdk/
 import API from '../../BraveAPI/index.js';
 import { formatWebResults } from '../web/index.js';
 import { stringify } from '../../utils.js';
-import { WebSearchApiResponse } from '../web/types.js';
+import { type WebSearchApiResponse } from '../web/types.js';
+import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 export const name = 'brave_local_search';
 
@@ -70,6 +71,19 @@ export const execute = async (params: WebQueryParams) => {
       text: formattedPOI,
     })),
   };
+};
+
+export const register = (mcpServer: McpServer) => {
+  mcpServer.registerTool(
+    name,
+    {
+      title: name,
+      description: description,
+      inputSchema: webParams.shape,
+      annotations: annotations,
+    },
+    execute
+  );
 };
 
 const buildFallbackWebResponse = (web_fallback: WebSearchApiResponse['web']): CallToolResult => {
@@ -164,4 +178,5 @@ export default {
   annotations,
   inputSchema: webParams.shape,
   execute,
+  register,
 };

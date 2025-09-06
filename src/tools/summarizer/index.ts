@@ -1,7 +1,8 @@
 import type { CallToolResult, ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 import { summarizerQueryParams, type SummarizerQueryParams } from './params.js';
 import API from '../../BraveAPI/index.js';
-import { SummarizerSearchApiResponse } from './types.js';
+import { type SummarizerSearchApiResponse } from './types.js';
+import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 export const name = 'brave_summarizer';
 
@@ -66,6 +67,19 @@ export const execute = async (params: SummarizerQueryParams) => {
   return response;
 };
 
+export const register = (mcpServer: McpServer) => {
+  mcpServer.registerTool(
+    name,
+    {
+      title: name,
+      description: description,
+      inputSchema: summarizerQueryParams.shape,
+      annotations: annotations,
+    },
+    execute
+  );
+};
+
 const pollForSummary = async (
   params: SummarizerQueryParams,
   pollInterval: number = 50,
@@ -99,4 +113,5 @@ export default {
   annotations,
   inputSchema: summarizerQueryParams.shape,
   execute,
+  register,
 };
