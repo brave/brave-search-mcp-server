@@ -103,6 +103,8 @@ The server supports the following environment variables:
 - `BRAVE_MCP_PORT`: HTTP server port (default: 8080)
 - `BRAVE_MCP_HOST`: HTTP server host (default: "0.0.0.0")
 - `BRAVE_MCP_LOG_LEVEL`: Desired logging level("debug", "info", "notice", "warning", "error", "critical", "alert", or "emergency", default: "info")
+- `BRAVE_MCP_ENABLED_TOOLS`: When used, specifies a whitelist for supported tools
+- `BRAVE_MCP_DISABLED_TOOLS`: When used, specifies a blacklist for supported tools
 
 ### Command Line Options
 
@@ -114,6 +116,9 @@ Options:
   --transport <stdio|http>    Transport type (default: stdio)
   --port <number>             HTTP server port (default: 8080)
   --host <string>             HTTP server host (default: 0.0.0.0)
+  --logging-level <string>    Desired logging level (one of _debug_, _info_, _notice_, _warning_, _error_, _critical_, _alert_, or _emergency_)
+  --enabled-tools             Tools whitelist (only the specified tools will be enabled)
+  --disabled-tools            Tools blacklist (included tools will be disabled)
 ```
 
 ## Installation
