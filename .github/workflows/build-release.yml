@@ -107,13 +107,14 @@ jobs:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: brave/brave-search-mcp
           IMAGE_RELEASE_TAG: ${{ steps.bump-version.outputs.tag }}
-        run: |
-          docker buildx \
-            --platform linux/amd64 --platform linux/aarch64 \
-            -t $REGISTRY/$REPOSITORY:$IMAGE_RELEASE_TAG \
-            -t $REGISTRY/$REPOSITORY:${GITHUB_SHA} \
-            -t $REGISTRY/$REPOSITORY:${GITHUB_SHA::7} .
-          docker push $REGISTRY/$REPOSITORY --all-tags
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          platforms: linux/amd64,linux/aarch64
+          push: true
+          tags: |
+            $REGISTRY/$REPOSITORY:$IMAGE_RELEASE_TAG
+            $REGISTRY/$REPOSITORY:${GITHUB_SHA}
+            $REGISTRY/$REPOSITORY:${GITHUB_SHA::7}
 
       - name: Install MCP Publisher
         run: |
