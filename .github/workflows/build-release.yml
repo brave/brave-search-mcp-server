@@ -102,6 +102,10 @@ jobs:
       - name: Set up Docker Buildx 
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
 
+      - name: Set Github short SHA Tag
+        id: vars
+        run: echo "short_sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+        
       - name: Build, tag and push to AWS Marketplace ECR
         env:
           MARKETPL_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -112,9 +116,9 @@ jobs:
           platforms: linux/amd64,linux/aarch64
           push: true
           tags: |
-            ${MARKETPL_REGISTRY}/${MARKETPL_REPOSITORY}:${IMAGE_RELEASE_TAG}
-            ${MARKETPL_REGISTRY}/${MARKETPL_REPOSITORY}:${GITHUB_SHA}
-            ${MARKETPL_REGISTRY}/${MARKETPL_REPOSITORY}:${GITHUB_SHA::7}
+            ${{ env.MARKETPL_REGISTRY }}/${{ env.MARKETPL_REPOSITORY }}:${{ env.IMAGE_RELEASE_TAG }}
+            ${{ env.MARKETPL_REGISTRY }}/${{ env.MARKETPL_REPOSITORY }}:${{ github.sha }}
+            ${{ env.MARKETPL_REGISTRY }}/${{ env.MARKETPL_REPOSITORY }}:${{ steps.vars.outputs.short_sha }}
 
       - name: Install MCP Publisher
         run: |
