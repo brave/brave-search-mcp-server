@@ -104,17 +104,17 @@ jobs:
 
       - name: Build, tag and push to AWS Marketplace ECR
         env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          REPOSITORY: brave/brave-search-mcp
+          MARKETPL_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          MARKETPL_REPOSITORY: brave/brave-search-mcp
           IMAGE_RELEASE_TAG: ${{ steps.bump-version.outputs.tag }}
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
           platforms: linux/amd64,linux/aarch64
           push: true
           tags: |
-            $REGISTRY/$REPOSITORY:$IMAGE_RELEASE_TAG
-            $REGISTRY/$REPOSITORY:${GITHUB_SHA}
-            $REGISTRY/$REPOSITORY:${GITHUB_SHA::7}
+            ${MARKETPL_REGISTRY}/${MARKETPL_REPOSITORY}:${IMAGE_RELEASE_TAG}
+            ${MARKETPL_REGISTRY}/${MARKETPL_REPOSITORY}:${GITHUB_SHA}
+            ${MARKETPL_REGISTRY}/${MARKETPL_REPOSITORY}:${GITHUB_SHA::7}
 
       - name: Install MCP Publisher
         run: |
