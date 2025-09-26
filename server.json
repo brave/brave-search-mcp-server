@@ -18,7 +18,7 @@
       "transport": {
         "type": "stdio"
       },
-      "environment_variables": [
+      "environmentVariables": [
         {
           "name": "BRAVE_API_KEY",
           "description": "Your API key for the service",
