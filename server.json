@@ -23,8 +23,8 @@
           "name": "BRAVE_API_KEY",
           "description": "Your API key for the service",
           "format": "string",
-          "is_required": true,
-          "is_secret": true
+          "isRequired": true,
+          "isSecret": true
         }
       ]
     }
