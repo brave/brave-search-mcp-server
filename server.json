@@ -4,15 +4,15 @@
   "description": "Brave Search MCP Server: web results, images, videos, rich results, AI summaries, and more.",
   "version": "2.0.21",
   "status": "active",
-  "website_url": "https://brave.com",
+  "websiteUrl": "https://brave.com",
   "repository": {
     "url": "https://github.com/brave/brave-search-mcp-server",
     "source": "github"
   },
   "packages": [
     {
-      "registry_type": "npm",
-      "registry_base_url": "https://registry.npmjs.org",
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@brave/brave-search-mcp-server",
       "version": "2.0.21",
       "transport": {
