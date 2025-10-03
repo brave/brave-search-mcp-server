@@ -62,25 +62,15 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      # DockerHub authentication
       - name: Login to Docker Hub
+        id: login-docker
         uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build Docker image
-        run: |
-          docker build \
-            -t ${GITHUB_REPOSITORY}:${{ steps.bump-version.outputs.tag }} \
-            -t ${GITHUB_REPOSITORY}:${GITHUB_SHA} \
-            -t ${GITHUB_REPOSITORY}:${GITHUB_SHA::7} \
-            -t ${GITHUB_REPOSITORY}:latest \
-            .
-
-      - name: Push to Docker Hub
-        run: docker push ${GITHUB_REPOSITORY} --all-tags
-
-      # AWS Marketplace ECR deployment steps
+      # AWS Marketplace ECR authentication
       - name: Configure AWS Credentials to deploy to AWS Marketplace ECR
         uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838 # v5.0.0
         with:
@@ -93,7 +83,6 @@ jobs:
         with:
           registries: ${{ secrets.MARKETPL_ECR_AWS_ACCOUNT_ID }}
 
-      # Push to AWS Marketplace-owned ECR Repository (https://docs.aws.amazon.com/marketplace/latest/userguide/container-product-policies.html)
       # Build docker image to support multi-architecture (https://aws.amazon.com/blogs/containers/introducing-multi-architecture-container-images-for-amazon-ecr/)
       # Extend Docker build capabilities by using Buildx (https://github.com/docker/buildx)
       - name: Set up QEMU to support multi-architecute builds
@@ -106,8 +95,16 @@ jobs:
         id: vars
         run: echo "short_sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
-      - name: Build, tag and push to AWS Marketplace ECR
+      - name: Validate Docker Build Configuration
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          call: check
+
+      # Push to DockerHub (per production best practice, remove 'latest' tag)
+      # Push to AWS Marketplace-owned ECR Repository (https://docs.aws.amazon.com/marketplace/latest/userguide/container-product-policies.html)
+      - name: Build, tag and push to Docker Hub and AWS Marketplace ECR
         env:
+          DOCKER_REGISTRY: ${{ github.repository }}
           MARKETPL_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           MARKETPL_REPOSITORY: brave/brave-search-mcp
           IMAGE_RELEASE_TAG: ${{ steps.bump-version.outputs.tag }}
@@ -115,7 +112,11 @@ jobs:
         with:
           platforms: linux/amd64,linux/aarch64
           push: true
+          sbom: true
           tags: |
+            ${{ env.DOCKER_REGISTRY }}:${{ env.IMAGE_RELEASE_TAG }}
+            ${{ env.DOCKER_REGISTRY }}:${{ github.sha }}
+            ${{ env.DOCKER_REGISTRY }}:${{ steps.vars.outputs.short_sha }}
             ${{ env.MARKETPL_REGISTRY }}/${{ env.MARKETPL_REPOSITORY }}:${{ env.IMAGE_RELEASE_TAG }}
             ${{ env.MARKETPL_REGISTRY }}/${{ env.MARKETPL_REPOSITORY }}:${{ github.sha }}
             ${{ env.MARKETPL_REGISTRY }}/${{ env.MARKETPL_REPOSITORY }}:${{ steps.vars.outputs.short_sha }}
