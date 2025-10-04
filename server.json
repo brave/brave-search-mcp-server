@@ -1,5 +1,5 @@
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.github.brave/brave-search-mcp-server",
   "description": "Brave Search MCP Server: web results, images, videos, rich results, AI summaries, and more.",
   "version": "2.0.26",
