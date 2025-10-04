@@ -3,7 +3,6 @@
   "name": "io.github.brave/brave-search-mcp-server",
   "description": "Brave Search MCP Server: web results, images, videos, rich results, AI summaries, and more.",
   "version": "2.0.28",
-  "status": "active",
   "repository": {
     "url": "https://github.com/brave/brave-search-mcp-server",
     "source": "github"
