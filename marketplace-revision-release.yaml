@@ -14,8 +14,6 @@ ChangeSet:
     }
 ChangeSetName: ''
 ClientRequestToken: ''
-# Set to VALIDATE to test request before applying changes. Default is APPLY.
-Intent: 'VALIDATE'
 ChangeSetTags:
   - Key: 'Release'
     Value: ''
