@@ -167,13 +167,13 @@ jobs:
       # Generate DeliveryOptions
       # Delivery options are ECS(-Anywhere), EKS(-Anywhere), and Bedrock Agentcore
       - name: Generate DeliveryOptions
+        id: delivery_options
         env:
           MARKETPL_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           MARKETPL_REPOSITORY: brave/brave-search-mcp
           IMAGE_RELEASE_TAG: ${{ steps.bump-version.outputs.tag }}
         run: |
-          echo "DELIVERY_OPTIONS<<EOF" >> $GITHUB_ENV
-          cat >> $GITHUB_ENV <<'EOF'
+          json=$(cat <<EOF
           [
             {
                 "DeliveryOptionTitle": "Brave Search MCP Server",
@@ -219,10 +219,14 @@ jobs:
                 }
             }
           ]
-          EOF
+EOF
+          )
+          echo "DELIVERY_OPTIONS=$(echo "$json" | jq -c .)" >> $GITHUB_OUTPUT
 
       - name: Update DeliveryOptions in marketplace-revision-release.yaml
-        run: yq -i '.ChangeSet[].DetailsDocument.DeliveryOptions = fromjson($DELIVERY_OPTIONS)' marketplace-revision-release.yaml
+        env:
+          DELIVERY_OPTIONS: ${{ steps.delivery_options.outputs.DELIVERY_OPTIONS }}
+        run: yq -i '.ChangeSet[].DetailsDocument.DeliveryOptions = fromjson(env.DELIVERY_OPTIONS)' marketplace-revision-release.yaml
 
       - name: Publish New Release to AWS Marketplace Catalog Management Portal
         run: |
