@@ -219,7 +219,7 @@ jobs:
                 }
             }
           ]
-EOF
+          EOF
 
       - name: Update DeliveryOptions in marketplace-revision-release.yaml
         run: yq -i '.ChangeSet[].DetailsDocument.DeliveryOptions = fromjson($DELIVERY_OPTIONS)' marketplace-revision-release.yaml
