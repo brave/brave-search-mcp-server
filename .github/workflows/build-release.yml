@@ -219,7 +219,7 @@ jobs:
                 }
             }
           ]
-EOF
+          EOF
           )
           echo "DELIVERY_OPTIONS=$(echo "$json" | jq -c .)" >> $GITHUB_OUTPUT
 
