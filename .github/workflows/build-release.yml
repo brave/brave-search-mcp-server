@@ -130,3 +130,102 @@ jobs:
 
       - name: Publish to MCP Registry
         run: ./mcp-publisher publish
+
+      # Update YAML template to deploy Brave Search MCP Server to AWS Marketplace Management Portal
+      # Install yq
+      - name: Set up yq to populate Marketplace Catalog StartChangeSet to publish new revision
+        uses: frenck/action-setup-yq@c4b5be8b4a215c536a41d436757d9feb92836d4f # v1.0.2
+
+      # Update Release Version
+      - name: Update Release Version in marketplace-revision-release.yaml
+        env:
+          IMAGE_RELEASE_TAG: ${{ steps.bump-version.outputs.tag }}
+        run: |
+          yq -i '(.ChangeSet[].EntityTags | select(.Key == "Release") | .Value) = "$IMAGE_RELEASE_TAG"' marketplace-revision-release.yaml
+          yq -i '.ChangeSet[].DetailsDocument.Version.VersionTitle = "Release $IMAGE_RELEASE_TAG"' marketplace-revision-release.yaml
+          yq -i '(.ChangeSetTags[] | select(.Key == "Release") | .Value) = $IMAGE_RELEASE_TAG' marketplace-revision-release.yaml
+          yq -i '.ChangeSetName = "Add New Release $IMAGE_RELEASE_TAG"' marketplace-revision-release.yaml
+        
+      - name: Update Release Notes in marketplace-revision-release.yaml
+        env:
+          RELEASE_NOTES: ${{ github.event.release.body }}
+        run:
+          yq -i '.ChangeSet[].DetailsDocument.Version.ReleaseNotes = env(RELEASE_NOTES)' marketplace-revision-release.yaml
+
+      # Generate ClientRequestToken 
+      # See https://docs.aws.amazon.com/marketplace/latest/APIReference/API_StartChangeSet.html
+      - name: Generate UUID for ClientRequestToken used with StartChangeSet
+        id: custom_token
+        run: echo "client_request_token=$(uuidgen)" >> "$GITHUB_OUTPUT"
+
+      - name: Update ClientRequestToken in marketplace-revision-release.yaml
+        env:
+          TOKEN: ${{ steps.custom_token.outputs.client_request_token }}
+        run: |
+          yq -i '.ClientRequestToken = env(TOKEN)' marketplace-revision-release.yaml
+
+      # Generate DeliveryOptions
+      # Delivery options are ECS(-Anywhere), EKS(-Anywhere), and Bedrock Agentcore
+      - name: Generate DeliveryOptions
+        env:
+          MARKETPL_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          MARKETPL_REPOSITORY: brave/brave-search-mcp
+          IMAGE_RELEASE_TAG: ${{ steps.bump-version.outputs.tag }}
+        run: |
+          echo 'DELIVERY_OPTIONS<<EOF' >> $GITHUB_ENV
+          cat >> $GITHUB_ENV <<EOF
+[
+  {
+      "DeliveryOptionTitle": "Brave Search MCP Server",
+      "Details": {
+          "EcrDeliveryOptionDetails": {
+              "UsageInstructions": "Navigate to https://brave.com/search/api/ and create an account.  Once an account is created, select a plan, and generate an API key.  \n\nPlease refer to Brave Search MCP Server usage documentation (https://brave-marketplace-artifacts-prod.s3.us-west-2.amazonaws.com/brave-search-mcp-server/MCP_Server_Usage_Instructions_md.md) for more details about configuration and usage of Brave Search MCP Server",
+              "AgenticType": [
+                  "MCP_SERVER"
+              ],
+              "CompatibleServices": [
+                  "Bedrock-AgentCore"
+              ],
+              "Description": "docker pull $MARKETPL_REGISTRY/$MARKETPL_REPOSITORY:$IMAGE_RELEASE_TAG",
+              "DeploymentResources": [
+                  {
+                      "Url": "https://brave-marketplace-artifacts-prod.s3.us-west-2.amazonaws.com/brave-search-mcp-server/MCP_Server_Usage_Instructions_md.md",
+                      "Name": "Brave Search MCP Usage Instructions"
+                  }
+              ],
+              "ContainerImages": [
+                  "$MARKETPL_REGISTRY/$MARKETPL_REPOSITORY:$IMAGE_RELEASE_TAG"
+              ]
+          }
+      }
+  },
+  {
+      "DeliveryOptionTitle": "Docker Image",
+      "Details": {
+          "EcrDeliveryOptionDetails": {
+              "UsageInstructions": "docker run --rm -ti -p 8080:8080 --cap-drop all --read-only -e BRAVE_API_KEY=\"XXXX\" -e BRAVE_MCP_TRANSPORT=http -e BRAVE_MCP_PORT=8080 -e BRAVE_MCP_HOST=0.0.0.0 $MARKETPL_REGISTRY/$MARKETPL_REPOSITORY:$IMAGE_RELEASE_TAG",
+              "CompatibleServices": [
+                  "ECS",
+                  "ECS-Anywhere",
+                  "EKS",
+                  "EKS-Anywhere"
+                ],
+              "Description": "Image can be access via AWS Marketplace ECR Repository: $MARKETPL_REGISTRY/$MARKETPL_REPOSITORY:$IMAGE_RELEASE_TAG",
+                "DeploymentResources": [],
+                "ContainerImages": [
+                    "$MARKETPL_REGISTRY/$MARKETPL_REPOSITORY:$IMAGE_RELEASE_TAG"
+                ]
+            }
+        }
+    }
+]
+EOF
+
+      - name: Update DeliveryOptions in marketplace-revision-release.yaml
+        run:
+          yq -i '.ChangeSet[].DetailsDocument.DeliveryOptions = fromjson(env(DELIVERY_OPTIONS))' marketplace-revision-release.yaml
+
+      - name: Publish New Release to AWS Marketplace Catalog Management Portal
+        run: |
+          aws marketplace-catalog start-change-set \
+            --cli-input-yaml file://marketplace-revision-release.yaml

@@ -1,0 +1,30 @@
+Catalog: 'AWSMarketplace'
+ChangeSet:
+- ChangeType: 'AddDeliveryOptions'
+  Entity: 
+    Type: 'ContainerProduct@1.0'
+    Identifier: 'prod-ixigokshzjrpw@41'
+  EntityTags: 
+  - Key: 'Release'
+    Value: ''
+  - Key: 'CostEntity'
+    Value: 'SEZC'
+  - Key: 'IPGroup'
+    Value: 'KY BAT Ledger Service'
+  DetailsDocument: {
+    "Version": {
+      "ReleaseNotes": "",
+      "VersionTitle": ""
+    },
+    "DeliveryOptions": ""
+  }
+ChangeSetName: '' 
+ClientRequestToken: ''
+Intent: 'VALIDATE' # Set to VALIDATE to test request before applying changes. Default is APPLY.
+ChangeSetTags: 
+- Key: 'Release' 
+  Value: '' 
+- Key: 'CostEntity' 
+  Value: 'SEZC' 
+- Key: 'IPGroup'
+  Value: 'KY BAT Ledger Service'
