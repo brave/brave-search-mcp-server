@@ -149,7 +149,7 @@ jobs:
       - name: Update Release Notes in marketplace-revision-release.yaml
         env:
           RELEASE_NOTES: ${{ github.event.release.body }}
-        run:
+        run: |
           yq -i '.ChangeSet[].DetailsDocument.Version.ReleaseNotes = env(RELEASE_NOTES)' marketplace-revision-release.yaml
 
       # Generate ClientRequestToken 
