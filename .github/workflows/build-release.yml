@@ -221,7 +221,7 @@ jobs:
           ]
           EOF
           )
-          echo "DELIVERY_OPTIONS=$(echo "$json" | jq -c .)" >> $GITHUB_OUTPUT
+          echo "DELIVERY_OPTIONS=$(echo "$json" | jq -r .)" >> $GITHUB_OUTPUT
 
       - name: Update DeliveryOptions in marketplace-revision-release.yaml
         env:
