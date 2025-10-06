@@ -172,8 +172,8 @@ jobs:
           MARKETPL_REPOSITORY: brave/brave-search-mcp
           IMAGE_RELEASE_TAG: ${{ steps.bump-version.outputs.tag }}
         run: |
-          echo 'DELIVERY_OPTIONS<<EOF' >> $GITHUB_ENV
-          cat >> $GITHUB_ENV <<EOF
+          echo "DELIVERY_OPTIONS<<EOF" >> $GITHUB_ENV
+          cat <<EOF >> $GITHUB_ENV
           [
             {
                 "DeliveryOptionTitle": "Brave Search MCP Server",
