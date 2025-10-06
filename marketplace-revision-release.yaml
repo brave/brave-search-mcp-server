@@ -5,13 +5,6 @@ ChangeSet:
     Entity:
       Type: 'ContainerProduct@1.0'
       Identifier: 'prod-ixigokshzjrpw@41'
-    EntityTags:
-      - Key: 'Release'
-        Value: ''
-      - Key: 'CostEntity'
-        Value: 'SEZC'
-      - Key: 'IPGroup'
-        Value: 'KY BAT Ledger Service'
     DetailsDocument: {
       "Version": {
         "ReleaseNotes": "",
