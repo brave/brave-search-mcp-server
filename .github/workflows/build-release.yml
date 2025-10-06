@@ -50,10 +50,20 @@ jobs:
           git commit -m "ci: update build assets (${{ steps.bump-version.outputs.tag }})"
           git push
 
+      - name: Generate Changelog
+        id: changelog
+        run: |
+          echo "# Changelog for ${{ steps.bump-version.outputs.tag }}" > ${{ github.workspace }}/RELEASE_NOTES.md
+          echo "* Updated version" >> ${{ github.workspace }}/RELEASE_NOTES.md
+          echo "release_notes<<EOF" >> $GITHUB_OUTPUT
+          cat ${{ github.workspace }}/RELEASE_NOTES.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Create release
         uses: softprops/action-gh-release@6cbd405e2c4e67a21c47fa9e383d020e4e28b836 # v2.3.3
         id: create_release
         with:
+          body_path: ${{ github.workspace }}/RELEASE_NOTES.md
           tag_name: ${{ steps.bump-version.outputs.tag }}
           generate_release_notes: true
           make_latest: true
@@ -147,9 +157,10 @@ jobs:
           yq -i '.ChangeSetName = "Add New Release " + env(IMAGE_RELEASE_TAG)' marketplace-revision-release.yaml
         
       - name: Update Release Notes in marketplace-revision-release.yaml
+        env:
+          RELEASE_NOTES: ${{ steps.changelog.outputs.release_notes }}
         run: |
-          export RELEASE_NOTES='${{ steps.create_release.outputs.body }}'
-          yq -i '.ChangeSet[].DetailsDocument.Version.ReleaseNotes = env(RELEASE_NOTES)' marketplace-revision-release.yaml
+          yq -i '.ChangeSet[].DetailsDocument.Version.ReleaseNotes = strenv(RELEASE_NOTES)' marketplace-revision-release.yaml
 
       # Generate ClientRequestToken 
       # See https://docs.aws.amazon.com/marketplace/latest/APIReference/API_StartChangeSet.html
