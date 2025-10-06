@@ -210,7 +210,7 @@ jobs:
                   "EKS",
                   "EKS-Anywhere"
                 ],
-              "Description": "Image can be access via AWS Marketplace ECR Repository: $MARKETPL_REGISTRY/$MARKETPL_REPOSITORY:$IMAGE_RELEASE_TAG",
+              "Description": "Image can be accessed via AWS Marketplace ECR Repository: $MARKETPL_REGISTRY/$MARKETPL_REPOSITORY:$IMAGE_RELEASE_TAG",
                 "DeploymentResources": [],
                 "ContainerImages": [
                     "$MARKETPL_REGISTRY/$MARKETPL_REPOSITORY:$IMAGE_RELEASE_TAG"
