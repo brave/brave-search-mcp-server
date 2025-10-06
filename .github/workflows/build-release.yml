@@ -173,7 +173,7 @@ jobs:
           IMAGE_RELEASE_TAG: ${{ steps.bump-version.outputs.tag }}
         run: |
           echo "DELIVERY_OPTIONS<<EOF" >> $GITHUB_ENV
-          cat <<'EOF' >> $GITHUB_ENV
+          cat >> $GITHUB_ENV <<'EOF'
           [
             {
                 "DeliveryOptionTitle": "Brave Search MCP Server",
@@ -219,7 +219,7 @@ jobs:
                 }
             }
           ]
-          EOF
+EOF
 
       - name: Update DeliveryOptions in marketplace-revision-release.yaml
         run: yq -i '.ChangeSet[].DetailsDocument.DeliveryOptions = fromjson($DELIVERY_OPTIONS)' marketplace-revision-release.yaml
