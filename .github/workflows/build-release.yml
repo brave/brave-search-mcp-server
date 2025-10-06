@@ -141,15 +141,15 @@ jobs:
         env:
           IMAGE_RELEASE_TAG: ${{ steps.bump-version.outputs.tag }}
         run: |
-          yq -i '.ChangeSet[].DetailsDocument.Version.VersionTitle = "Release $IMAGE_RELEASE_TAG"' marketplace-revision-release.yaml
-          yq -i '(.ChangeSetTags[] | ( .[] | select(.Key == "Release") ) | .Value) = $IMAGE_RELEASE_TAG' marketplace-revision-release.yaml
-          yq -i '.ChangeSetName = "Add New Release $IMAGE_RELEASE_TAG"' marketplace-revision-release.yaml
+          yq -i '.ChangeSet[].DetailsDocument.Version.VersionTitle = "Release " + env(IMAGE_RELEASE_TAG)' marketplace-revision-release.yaml
+          yq -i '(.ChangeSetTags[] | ( .[] | select(.Key == "Release") ) | .Value) = env(IMAGE_RELEASE_TAG)' marketplace-revision-release.yaml
+          yq -i '.ChangeSetName = "Add New Release " + env(IMAGE_RELEASE_TAG)' marketplace-revision-release.yaml
         
       - name: Update Release Notes in marketplace-revision-release.yaml
         env:
           RELEASE_NOTES: ${{ github.event.release.body }}
         run: |
-          yq -i '.ChangeSet[].DetailsDocument.Version.ReleaseNotes = "$RELEASE_NOTES"' marketplace-revision-release.yaml
+          yq -i '.ChangeSet[].DetailsDocument.Version.ReleaseNotes = env(RELEASE_NOTES)' marketplace-revision-release.yaml
 
       # Generate ClientRequestToken 
       # See https://docs.aws.amazon.com/marketplace/latest/APIReference/API_StartChangeSet.html
@@ -161,7 +161,7 @@ jobs:
         env:
           TOKEN: ${{ steps.custom_token.outputs.client_request_token }}
         run: |
-          yq -i '.ClientRequestToken = "$TOKEN"' marketplace-revision-release.yaml
+          yq -i '.ClientRequestToken = env(TOKEN)' marketplace-revision-release.yaml
 
       # Generate DeliveryOptions
       # Delivery options are ECS(-Anywhere), EKS(-Anywhere), and Bedrock Agentcore
