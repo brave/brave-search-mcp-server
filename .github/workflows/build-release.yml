@@ -138,17 +138,15 @@ jobs:
 
       # Update Release Version
       - name: Update Release Version in marketplace-revision-release.yaml
-        env:
-          IMAGE_RELEASE_TAG: ${{ steps.bump-version.outputs.tag }}
         run: |
+          export IMAGE_RELEASE_TAG='${{ steps.bump-version.outputs.tag }}'
           yq -i '.ChangeSet[].DetailsDocument.Version.VersionTitle = "Release " + env(IMAGE_RELEASE_TAG)' marketplace-revision-release.yaml
           yq -i '(.ChangeSetTags[] | ( .[] | select(.Key == "Release") ) | .Value) = env(IMAGE_RELEASE_TAG)' marketplace-revision-release.yaml
           yq -i '.ChangeSetName = "Add New Release " + env(IMAGE_RELEASE_TAG)' marketplace-revision-release.yaml
         
       - name: Update Release Notes in marketplace-revision-release.yaml
-        env:
-          RELEASE_NOTES: ${{ github.event.release.body }}
         run: |
+          export RELEASE_NOTES='${{ github.event.release.body }}'
           yq -i '.ChangeSet[].DetailsDocument.Version.ReleaseNotes = env(RELEASE_NOTES)' marketplace-revision-release.yaml
 
       # Generate ClientRequestToken 
@@ -158,9 +156,8 @@ jobs:
         run: echo "client_request_token=$(uuidgen)" >> "$GITHUB_OUTPUT"
 
       - name: Update ClientRequestToken in marketplace-revision-release.yaml
-        env:
-          TOKEN: ${{ steps.custom_token.outputs.client_request_token }}
         run: |
+          export TOKEN='${{ steps.custom_token.outputs.client_request_token }}'
           yq -i '.ClientRequestToken = env(TOKEN)' marketplace-revision-release.yaml
 
       # Generate DeliveryOptions
