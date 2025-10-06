@@ -141,9 +141,9 @@ jobs:
         env:
           IMAGE_RELEASE_TAG: ${{ steps.bump-version.outputs.tag }}
         run: |
-          yq -i '(.ChangeSet[].EntityTags | select(.Key == "Release") | .Value) = "$IMAGE_RELEASE_TAG"' marketplace-revision-release.yaml
+          yq -i '(.ChangeSet[].EntityTags | ( .[] | select(.Key == "Release") ) | .Value) = "$IMAGE_RELEASE_TAG"' marketplace-revision-release.yaml
           yq -i '.ChangeSet[].DetailsDocument.Version.VersionTitle = "Release $IMAGE_RELEASE_TAG"' marketplace-revision-release.yaml
-          yq -i '(.ChangeSetTags[] | select(.Key == "Release") | .Value) = $IMAGE_RELEASE_TAG' marketplace-revision-release.yaml
+          yq -i '(.ChangeSetTags[] | ( .[] | select(.Key == "Release") ) | .Value) = $IMAGE_RELEASE_TAG' marketplace-revision-release.yaml
           yq -i '.ChangeSetName = "Add New Release $IMAGE_RELEASE_TAG"' marketplace-revision-release.yaml
         
       - name: Update Release Notes in marketplace-revision-release.yaml
