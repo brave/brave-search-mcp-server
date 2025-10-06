@@ -150,7 +150,7 @@ jobs:
         env:
           RELEASE_NOTES: ${{ github.event.release.body }}
         run: |
-          yq -i '.ChangeSet[].DetailsDocument.Version.ReleaseNotes = env(RELEASE_NOTES)' marketplace-revision-release.yaml
+          yq -i '.ChangeSet[].DetailsDocument.Version.ReleaseNotes = "$RELEASE_NOTES"' marketplace-revision-release.yaml
 
       # Generate ClientRequestToken 
       # See https://docs.aws.amazon.com/marketplace/latest/APIReference/API_StartChangeSet.html
@@ -162,7 +162,7 @@ jobs:
         env:
           TOKEN: ${{ steps.custom_token.outputs.client_request_token }}
         run: |
-          yq -i '.ClientRequestToken = env(TOKEN)' marketplace-revision-release.yaml
+          yq -i '.ClientRequestToken = "$TOKEN"' marketplace-revision-release.yaml
 
       # Generate DeliveryOptions
       # Delivery options are ECS(-Anywhere), EKS(-Anywhere), and Bedrock Agentcore
@@ -220,8 +220,9 @@ jobs:
             }
           ]
           EOF
+
       - name: Update DeliveryOptions in marketplace-revision-release.yaml
-        run: yq -i '.ChangeSet[].DetailsDocument.DeliveryOptions = fromjson(env(DELIVERY_OPTIONS))' marketplace-revision-release.yaml
+        run: yq -i '.ChangeSet[].DetailsDocument.DeliveryOptions = fromjson($DELIVERY_OPTIONS)' marketplace-revision-release.yaml
 
       - name: Publish New Release to AWS Marketplace Catalog Management Portal
         run: |
