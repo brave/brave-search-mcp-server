@@ -224,9 +224,8 @@ jobs:
           echo "DELIVERY_OPTIONS=$(echo "$json" | jq -c .)" >> $GITHUB_OUTPUT
 
       - name: Update DeliveryOptions in marketplace-revision-release.yaml
-        env:
-          DELIVERY_OPTIONS: ${{ steps.delivery_options.outputs.DELIVERY_OPTIONS }}
         run: |
+          export DELIVERY_OPTIONS='${{ steps.delivery_options.outputs.DELIVERY_OPTIONS }}'
           yq -i '.ChangeSet[].DetailsDocument.DeliveryOptions = strenv(DELIVERY_OPTIONS) | fromjson' marketplace-revision-release.yaml
 
       - name: Publish New Release to AWS Marketplace Catalog Management Portal
