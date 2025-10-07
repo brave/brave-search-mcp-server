@@ -238,6 +238,9 @@ jobs:
           export DELIVERY_OPTIONS='${{ steps.delivery_options.outputs.DELIVERY_OPTIONS }}'
           yq -i '.ChangeSet[].DetailsDocument.DeliveryOptions = strenv(DELIVERY_OPTIONS)' marketplace-revision-release.yaml
 
+      - name: Debug - Show marketplace-revision-release.yaml contents
+        run: cat marketplace-revision-release.yaml
+
       - name: Publish New Release to AWS Marketplace Catalog Management Portal
         run: |
           aws marketplace-catalog start-change-set \
