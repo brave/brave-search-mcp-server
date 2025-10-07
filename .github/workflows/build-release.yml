@@ -153,7 +153,7 @@ jobs:
           IMAGE_RELEASE_TAG: ${{ steps.bump-version.outputs.tag }}
         run: |
           yq -i '.ChangeSet[].DetailsDocument.Version.VersionTitle = "Release " + env(IMAGE_RELEASE_TAG)' marketplace-revision-release.yaml
-          yq -i '(.ChangeSetTags[] | ( .[] | select(.Key == "Release") ) | .Value) = env(IMAGE_RELEASE_TAG)' marketplace-revision-release.yaml
+          yq -i '(.ChangeSetTags[] | ( .[] | select(.Key == "Release") ) | .Value) = strenv(IMAGE_RELEASE_TAG)' marketplace-revision-release.yaml
           yq -i '.ChangeSetName = "Add New Release " + env(IMAGE_RELEASE_TAG)' marketplace-revision-release.yaml
         
       - name: Update Release Notes in marketplace-revision-release.yaml
@@ -239,7 +239,8 @@ jobs:
           yq -i '.ChangeSet[].DetailsDocument.DeliveryOptions = strenv(DELIVERY_OPTIONS)' marketplace-revision-release.yaml
 
       - name: Debug - Show marketplace-revision-release.yaml contents
-        run: cat marketplace-revision-release.yaml
+        run: 
+          yq eval-all marketplace-revision-release.yaml
 
       - name: Publish New Release to AWS Marketplace Catalog Management Portal
         run: |
