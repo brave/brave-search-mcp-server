@@ -165,6 +165,13 @@ jobs:
         run: |
           jq --arg notes "$RELEASE_NOTES" '.ChangeSet[].DetailsDocument.Version.ReleaseNotes = $notes' marketplace-revision-release.json > tmp.json && mv tmp.json marketplace-revision-release.json
 
+       # Update Version Title
+      - name: Update Version Title in marketplace-revision-release.json
+        env:
+          TITLE: 'Release ${{ steps.bump-version.outputs.tag }}'
+        run: |
+          jq --arg title "$TITLE" '.ChangeSet[].DetailsDocument.Version.VersionTitle = $title' marketplace-revision-release.json > tmp.json && mv tmp.json marketplace-revision-release.json
+
       # Generate ClientRequestToken 
       # See https://docs.aws.amazon.com/marketplace/latest/APIReference/API_StartChangeSet.html
       - name: Generate UUID for ClientRequestToken used with StartChangeSet
