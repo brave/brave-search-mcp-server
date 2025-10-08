@@ -5,7 +5,7 @@
             "ChangeType": "AddDeliveryOptions",
             "Entity": {
                 "Type": "ContainerProduct@1.0",
-                "Identifier": "prod-ixigokshzjrpw@41"
+                "Identifier": "prod-ixigokshzjrpw"
             },
             "DetailsDocument": {
                "Version": {
