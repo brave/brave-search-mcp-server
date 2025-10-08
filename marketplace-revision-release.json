@@ -1,0 +1,75 @@
+{
+    "Catalog": "AWSMarketplace",
+    "ChangeSet": [
+        {
+            "ChangeType": "AddDeliveryOptions",
+            "Entity": {
+                "Type": "ContainerProduct@1.0",
+                "Identifier": "prod-ixigokshzjrpw@41"
+            },
+            "DetailsDocument": {
+               "Version": {
+                  "ReleaseNotes": "",
+                  "VersionTitle": ""
+               },
+               "DeliveryOptions": [
+                    {
+                        "DeliveryOptionTitle": "Brave Search MCP Server",
+                        "Details": {
+                            "EcrDeliveryOptionDetails": {
+                                "UsageInstructions": "Navigate to https://brave.com/search/api/ and create an account.  Once an account is created, select a plan, and generate an API key.  \n\nPlease refer to Brave Search MCP Server usage documentation (https://brave-marketplace-artifacts-prod.s3.us-west-2.amazonaws.com/brave-search-mcp-server/MCP_Server_Usage_Instructions_md.md) for more details about configuration and usage of Brave Search MCP Server",
+                                "AgenticType": [
+                                    "MCP_SERVER"
+                                ],
+                                "CompatibleServices": [
+                                    "Bedrock-AgentCore"
+                                ],
+                                "Description": "",
+                                "DeploymentResources": [
+                                    {
+                                        "Url": "https://brave-marketplace-artifacts-prod.s3.us-west-2.amazonaws.com/brave-search-mcp-server/MCP_Server_Usage_Instructions_md.md",
+                                        "Name": "Brave Search MCP Usage Instructions"
+                                    }
+                                ],
+                                "ContainerImages": ""
+                            }
+                        }
+                    },
+                    {
+                        "DeliveryOptionTitle": "Docker Image",
+                        "Details": {
+                            "EcrDeliveryOptionDetails": {
+                                "UsageInstructions": "",
+                                "CompatibleServices": [
+                                    "ECS",
+                                    "ECS-Anywhere",
+                                    "EKS",
+                                    "EKS-Anywhere"
+                                ],
+                                "Description": "",
+                                "DeploymentResources": [],
+                                "ContainerImages": ""
+                            }
+                        }
+                    }
+               ]
+            }
+        }
+    ],
+    "ChangeSetName": "",
+    "ClientRequestToken": "",
+    "ChangeSetTags": [
+        {
+            "Key": "Release",
+            "Value": ""
+        },
+        {
+            "Key": "CostEntity",
+            "Value": "SEZC"
+        },
+        {
+            "Key": "IPGroup",
+            "Value": "KY BAT Ledger Service"
+        }
+    ]
+}
