@@ -129,7 +129,8 @@ jobs:
         with:
           platforms: linux/amd64,linux/aarch64
           push: true
-          sbom: true
+          sbom: false
+          provenance: false
           tags: |
             ${{ env.DOCKER_REGISTRY }}:${{ env.IMAGE_RELEASE_TAG }}
             ${{ env.DOCKER_REGISTRY }}:${{ github.sha }}
