@@ -206,7 +206,7 @@ jobs:
 
       - name: Update DeliveryOptions Description for Docker Image option in marketplace-revision-release.json
         env:
-          DESCRIPTION: 'Delivery option description'
+          DESCRIPTION: 'To obtain a Brave Search API key, go to https://aws.amazon.com/marketplace/pp/prodview-qjlabherxghtq and purchase a subscription within the AWS account where Brave Search MCP Server will be used.  \n\nPlease refer to AWS ECS or EKS documentation for configuring workloads to provide the environment variables referenced in the Usage Instructions.'
         run: |
           jq --arg desc "$DESCRIPTION" '.ChangeSet[].DetailsDocument.DeliveryOptions[] |= (if .DeliveryOptionTitle == "Docker Image" then .Details.EcrDeliveryOptionDetails.Description = $desc else . end)' marketplace-revision-release.json > tmp.json && mv tmp.json marketplace-revision-release.json
 

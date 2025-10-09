@@ -17,7 +17,7 @@
                         "DeliveryOptionTitle": "Brave Search MCP Server",
                         "Details": {
                             "EcrDeliveryOptionDetails": {
-                                "UsageInstructions": "Navigate to https://brave.com/search/api/ and create an account.  Once an account is created, select a plan, and generate an API key.  \n\nPlease refer to Brave Search MCP Server usage documentation (https://brave-marketplace-artifacts-prod.s3.us-west-2.amazonaws.com/brave-search-mcp-server/MCP_Server_Usage_Instructions_md.md) for more details about configuration and usage of Brave Search MCP Server",
+                                "UsageInstructions": "To obtain a Brave Search API key, go to https://aws.amazon.com/marketplace/pp/prodview-qjlabherxghtq and purchase a subscription.  \n\nPlease refer to Brave Search MCP Server usage documentation (https://brave-marketplace-artifacts-prod.s3.us-west-2.amazonaws.com/brave-search-mcp-server/MCP_Server_Usage_Instructions_md.md) for more details about configuration and usage of Brave Search MCP Server",
                                 "AgenticType": [
                                     "MCP_SERVER"
                                 ],
