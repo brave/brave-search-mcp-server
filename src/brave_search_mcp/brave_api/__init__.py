@@ -1,0 +1,1 @@
+"""Brave Search API client."""
