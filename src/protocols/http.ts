@@ -4,6 +4,7 @@ import config from '../config.js';
 import createMcpServer from '../server.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { ListToolsRequest, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { setRequestApiKey } from '../BraveAPI/index.js';
 
 const yieldGenericServerError = (res: Response) => {
   res.status(500).json({
@@ -57,6 +58,29 @@ const createApp = () => {
 
   app.all('/mcp', async (req: Request, res: Response) => {
     try {
+      const authHeader = req.headers.authorization;
+      let apiKey = config.braveApiKey; // Use default from config if available
+
+      if (authHeader) {
+        // Support both "Bearer <token>" and direct token formats
+        apiKey = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
+      }
+
+      if (!apiKey) {
+        res.status(401).json({
+          id: null,
+          jsonrpc: '2.0',
+          error: {
+            code: -32001,
+            message:
+              'API key required. Provide via Authorization header or BRAVE_API_KEY environment variable.',
+          },
+        });
+        return;
+      }
+
+      setRequestApiKey(apiKey);
+
       const transport = await getTransport(req);
       await transport.handleRequest(req, res, req.body);
     } catch (error) {

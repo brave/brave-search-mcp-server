@@ -1,6 +1,20 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import type { Endpoints } from './types.js';
 import config from '../config.js';
 import { stringify } from '../utils.js';
+
+// AsyncLocalStorage for request-scoped API key (used in HTTP transport mode)
+const apiKeyStorage = new AsyncLocalStorage<string>();
+
+// Set API key for current async context (HTTP requests)
+export function setRequestApiKey(apiKey: string): void {
+  apiKeyStorage.enterWith(apiKey);
+}
+
+// Get API key from current context or fallback to config
+function getApiKey(): string {
+  return apiKeyStorage.getStore() ?? config.braveApiKey;
+}
 
 const typeToPathMap: Record<keyof Endpoints, string> = {
   images: '/res/v1/images/search',
@@ -16,7 +30,7 @@ const getDefaultRequestHeaders = (): Record<string, string> => {
   return {
     Accept: 'application/json',
     'Accept-Encoding': 'gzip',
-    'X-Subscription-Token': config.braveApiKey,
+    'X-Subscription-Token': getApiKey(),
   };
 };
 
