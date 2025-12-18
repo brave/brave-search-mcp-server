@@ -10,11 +10,20 @@ export const name = 'brave_image_search';
 
 export const annotations: ToolAnnotations = {
   title: 'Brave Image Search',
+  readOnlyHint: true, // Only reads data via external API, no modifications
+  idempotentHint: true, // Same query = same API operation, repeatable without side effects
   openWorldHint: true,
 };
 
 export const description = `
     Performs an image search using the Brave Search API. Helpful for when you need pictures of people, places, things, graphic design ideas, art inspiration, and more. When relaying results in a markdown environment, it may be helpful to include images in the results (e.g., ![image.title](image.properties.url)).
+
+    Context Control Tips:
+        - Start with count=10-20 for initial image searches to minimize context usage
+        - Default count=50 provides comprehensive results but uses more context
+        - Maximum count=200 available for exhaustive searches when needed
+        - Note: No pagination available for images (no offset parameter)
+        - Returns URLs only (no base64 data) for efficient context usage since v2.0
 `;
 
 export const execute = async (params: QueryParams) => {

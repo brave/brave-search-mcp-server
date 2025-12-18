@@ -8,6 +8,8 @@ export const name = 'brave_summarizer';
 
 export const annotations: ToolAnnotations = {
   title: 'Brave Summarizer',
+  readOnlyHint: true, // Only reads data via external API, no modifications
+  idempotentHint: true, // Same query = same API operation, repeatable without side effects
   openWorldHint: true,
 };
 
@@ -24,6 +26,13 @@ export const description = `
     Returns a text summary that consolidates information from the search results. Optional features include inline references to source URLs and additional entity information.
 
     Requirements: Must first perform a web search using brave_web_search with summary=true parameter. Requires a Pro AI subscription to access the summarizer functionality.
+
+    Context Control Tips:
+        - This tool provides the MOST context-efficient way to get comprehensive information
+        - Returns a single concise summary instead of multiple search results
+        - Ideal when you need an overview before diving into specific results
+        - Use web search with smaller count (5-10) + summarizer for optimal context usage
+        - No pagination needed - summarizer processes all search results at once
 `;
 
 export const execute = async (params: SummarizerQueryParams) => {

@@ -8,6 +8,8 @@ export const name = 'brave_video_search';
 
 export const annotations: ToolAnnotations = {
   title: 'Brave Video Search',
+  readOnlyHint: true, // Only reads data via external API, no modifications
+  idempotentHint: true, // Same query = same API operation, repeatable without side effects
   openWorldHint: true,
 };
 
@@ -19,6 +21,13 @@ export const description = `
         - Useful for discovering video content, getting video metadata, or finding videos from specific creators/publishers.
 
     Returns a JSON list of video-related results with title, url, description, duration, and thumbnail_url.
+
+    Context Control Tips:
+        - Start with count=5-10 for initial video discovery to minimize context usage
+        - Use count=20 (default) for balanced video results
+        - Combine count with offset to paginate (e.g., count=10, offset=10 for next page)
+        - Maximum pagination: offset can only go up to 9, limiting total to ~59 videos (count=50, offset=9)
+        - Video metadata is compact, so slightly higher counts (15-20) are context-efficient
 `;
 
 export const execute = async (params: QueryParams) => {

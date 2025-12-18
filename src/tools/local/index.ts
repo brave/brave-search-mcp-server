@@ -16,18 +16,27 @@ export const name = 'brave_local_search';
 
 export const annotations: ToolAnnotations = {
   title: 'Brave Local Search',
+  readOnlyHint: true, // Only reads data via external API, no modifications
+  idempotentHint: true, // Same query = same API operation, repeatable without side effects
   openWorldHint: true,
 };
 
 export const description = `
     Brave Local Search API provides enrichments for location search results. Access to this API is available only through the Brave Search API Pro plans; confirm the user's plan before using this tool (if the user does not have a Pro plan, use the brave_web_search tool). Searches for local businesses and places using Brave's Local Search API. Best for queries related to physical locations, businesses, restaurants, services, etc.
-    
+
     Returns detailed information including:
         - Business names and addresses
         - Ratings and review counts
         - Phone numbers and opening hours
 
     Use this when the query implies 'near me', 'in my area', or mentions specific locations (e.g., 'in San Francisco'). This tool automatically falls back to brave_web_search if no local results are found.
+
+    Context Control Tips:
+        - Start with count=5 for initial local searches to get top-rated businesses efficiently
+        - Location results include rich metadata (ratings, hours, descriptions) - use smaller counts
+        - Processes up to 20 location IDs per request (API limit)
+        - Pagination available via offset (0-9) for browsing more local results
+        - Falls back to web search automatically if no locations found (Pro plan required)
 `;
 
 // Access to Local API is available through the Pro plans.
