@@ -37,7 +37,7 @@ export const params = z.object({
     .max(50)
     .default(20)
     .describe(
-      'Number of results (1-50, default 20). Combine this parameter with `offset` to paginate search results.'
+      'Number of results (1-50, default 20). Start with 5-10 for initial discovery, use 20 for balanced results. Combine with offset for pagination.'
     )
     .optional(),
   offset: z
@@ -47,7 +47,7 @@ export const params = z.object({
     .max(9)
     .default(0)
     .describe(
-      'Pagination offset (max 9, default 0). Combine this parameter with `count` to paginate search results.'
+      'Pagination offset (0-9, default 0). Example: offset=10 with count=10 gets videos 11-20. Maximum offset is 9.'
     )
     .optional(),
   spellcheck: z
