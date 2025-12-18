@@ -162,7 +162,7 @@ export const params = z.object({
     .max(20)
     .default(10)
     .describe(
-      'Number of results (1-20, default 10). Applies only to web search results (i.e., has no effect on locations, news, videos, etc.)'
+      'Number of results (1-20, default 10). Start with 5 for context efficiency, use 10-15 for comprehensive results. Applies only to web search results (i.e., has no effect on locations, news, videos, etc.)'
     )
     .optional(),
   offset: z
@@ -171,7 +171,7 @@ export const params = z.object({
     .min(0)
     .max(9)
     .default(0)
-    .describe('Pagination offset (max 9, default 0)')
+    .describe('Pagination offset (0-9, default 0). Use to get additional results: offset=10 gets results 11-20 (when count=10). Max offset is 9.')
     .optional(),
   safesearch: z
     .enum(['off', 'moderate', 'strict'])
