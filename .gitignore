@@ -3,3 +3,7 @@
 .env
 .smithery
 CLAUDE.md
+
+# Local deployment configuration
+run-streamable-http.sh
+docker-compose.yml

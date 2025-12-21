@@ -1,5 +1,9 @@
 # Brave Search MCP Server
 
+> **Fork Notice**: This is the [triepod-ai fork](https://github.com/triepod-ai/brave-search-mcp-server)
+> of the official [Brave Search MCP Server](https://github.com/brave/brave-search-mcp-server).
+> See [FORK.md](./FORK.md) for enhancement details.
+
 An MCP server implementation that integrates the Brave Search API, providing comprehensive search capabilities including web search, local business search, image search, video search, news search, and AI-powered summarization. This project supports both STDIO and HTTP transports, with STDIO as the default mode.
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/brave/brave-search-mcp-server)
