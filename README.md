@@ -108,6 +108,20 @@ Generates AI-powered summaries from web search results using Brave's summarizati
    - **Pro**: Enhanced features including local search, AI summaries, extra snippets
 3. Generate your API key from the [developer dashboard](https://api-dashboard.search.brave.com/app/keys)
 
+### Security and Authentication
+
+The Brave Search API uses **API key authentication**. Your API key is used in the `X-Subscription-Token` header for all requests.
+
+**Important Security Notes:**
+
+- **API Key Protection**: Treat your API key like a password. Never commit it to version control or share it publicly. Use environment variables to store it securely.
+- **Account Security**: Protect your Brave Search API account with a strong password and enable any available two-factor authentication (2FA) methods on your Brave account.
+- **Browser vs API Authentication**: The Brave browser supports hardware authentication keys (like YubiKey) for website login via FIDO2/WebAuthn. However, this is separate from API authentication.
+- **Hardware 2FA Limitation**: YubiKey and other hardware-based 2FA are **not currently supported** for Brave Search API dashboard login or API key management.
+- **Available 2FA Options**: Standard 2FA methods (such as TOTP authenticator apps) may be available for your Brave account. Check your account security settings for available options.
+- **Key Rotation**: Regularly rotate your API keys and revoke any keys that may have been compromised.
+- **Least Privilege**: When deploying this server, use environment-specific API keys and follow the principle of least privilege.
+
 ### Environment Variables
 
 The server supports the following environment variables:
