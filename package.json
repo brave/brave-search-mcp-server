@@ -41,7 +41,7 @@
     "commander": "14.0.2",
     "dotenv": "17.2.3",
     "express": "5.2.1",
-    "zod": "3.25.76"
+    "zod": "4.3.4"
   },
   "devDependencies": {
     "@types/express": "5.0.5",

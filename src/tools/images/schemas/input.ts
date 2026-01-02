@@ -24,7 +24,6 @@ export const params = z.object({
     )
     .optional(),
   count: z
-    .number()
     .int()
     .min(1)
     .max(200)

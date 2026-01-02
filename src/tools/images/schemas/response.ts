@@ -15,23 +15,23 @@ const QuerySchema = z.object({
 });
 
 const ThumbnailSchema = z.object({
-  src: z.string().url().optional().describe('The URL of the thumbnail.'),
-  width: z.number().int().positive().optional().describe('The width of the thumbnail.'),
-  height: z.number().int().positive().optional().describe('The height of the thumbnail.'),
+  src: z.url().optional().describe('The URL of the thumbnail.'),
+  width: z.int().positive().optional().describe('The width of the thumbnail.'),
+  height: z.int().positive().optional().describe('The height of the thumbnail.'),
 });
 
 const PropertiesSchema = z.object({
-  url: z.string().url().optional().describe('The URL of the image.'),
-  placeholder: z.string().url().optional().describe('The lower resolution placeholder image.'),
-  width: z.number().int().positive().optional().describe('The width of the image.'),
-  height: z.number().int().positive().optional().describe('The height of the image.'),
+  url: z.url().optional().describe('The URL of the image.'),
+  placeholder: z.url().optional().describe('The lower resolution placeholder image.'),
+  width: z.int().positive().optional().describe('The width of the image.'),
+  height: z.int().positive().optional().describe('The height of the image.'),
 });
 
 const MetaUrlSchema = z.object({
   scheme: z.enum(['https', 'http']).optional().describe('The scheme of the URL.'),
   netloc: z.string().optional().describe('The network location of the URL.'),
   hostname: z.string().optional().describe('The lowercased hostname of the URL.'),
-  favicon: z.string().url().optional().describe('The URL of the favicon of the URL.'),
+  favicon: z.url().optional().describe('The URL of the favicon of the URL.'),
   path: z.string().optional().describe('The path of the URL (useful as a display string).'),
 });
 
@@ -42,13 +42,9 @@ export const ConfidenceSchema = z
 const ImageResultSchema = z.object({
   type: z.literal('image_result').describe('The type of result.'),
   title: z.string().optional().describe('The title of the image.'),
-  url: z.string().url().optional().describe('The URL of the image.'),
-  source: z.string().url().optional().describe('The source URL of the image.'),
-  page_fetched: z
-    .string()
-    .datetime()
-    .optional()
-    .describe('The date and time the page was fetched.'),
+  url: z.url().optional().describe('The URL of the image.'),
+  source: z.url().optional().describe('The source URL of the image.'),
+  page_fetched: z.iso.datetime().optional().describe('The date and time the page was fetched.'),
   thumbnail: ThumbnailSchema.optional().describe('The thumbnail of the image.'),
   properties: PropertiesSchema.optional().describe('The metadata for the image.'),
   meta_url: MetaUrlSchema.optional().describe(

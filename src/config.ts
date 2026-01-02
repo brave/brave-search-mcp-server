@@ -8,7 +8,10 @@ dotenv.config({ debug: false, quiet: true });
 
 // Config schema for Smithery.ai
 export const configSchema = z.object({
-  braveApiKey: z.string().describe('Your API key'),
+  braveApiKey: z
+    .string()
+    .describe('Your API key')
+    .default(process.env.BRAVE_API_KEY ?? ''),
   enabledTools: z
     .array(z.string())
     .describe('Enforces a tool whitelist (cannot be used with disabledTools)')

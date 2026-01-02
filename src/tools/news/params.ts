@@ -28,7 +28,6 @@ export const params = z.object({
     )
     .optional(),
   count: z
-    .number()
     .int()
     .min(1)
     .max(50)
@@ -36,7 +35,6 @@ export const params = z.object({
     .describe('Number of results (1-50, default 20)')
     .optional(),
   offset: z
-    .number()
     .int()
     .min(0)
     .max(9)

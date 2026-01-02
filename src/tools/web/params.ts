@@ -156,7 +156,6 @@ export const params = z.object({
     )
     .optional(),
   count: z
-    .number()
     .int()
     .min(1)
     .max(20)
@@ -166,7 +165,6 @@ export const params = z.object({
     )
     .optional(),
   offset: z
-    .number()
     .int()
     .min(0)
     .max(9)
