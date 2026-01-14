@@ -31,7 +31,41 @@
                                         "Name": "Brave Search MCP Usage Instructions"
                                     }
                                 ],
-                                "ContainerImages": ""
+                                "ContainerImages": "",
+                                "EnvironmentVariables": [
+                                    {
+                                        "Name": "BRAVE_API_KEY",
+                                        "Description": "*Required* Brave Search API Key.  Obtain Brave Search API Key through AWS Marketplace Product (https://aws.amazon.com/marketplace/pp/prodview-qjlabherxghtq)"
+                                    },
+                                    {
+                                        "DefaultValue": "http",
+                                        "Name": "BRAVE_MCP_TRANSPORT",
+                                        "Description": "MCP protocol transport mode.  Supported values are \"http\" or \"stdio\", however Bedrock Agentcore only supports \"http\" (reference https://docs.aws.amazon.com/marketplace/latest/userguide/bedrock-agentcore-runtime.html#agentcore-container-requirements)."
+                                    },
+                                    {
+                                        "DefaultValue": "8080",
+                                        "Name": "BRAVE_MCP_PORT",
+                                        "Description": "HTTP server port (default: 8080).  Mandatory port for Bedrock Agentcore is 8080 (reference https://docs.aws.amazon.com/marketplace/latest/userguide/bedrock-agentcore-runtime.html#agentcore-container-requirements)."
+                                    },
+                                    {
+                                        "DefaultValue": "0.0.0.0",
+                                        "Name": "BRAVE_MCP_HOST",
+                                        "Description": "HTTP server host (default: 0.0.0.0).  Mandatory host value is 0.0.0.0 for Bedrock Agentcore (reference https://docs.aws.amazon.com/marketplace/latest/userguide/bedrock-agentcore-runtime.html#agentcore-container-requirements)."
+                                    },
+                                    {
+                                        "DefaultValue": "info",
+                                        "Name": "BRAVE_MCP_LOG_LEVEL",
+                                        "Description": "MCP supported logging level (reference https://modelcontextprotocol.io/specification/2025-03-26/server/utilities/logging#log-levels)"
+                                    },
+                                    {
+                                        "Name": "BRAVE_MCP_ENABLED_TOOLS",
+                                        "Description": "*Optional* When used, specifies a whitelist for supported tools"
+                                    },
+                                    {
+                                        "Name": "BRAVE_MCP_DISABLED_TOOLS",
+                                        "Description": "*Optional* When used, specifies a blacklist for supported tools"
+                                    }
+                                ]
                             }
                         }
                     },
