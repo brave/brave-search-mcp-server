@@ -30,4 +30,4 @@ RUN npm ci --ignore-scripts --omit-dev
 
 USER node
 
-CMD ["node", "dist/index.js"]
+ENTRYPOINT ["node", "dist/index.js"]
