@@ -34,6 +34,11 @@ export const configSchema = z.object({
     .default('info')
     .describe('Desired logging level')
     .optional(),
+  stateless: z
+    .boolean()
+    .default(false)
+    .describe('Whether the server should be stateless')
+    .optional(),
 });
 
 export type SmitheryConfig = z.infer<typeof configSchema>;
@@ -46,6 +51,7 @@ type Configuration = {
   loggingLevel: LoggingLevel;
   enabledTools: string[];
   disabledTools: string[];
+  stateless: boolean;
 };
 
 const state: Configuration & { ready: boolean } = {
@@ -57,6 +63,7 @@ const state: Configuration & { ready: boolean } = {
   ready: false,
   enabledTools: [],
   disabledTools: [],
+  stateless: false,
 };
 
 export function isToolPermittedByUser(toolName: string): boolean {
@@ -77,12 +84,12 @@ export function getOptions(): Configuration | false {
     .option(
       '--enabled-tools <names...>',
       'tools to enable',
-      process.env.BRAVE_MCP_ENABLED_TOOLS?.split(' ') ?? []
+      process.env.BRAVE_MCP_ENABLED_TOOLS?.trim().split(' ') ?? []
     )
     .option(
       '--disabled-tools <names...>',
       'tools to disable',
-      process.env.BRAVE_MCP_DISABLED_TOOLS?.split(' ') ?? []
+      process.env.BRAVE_MCP_DISABLED_TOOLS?.trim().split(' ') ?? []
     )
     .option(
       '--port <number>',
@@ -93,6 +100,11 @@ export function getOptions(): Configuration | false {
       '--host <string>',
       'desired host for HTTP transport',
       process.env.BRAVE_MCP_HOST ?? '0.0.0.0'
+    )
+    .option(
+      '--stateless <boolean>',
+      'whether the server should be stateless',
+      process.env.BRAVE_MCP_STATELESS ?? 'false'
     )
     .allowUnknownOption()
     .parse(process.argv);
@@ -108,7 +120,11 @@ export function getOptions(): Configuration | false {
     return false;
   }
 
-  if ([...enabledTools, ...disabledTools].some((t) => !toolNames.includes(t))) {
+  if (
+    [...enabledTools, ...disabledTools].some(
+      (t) => t.trim().length > 0 && !toolNames.includes(t.trim())
+    )
+  ) {
     console.error(`Invalid tool name used. Must be one of: ${toolNames.join(', ')}`);
     return false;
   }
@@ -149,6 +165,11 @@ export function getOptions(): Configuration | false {
     }
   }
 
+  // Only set stateless to true if the --stateless option is explicitly set to true
+  if (options.stateless === 'true') {
+    state.stateless = true;
+  }
+
   // Update state
   state.braveApiKey = options.braveApiKey;
   state.transport = options.transport;
@@ -157,6 +178,7 @@ export function getOptions(): Configuration | false {
   state.loggingLevel = options.loggingLevel;
   state.enabledTools = options.enabledTools;
   state.disabledTools = options.disabledTools;
+  state.stateless = options.stateless;
   state.ready = true;
 
   return options as Configuration;

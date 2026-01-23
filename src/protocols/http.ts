@@ -37,13 +37,22 @@ const getTransport = async (request: Request): Promise<StreamableHTTPServerTrans
     return transport;
   }
 
-  // Otherwise, start a new transport/session
-  const transport = new StreamableHTTPServerTransport({
-    sessionIdGenerator: () => randomUUID(),
-    onsessioninitialized: (sessionId) => {
-      transports.set(sessionId, transport);
-    },
-  });
+  let transport: StreamableHTTPServerTransport;
+
+  if (config.stateless) {
+    // Some contexts (e.g. AgentCore) may prefer or require a stateless transport
+    transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: undefined,
+    });
+  } else {
+    // Otherwise, start a new transport/session
+    transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: () => randomUUID(),
+      onsessioninitialized: (sessionId) => {
+        transports.set(sessionId, transport);
+      },
+    });
+  }
 
   const mcpServer = createMcpServer();
   await mcpServer.connect(transport);
