@@ -104,7 +104,7 @@ export function getOptions(): Configuration | false {
     .option(
       '--stateless <boolean>',
       'whether the server should be stateless',
-      process.env.BRAVE_MCP_STATELESS ?? 'false'
+      process.env.BRAVE_MCP_STATELESS === 'true' ? true : false
     )
     .allowUnknownOption()
     .parse(process.argv);
@@ -165,10 +165,8 @@ export function getOptions(): Configuration | false {
     }
   }
 
-  // Only set stateless to true if the --stateless option is explicitly set to true
-  if (options.stateless === 'true') {
-    state.stateless = true;
-  }
+  // Normalize stateless to boolean (CLI passes it as string)
+  options.stateless = options.stateless === true || options.stateless === 'true';
 
   // Update state
   state.braveApiKey = options.braveApiKey;
