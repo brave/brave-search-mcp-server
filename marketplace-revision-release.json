@@ -43,9 +43,9 @@
                                         "Description": "MCP protocol transport mode.  Supported values are \"http\" or \"stdio\", however Bedrock Agentcore only supports \"http\" (reference https://docs.aws.amazon.com/marketplace/latest/userguide/bedrock-agentcore-runtime.html#agentcore-container-requirements)."
                                     },
                                     {
-                                        "DefaultValue": "8080",
+                                        "DefaultValue": "8000",
                                         "Name": "BRAVE_MCP_PORT",
-                                        "Description": "HTTP server port (default: 8080).  Mandatory port for Bedrock Agentcore is 8080 (reference https://docs.aws.amazon.com/marketplace/latest/userguide/bedrock-agentcore-runtime.html#agentcore-container-requirements)."
+                                        "Description": "HTTP server port (default: 8000).  Mandatory port for Bedrock Agentcore is 8000 (reference https://docs.aws.amazon.com/marketplace/latest/userguide/bedrock-agentcore-runtime.html#agentcore-container-requirements)."
                                     },
                                     {
                                         "DefaultValue": "0.0.0.0",
@@ -64,6 +64,11 @@
                                     {
                                         "Name": "BRAVE_MCP_DISABLED_TOOLS",
                                         "Description": "*Optional* When used, specifies a blacklist for supported tools"
+                                    },
+                                    {
+                                        "DefaultValue": "true",
+                                        "Name": "BRAVE_MCP_STATELESS",
+                                        "Description": "Sets HTTP Stateless mode (default: true). When deploying on Bedrock Agentcore, this should be set to true."
                                     }
                                 ]
                             }
