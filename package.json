@@ -41,6 +41,7 @@
     "commander": "14.0.2",
     "dotenv": "17.2.3",
     "express": "5.2.1",
+    "proxy-agent": "^6.4.0",
     "zod": "4.3.5"
   },
   "devDependencies": {
