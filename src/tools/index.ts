@@ -4,6 +4,7 @@ import VideoSearchTool from './videos/index.js';
 import ImageSearchTool from './images/index.js';
 import NewsSearchTool from './news/index.js';
 import SummarizerTool from './summarizer/index.js';
+import LlmContextTool from './llm-context/index.js';
 
 export default {
   WebSearchTool,
@@ -12,4 +13,5 @@ export default {
   ImageSearchTool,
   NewsSearchTool,
   SummarizerTool,
+  LlmContextTool,
 };
