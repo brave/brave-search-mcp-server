@@ -39,6 +39,11 @@ export const configSchema = z.object({
     .default(false)
     .describe('Whether the server should be stateless')
     .optional(),
+  proxyUrl: z
+    .string()
+    .describe('Proxy URL for API requests (e.g., http://127.0.0.1:7890)')
+    .default(process.env.BRAVE_PROXY_URL ?? '')
+    .optional(),
 });
 
 export type SmitheryConfig = z.infer<typeof configSchema>;
@@ -52,6 +57,7 @@ type Configuration = {
   enabledTools: string[];
   disabledTools: string[];
   stateless: boolean;
+  proxyUrl: string;
 };
 
 const state: Configuration & { ready: boolean } = {
@@ -64,6 +70,7 @@ const state: Configuration & { ready: boolean } = {
   enabledTools: [],
   disabledTools: [],
   stateless: false,
+  proxyUrl: process.env.BRAVE_PROXY_URL ?? '',
 };
 
 export function isToolPermittedByUser(toolName: string): boolean {
@@ -105,6 +112,11 @@ export function getOptions(): Configuration | false {
       '--stateless <boolean>',
       'whether the server should be stateless',
       process.env.BRAVE_MCP_STATELESS === 'true' ? true : false
+    )
+    .option(
+      '--proxy-url <string>',
+      'proxy URL for API requests (e.g., http://127.0.0.1:7890)',
+      process.env.BRAVE_PROXY_URL ?? ''
     )
     .allowUnknownOption()
     .parse(process.argv);
@@ -178,6 +190,7 @@ export function getOptions(): Configuration | false {
   state.enabledTools = options.enabledTools;
   state.disabledTools = options.disabledTools;
   state.stateless = options.stateless;
+  state.proxyUrl = options.proxyUrl;
   state.ready = true;
 
   return options as Configuration;

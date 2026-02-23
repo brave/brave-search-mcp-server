@@ -120,6 +120,7 @@ The server supports the following environment variables:
 - `BRAVE_MCP_ENABLED_TOOLS`: When used, specifies a whitelist for supported tools
 - `BRAVE_MCP_DISABLED_TOOLS`: When used, specifies a blacklist for supported tools
 - `BRAVE_MCP_STATELESS`: HTTP stateless mode (default: "true").  When running on Amazon Bedrock Agentcore, set to "true".
+- `BRAVE_PROXY_URL`: Proxy URL for API requests (e.g., "http://127.0.0.1:7890"). Supports HTTP, HTTPS, SOCKS4, and SOCKS5 proxies.
 
 ### Command Line Options
 
@@ -135,9 +136,47 @@ Options:
   --enabled-tools             Tools whitelist (only the specified tools will be enabled)
   --disabled-tools            Tools blacklist (included tools will be disabled)
   --stateless  <boolean>      HTTP Stateless flag
+  --proxy-url <string>        Proxy URL for API requests (e.g., http://127.0.0.1:7890)
 ```
 
-## Installation
+### Using a Proxy
+
+### Using a Proxy
+
+If you need to route API requests through a proxy (for example, in restricted network environments), you can configure a proxy URL using either an environment variable or a command line option:
+
+**Using Environment Variable:**
+```bash
+export BRAVE_PROXY_URL="http://127.0.0.1:7890"
+node dist/index.js --brave-api-key YOUR_API_KEY
+```
+
+**Using Command Line Option:**
+```bash
+node dist/index.js --brave-api-key YOUR_API_KEY --proxy-url "http://127.0.0.1:7890"
+```
+
+**Supported Proxy Types:**
+- HTTP proxy: `http://host:port`
+- HTTPS proxy: `https://host:port`
+- SOCKS4 proxy: `socks4://host:port`
+- SOCKS5 proxy: `socks5://host:port`
+
+**Example with Docker:**
+```json
+{
+  "mcpServers": {
+    "brave-search": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "-e", "BRAVE_API_KEY", "-e", "BRAVE_PROXY_URL", "mcp/brave-search"],
+      "env": {
+        "BRAVE_API_KEY": "YOUR_API_KEY_HERE",
+        "BRAVE_PROXY_URL": "http://127.0.0.1:7890"
+      }
+    }
+  }
+}
+```
 
 ### Installing via Smithery
 

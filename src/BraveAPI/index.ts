@@ -1,6 +1,7 @@
 import type { Endpoints } from './types.js';
 import config from '../config.js';
 import { stringify } from '../utils.js';
+import { ProxyAgent } from 'proxy-agent';
 
 const typeToPathMap: Record<keyof Endpoints, string> = {
   images: '/res/v1/images/search',
@@ -91,7 +92,17 @@ async function issueRequest<T extends keyof Endpoints>(
   // Issue Request
   const urlWithParams = url.toString() + '?' + queryParams.toString();
   const headers = { ...getDefaultRequestHeaders(), ...requestHeaders } as Headers;
-  const response = await fetch(urlWithParams, { headers });
+
+  // Build fetch options
+  const fetchOptions: RequestInit = { headers };
+
+  // Use custom proxy if configured
+  if (config.proxyUrl) {
+    const agent = new ProxyAgent(config.proxyUrl);
+    fetchOptions.agent = agent as any;
+  }
+
+  const response = await fetch(urlWithParams, fetchOptions);
 
   // Handle Error
   if (!response.ok) {
