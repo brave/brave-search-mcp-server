@@ -59,8 +59,10 @@ jobs:
       - name: Generate Changelog
         id: changelog
         run: |
+          COMMIT_MESSAGE=$(git log -1 --pretty=format:'%s')
           echo "# Changelog for ${{ steps.bump-version.outputs.tag }}" > ${{ github.workspace }}/RELEASE_NOTES.md
           echo "* Updated version" >> ${{ github.workspace }}/RELEASE_NOTES.md
+          echo "${COMMIT_MESSAGE}" >> ${{ github.workspace }}/RELEASE_NOTES.md
           echo "release_notes<<EOF" >> $GITHUB_OUTPUT
           cat ${{ github.workspace }}/RELEASE_NOTES.md >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
@@ -157,7 +159,7 @@ jobs:
         env:
           IMAGE_RELEASE_TAG: ${{ steps.bump-version.outputs.tag }}
         run: |
-          jq --arg tag "$IMAGE_RELEASE_TAG" '.ChangeSet[].DetailsDocument.Version.VersionTitle = "Release Version \($tag)' marketplace-revision-release.json > tmp.json && mv tmp.json marketplace-revision-release.json
+          jq --arg tag "$IMAGE_RELEASE_TAG" '.ChangeSet[].DetailsDocument.Version.VersionTitle = "Release Version \($tag)"' marketplace-revision-release.json > tmp.json && mv tmp.json marketplace-revision-release.json
           jq --arg tag "$IMAGE_RELEASE_TAG" '.ChangeSetTags[] |= (if .Key == "Release" then .Value = $tag else . end)' marketplace-revision-release.json > tmp.json && mv tmp.json marketplace-revision-release.json
        # Update Release Notes 
       - name: Update Release Notes in marketplace-revision-release.json
