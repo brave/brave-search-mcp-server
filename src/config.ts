@@ -145,9 +145,11 @@ export function getOptions(): Configuration | false {
     return false;
   }
 
-  if (!options.braveApiKey) {
+  // For HTTP transport, API key can be provided via Authorization header
+  // For STDIO transport, API key is required at startup
+  if (!options.braveApiKey && options.transport !== 'http') {
     console.error(
-      'Error: --brave-api-key is required. You can get one at https://brave.com/search/api/.'
+      'Error: --brave-api-key is required for STDIO transport. You can get one at https://brave.com/search/api/.'
     );
     return false;
   }

@@ -112,7 +112,7 @@ Generates AI-powered summaries from web search results using Brave's summarizati
 
 The server supports the following environment variables:
 
-- `BRAVE_API_KEY`: Your Brave Search API key (required)
+- `BRAVE_API_KEY`: Your Brave Search API key (required for STDIO transport, optional for HTTP transport if using Authorization header)
 - `BRAVE_MCP_TRANSPORT`: Transport mode ("http" or "stdio", default: "stdio")
 - `BRAVE_MCP_PORT`: HTTP server port (default: 8000)
 - `BRAVE_MCP_HOST`: HTTP server host (default: "0.0.0.0")
@@ -120,6 +120,25 @@ The server supports the following environment variables:
 - `BRAVE_MCP_ENABLED_TOOLS`: When used, specifies a whitelist for supported tools
 - `BRAVE_MCP_DISABLED_TOOLS`: When used, specifies a blacklist for supported tools
 - `BRAVE_MCP_STATELESS`: HTTP stateless mode (default: "true").  When running on Amazon Bedrock Agentcore, set to "true".
+
+### HTTP Transport Mode
+
+When using HTTP transport, you have two options for providing the API key:
+
+1. **Environment Variable** (traditional): Set `BRAVE_API_KEY` when starting the server
+2. **Authorization Header** (recommended): Send the API key with each request using the `Authorization` header
+
+**Authorization Header Format:**
+```
+Authorization: Bearer YOUR_API_KEY_HERE
+```
+
+Or simply:
+```
+Authorization: YOUR_API_KEY_HERE
+```
+
+If both the environment variable and Authorization header are provided, the Authorization header takes precedence for that request.
 
 ### Command Line Options
 
