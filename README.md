@@ -137,6 +137,10 @@ Options:
   --stateless  <boolean>      HTTP Stateless flag
 ```
 
+## Hosted deployment
+
+A hosted deployment is available on [Fronteir AI](https://fronteir.ai/mcp/brave-brave-search-mcp-server).
+
 ## Installation
 
 ### Installing via Smithery
