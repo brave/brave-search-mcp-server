@@ -4,8 +4,10 @@ import type { QueryParams as VideoQueryParams } from '../tools/videos/params.js'
 import type { QueryParams as NewsQueryParams } from '../tools/news/params.js';
 import type { LocalPoisParams, LocalDescriptionsParams } from '../tools/local/params.js';
 import type { SummarizerQueryParams } from '../tools/summarizer/params.js';
+import type { QueryParams as LlmContextQueryParams } from '../tools/llm-context/params.js';
 import type { WebSearchApiResponse } from '../tools/web/types.js';
 import type { SummarizerSearchApiResponse } from '../tools/summarizer/types.js';
+import type { LlmContextApiResponse } from '../tools/llm-context/types.js';
 import type { ImageSearchApiResponse } from '../tools/images/types.js';
 import type { VideoSearchApiResponse } from '../tools/videos/types.js';
 import type { NewsSearchApiResponse } from '../tools/news/types.js';
@@ -67,6 +69,11 @@ export type Endpoints = {
   summarizer: {
     params: SummarizerQueryParams;
     response: SummarizerSearchApiResponse;
+    requestHeaders: Headers;
+  };
+  llmContext: {
+    params: LlmContextQueryParams;
+    response: LlmContextApiResponse;
     requestHeaders: Headers;
   };
 };

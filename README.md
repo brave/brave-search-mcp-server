@@ -98,6 +98,25 @@ Generates AI-powered summaries from web search results using Brave's summarizati
 
 **Usage:** First perform a web search with `summary: true`, then use the returned summary key with this tool.
 
+### LLM Context (`brave_llm_context`)
+Searches the web and returns pre-extracted, LLM-optimized content including markdown text, structured data, code blocks, forum discussions, and YouTube captions. Unlike `brave_web_search` which returns URLs and snippets, this tool returns the actual extracted page content ready for LLM consumption.
+
+**Parameters:**
+- `query` (string, required): Search terms (max 400 chars, 50 words)
+- `country` (string, optional): Country code (default: "US")
+- `search_lang` (string, optional): Search language (default: "en")
+- `count` (number, optional): Results to consider (1-50, default: 20)
+- `maximum_number_of_urls` (number, optional): Max URLs to extract from (1-50, default: 20)
+- `maximum_number_of_tokens` (number, optional): Total token budget (1024-32768, default: 8192)
+- `maximum_number_of_snippets` (number, optional): Max snippets across results (1-100, default: 50)
+- `maximum_number_of_tokens_per_url` (number, optional): Per-URL token limit (512-8192, default: 4096)
+- `maximum_number_of_snippets_per_url` (number, optional): Per-URL snippet limit (1-100, default: 50)
+- `context_threshold_mode` (string, optional): Relevance filtering ("strict", "balanced", "lenient", "disabled", default: "balanced")
+- `enable_local` (boolean, optional): Enable location-aware results (auto-detected if not specified)
+- `goggles` (array, optional): Custom re-ranking definitions
+
+**Note:** Requires a Search plan or higher. See the [LLM Context API documentation](https://api-dashboard.search.brave.com/documentation/services/llm-context) for details.
+
 ## Configuration
 
 ### Getting an API Key

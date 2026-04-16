@@ -10,6 +10,7 @@ const typeToPathMap: Record<keyof Endpoints, string> = {
   videos: '/res/v1/videos/search',
   web: '/res/v1/web/search',
   summarizer: '/res/v1/summarizer/search',
+  llmContext: '/res/v1/llm/context',
 };
 
 const getDefaultRequestHeaders = (): Record<string, string> => {
