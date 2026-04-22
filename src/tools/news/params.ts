@@ -54,8 +54,15 @@ export const params = z.object({
     )
     .optional(),
   freshness: z
-    .union([z.literal('pd'), z.literal('pw'), z.literal('pm'), z.literal('py'), z.string()])
-    .default('pd')
+    .union([
+      z.enum(['pd', 'pw', 'pm', 'py']),
+      z
+        .string()
+        .regex(
+          /^\d{4}-\d{2}-\d{2}to\d{4}-\d{2}-\d{2}$/,
+          "Use 'pd', 'pw', 'pm', or 'py' for a relative discovery window, or a custom range as YYYY-MM-DDtoYYYY-MM-DD (e.g. 2022-04-01to2022-07-30)."
+        ),
+    ])
     .describe(
       "Filters search results by when they were discovered. The following values are supported: 'pd' - Discovered within the last 24 hours. 'pw' - Discovered within the last 7 Days. 'pm' - Discovered within the last 31 Days. 'py' - Discovered within the last 365 Days. 'YYYY-MM-DDtoYYYY-MM-DD' - Timeframe is also supported by specifying the date range e.g. 2022-04-01to2022-07-30."
     )
