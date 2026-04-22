@@ -6,40 +6,62 @@ import tools from './tools/index.js';
 
 dotenv.config({ debug: false, quiet: true });
 
+function parseToolNameList(value: string | string[] | undefined | null): string[] {
+  if (value == null) return [];
+  if (Array.isArray(value))
+    return value.map((t: string) => t.trim()).filter((t: string) => t.length > 0);
+  return value
+    .trim()
+    .split(/\s+/)
+    .filter((t: string) => t.length > 0);
+}
+
 // Config schema for Smithery.ai
-export const configSchema = z.object({
-  braveApiKey: z
-    .string()
-    .describe('Your API key')
-    .default(process.env.BRAVE_API_KEY ?? ''),
-  enabledTools: z
-    .array(z.string())
-    .describe('Enforces a tool whitelist (cannot be used with disabledTools)')
-    .optional(),
-  disabledTools: z
-    .array(z.string())
-    .describe('Enforces a tool blacklist (cannot be used with enabledTools)')
-    .optional(),
-  loggingLevel: z
-    .enum([
-      'debug',
-      'error',
-      'info',
-      'notice',
-      'warning',
-      'critical',
-      'alert',
-      'emergency',
-    ] as const)
-    .default('info')
-    .describe('Desired logging level')
-    .optional(),
-  stateless: z
-    .boolean()
-    .default(false)
-    .describe('Whether the server should be stateless')
-    .optional(),
-});
+export const configSchema = z
+  .object({
+    braveApiKey: z
+      .string()
+      .describe('Your API key')
+      .default(process.env.BRAVE_API_KEY ?? ''),
+    enabledTools: z
+      .array(z.string())
+      .describe('Enforces a tool whitelist (cannot be used with disabledTools)')
+      .optional(),
+    disabledTools: z
+      .array(z.string())
+      .describe('Enforces a tool blacklist (cannot be used with enabledTools)')
+      .optional(),
+    loggingLevel: z
+      .enum([
+        'debug',
+        'error',
+        'info',
+        'notice',
+        'warning',
+        'critical',
+        'alert',
+        'emergency',
+      ] as const)
+      .default('info')
+      .describe('Desired logging level')
+      .optional(),
+    stateless: z
+      .boolean()
+      .default(false)
+      .describe('Whether the server should be stateless')
+      .optional(),
+  })
+  .refine(
+    (config) => {
+      const enabledTools = parseToolNameList(config.enabledTools);
+      const disabledTools = parseToolNameList(config.disabledTools);
+      return enabledTools.length === 0 || disabledTools.length === 0;
+    },
+    {
+      message: 'enabledTools and disabledTools cannot be used together',
+      path: ['enabledTools', 'disabledTools'],
+    }
+  );
 
 export type SmitheryConfig = z.infer<typeof configSchema>;
 
@@ -113,20 +135,20 @@ export function getOptions(): Configuration | false {
   const toolNames = Object.values(tools).map((tool) => tool.name);
 
   // Validate tool inclusion configuration
-  const enabledTools = options.enabledTools.filter((t: string) => t.trim().length > 0);
-  const disabledTools = options.disabledTools.filter((t: string) => t.trim().length > 0);
+  const enabledTools = parseToolNameList(options.enabledTools);
+  const disabledTools = parseToolNameList(options.disabledTools);
 
   if (enabledTools.length > 0 && disabledTools.length > 0) {
     console.error('Error: --enabled-tools and --disabled-tools cannot be used together');
     return false;
   }
 
-  if (
-    [...enabledTools, ...disabledTools].some(
-      (t) => t.trim().length > 0 && !toolNames.includes(t.trim())
-    )
-  ) {
-    console.error(`Invalid tool name used. Must be one of: ${toolNames.join(', ')}`);
+  const invalidToolNames = [...enabledTools, ...disabledTools].filter(
+    (t: string) => !toolNames.includes(t)
+  );
+  if (invalidToolNames.length > 0) {
+    console.error(`Invalid tool name(s) used: ${invalidToolNames.join(', ')}`);
+    console.error(`Valid tool names are: ${toolNames.join(', ')}`);
     return false;
   }
 
@@ -175,8 +197,8 @@ export function getOptions(): Configuration | false {
   state.port = options.port;
   state.host = options.host;
   state.loggingLevel = options.loggingLevel;
-  state.enabledTools = options.enabledTools;
-  state.disabledTools = options.disabledTools;
+  state.enabledTools = enabledTools;
+  state.disabledTools = disabledTools;
   state.stateless = options.stateless;
   state.ready = true;
 

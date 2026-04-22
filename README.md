@@ -117,8 +117,8 @@ The server supports the following environment variables:
 - `BRAVE_MCP_PORT`: HTTP server port (default: 8000)
 - `BRAVE_MCP_HOST`: HTTP server host (default: "0.0.0.0")
 - `BRAVE_MCP_LOG_LEVEL`: Desired logging level("debug", "info", "notice", "warning", "error", "critical", "alert", or "emergency", default: "info")
-- `BRAVE_MCP_ENABLED_TOOLS`: When used, specifies a whitelist for supported tools
-- `BRAVE_MCP_DISABLED_TOOLS`: When used, specifies a blacklist for supported tools
+- `BRAVE_MCP_ENABLED_TOOLS`: When used, specifies a space-separated whitelist for supported tools
+- `BRAVE_MCP_DISABLED_TOOLS`: When used, specifies a space-separated blacklist for supported tools
 - `BRAVE_MCP_STATELESS`: HTTP stateless mode (default: "true").  When running on Amazon Bedrock Agentcore, set to "true".
 
 ### Command Line Options
