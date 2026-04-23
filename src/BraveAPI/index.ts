@@ -59,11 +59,18 @@ async function issueRequest<T extends keyof Endpoints>(
 
     // Handle `result_filter` parameter
     if (key === 'result_filter') {
-      // Handle special behavior of 'summary' parameter:
-      // Requires `result_filter` to be empty, or only contain 'summarizer'
-      // see: https://bravesoftware.slack.com/archives/C01NNFM9XMM/p1751654841090929
+      /**
+       * Handle special behavior of 'summary' parameter:
+       * When 'summary' is true, we need to either set result_filter to
+       * 'summarizer', or leave it excluded entirely. This is due to a known
+       * bug in the now-deprecated Summarizer endpoint. Setting it to
+       * 'summarizer' will result in no web results being returned, which is
+       * not ideal. As such, we skip the parameter entirely.
+       * See https://github.com/brave/brave-search-mcp-server/issues/272 and
+       * https://bravesoftware.slack.com/archives/C01NNFM9XMM/p1751654841090929
+       */
       if ('summary' in parameters && parameters.summary === true) {
-        queryParams.set(key, 'summarizer');
+        continue;
       } else if (Array.isArray(value) && value.length > 0) {
         queryParams.set(key, value.join(','));
       }
