@@ -20,6 +20,8 @@ export const name = 'brave_web_search';
 
 export const annotations: ToolAnnotations = {
   title: 'Brave Web Search',
+  readOnlyHint: true, // Only reads data via external API, no modifications
+  idempotentHint: true, // Same query = same API operation, repeatable without side effects
   openWorldHint: true,
 };
 
@@ -34,8 +36,15 @@ export const description = `
         - Research requiring diverse result types (web pages, images, reviews, etc.)
 
     Returns a JSON list of web results with title, description, and URL.
-    
+
     When the "results_filter" parameter is empty, JSON results may also contain FAQ, Discussions, News, and Video results.
+
+    Context Control Tips:
+        - Start with count=5 for initial queries to minimize context usage
+        - Use count=10 (default) for balanced information vs. context efficiency
+        - For follow-up searches, use offset parameter (e.g., offset=10) to paginate through results
+        - Maximum pagination: offset can only go up to 9, limiting total accessible results to ~29 (count=20, offset=9)
+        - Consider using result_filter to limit result types and reduce context usage
 `;
 
 export const execute = async (params: QueryParams) => {

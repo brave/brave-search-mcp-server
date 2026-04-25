@@ -32,14 +32,18 @@ export const params = z.object({
     .min(1)
     .max(50)
     .default(20)
-    .describe('Number of results (1-50, default 20)')
+    .describe(
+      'Number of results (1-50, default 20). Start with 5-10 for breaking news, use 20 for comprehensive coverage.'
+    )
     .optional(),
   offset: z
     .int()
     .min(0)
     .max(9)
     .default(0)
-    .describe('Pagination offset (max 9, default 0)')
+    .describe(
+      'Pagination offset (0-9, default 0). Use to get more articles: offset=20 gets articles 21-40 (when count=20).'
+    )
     .optional(),
   spellcheck: z
     .boolean()

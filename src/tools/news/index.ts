@@ -8,12 +8,14 @@ export const name = 'brave_news_search';
 
 export const annotations: ToolAnnotations = {
   title: 'Brave News Search',
+  readOnlyHint: true, // Only reads data via external API, no modifications
+  idempotentHint: true, // Same query = same API operation, repeatable without side effects
   openWorldHint: true,
 };
 
 export const description = `
     This tool searches for news articles using Brave's News Search API based on the user's query. Use it when you need current news information, breaking news updates, or articles about specific topics, events, or entities.
-    
+
     When to use:
         - Finding recent news articles on specific topics
         - Getting breaking news updates
@@ -21,13 +23,20 @@ export const description = `
         - Gathering news sources and headlines for analysis
 
     Returns a JSON list of news-related results with title, url, and description. Some results may contain snippets of text from the article.
-    
+
     When relaying results in markdown-supporting environments, always cite sources with hyperlinks.
-    
+
     Examples:
         - "According to [Reuters](https://www.reuters.com/technology/china-bans/), China bans uncertified and recalled power banks on planes".
         - "The [New York Times](https://www.nytimes.com/2025/06/27/us/technology/ev-sales.html) reports that Tesla's EV sales have increased by 20%".
         - "According to [BBC News](https://www.bbc.com/news/world-europe-65910000), the UK government has announced a new policy to support renewable energy".
+
+    Context Control Tips:
+        - Start with count=5-10 for breaking news queries to get latest headlines efficiently
+        - Use count=20 (default) for comprehensive news coverage
+        - For more articles, use offset parameter (e.g., offset=5) to paginate through results
+        - Maximum pagination: offset can only go up to 9, limiting total to ~59 articles (count=50, offset=9)
+        - Set freshness='pd' for last 24 hours to reduce result volume and improve relevance
 `;
 
 export const execute = async (params: QueryParams) => {
