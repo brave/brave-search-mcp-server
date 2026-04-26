@@ -96,7 +96,7 @@ export interface LocationResult extends Result {
   results?: LocationWebResult;
   /** IANA timezone identifier. */
   timezone?: string;
-  /** The utc offset of the timezone. */
+  /** The UTC offset of the timezone, in minutes. */
   timezone_offset?: number;
 }
 
