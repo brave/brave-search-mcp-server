@@ -1,5 +1,4 @@
 import type { TextContent, ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
-import { z } from 'zod';
 import API from '../../BraveAPI/index.js';
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import {

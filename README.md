@@ -116,6 +116,8 @@ Searches for points of interest (POIs) in a specified geographic area using Brav
 - `spellcheck` (boolean, optional): Whether to spellcheck the query (default `true`).
 - `geoloc` (string, optional): Optional geolocation token used to refine results.
 
+**Note:** Provide a search area via `latitude` + `longitude` or `location` (or both). When neither is provided and `query` is also empty, the API returns a 422 with a descriptive error.
+
 **Optional request headers:**
 - `api-version` (string, optional): Brave API version (`YYYY-MM-DD`)
 - `accept` (string, optional): Response media type (`application/json` or `*/*`)
