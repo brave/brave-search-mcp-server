@@ -1,6 +1,6 @@
 # Brave Search MCP Server
 
-An MCP server implementation that integrates the Brave Search API, providing comprehensive search capabilities including web search, local business search, image search, video search, news search, LLM context, and AI-powered summarization. This project supports both STDIO and HTTP transports, with STDIO as the default mode.
+An MCP server implementation that integrates the Brave Search API, providing comprehensive search capabilities including web search, local business search, place search, image search, video search, news search, LLM context, and AI-powered summarization. This project supports both STDIO and HTTP transports, with STDIO as the default mode.
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/brave/brave-search-mcp-server)
 
@@ -97,6 +97,32 @@ Generates AI-powered summaries from web search results using Brave's summarizati
 - `inline_references` (boolean, optional): Add source URL references (default: false)
 
 **Usage:** First perform a web search with `summary: true`, then use the returned summary key with this tool.
+
+### Place Search (`brave_place_search`)
+Searches for points of interest (POIs) in a specified geographic area using Brave's Place Search API. Returns rich, structured place data including name, address, opening hours, contact info, ratings, photos, categories, and timezone.
+
+**Parameters:**
+- `query` (string, optional): Query string used to refine the POI search (max 400 chars, 50 words). When omitted, returns general points of interest in the supplied area.
+- `latitude` (number, optional): Latitude of the search center (-90 to 90). Typically paired with `longitude`.
+- `longitude` (number, optional): Longitude of the search center (-180 to 180). Typically paired with `latitude`.
+- `location` (string, optional): Location string used as an alternative to `latitude`/`longitude`. For US locations prefer the form `<city> <state> <country name>` (e.g., `san francisco ca united states`); for non-US locations use `<city> <country name>` (e.g., `tokyo japan`).
+- `radius` (number, optional): Search radius around the supplied coordinates, in meters. If omitted, the search is performed globally.
+- `count` (number, optional): Number of results to return (1-50, default 20).
+- `country` (string, optional): Two-letter country code (default `US`).
+- `search_lang` (string, optional): Search language (default `en`).
+- `ui_lang` (string, optional): UI language (default `en-US`).
+- `units` (string, optional): Distance units (`metric` or `imperial`, default `metric`).
+- `safesearch` (string, optional): Safe search level (`off`, `moderate`, `strict`, default `strict`).
+- `spellcheck` (boolean, optional): Whether to spellcheck the query (default `true`).
+- `geoloc` (string, optional): Optional geolocation token used to refine results.
+
+**Note:** Provide a search area via `latitude` + `longitude` or `location` (or both). When neither is provided and `query` is also empty, the API returns a 422 with a descriptive error.
+
+**Optional request headers:**
+- `api-version` (string, optional): Brave API version (`YYYY-MM-DD`)
+- `accept` (string, optional): Response media type (`application/json` or `*/*`)
+- `cache-control` (string, optional): Use `no-cache` to request fresh content
+- `user-agent` (string, optional): User agent originating the request
 
 ### LLM Context (`brave_llm_context`)
 Retrieves pre-extracted web content optimized for AI agents, LLM grounding, and RAG pipelines.

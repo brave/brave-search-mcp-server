@@ -11,6 +11,7 @@ const typeToPathMap: Record<keyof Endpoints, string> = {
   web: '/res/v1/web/search',
   summarizer: '/res/v1/summarizer/search',
   llmContext: '/res/v1/llm/context',
+  placeSearch: '/res/v1/local/place_search',
 };
 
 const getDefaultRequestHeaders = (): Record<string, string> => {

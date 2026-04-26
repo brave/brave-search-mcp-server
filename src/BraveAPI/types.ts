@@ -15,6 +15,11 @@ import type {
 } from '../tools/local/types.js';
 import type { LlmQueryParams, LlmRequestHeaders } from '../tools/llm_context/schemas/input.js';
 import type { LlmContextSearchApiResponse } from '../tools/llm_context/schemas/output.js';
+import type {
+  PlaceSearchQueryParams,
+  PlaceSearchRequestHeaders,
+} from '../tools/place_search/schemas/input.js';
+import type { PlaceSearchApiResponse } from '../tools/place_search/schemas/output.js';
 
 export interface RateLimitErrorResponse {
   type: 'ErrorResponse';
@@ -75,5 +80,10 @@ export type Endpoints = {
     params: LlmQueryParams;
     response: LlmContextSearchApiResponse;
     requestHeaders: LlmRequestHeaders;
+  };
+  placeSearch: {
+    params: PlaceSearchQueryParams;
+    response: PlaceSearchApiResponse;
+    requestHeaders: PlaceSearchRequestHeaders;
   };
 };

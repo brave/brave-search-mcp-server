@@ -5,6 +5,7 @@ import ImageSearchTool from './images/index.js';
 import NewsSearchTool from './news/index.js';
 import SummarizerTool from './summarizer/index.js';
 import LlmContextTool from './llm_context/index.js';
+import PlaceSearchTool from './place_search/index.js';
 
 export default {
   WebSearchTool,
@@ -14,4 +15,5 @@ export default {
   NewsSearchTool,
   SummarizerTool,
   LlmContextTool,
+  PlaceSearchTool,
 };
