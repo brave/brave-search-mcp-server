@@ -149,6 +149,7 @@ export const RequestParamsSchema = z.object({
       (str) => str.length === 0 || str.split(/\s+/).length <= 50,
       'Query cannot exceed 50 words'
     )
+    .transform((str) => (str.length === 0 ? undefined : str))
     .describe(
       'Query string to search for points of interest in an area. If no query is provided, the endpoint will return general points of interest in the given area.'
     )
