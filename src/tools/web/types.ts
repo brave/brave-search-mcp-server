@@ -445,7 +445,7 @@ interface LocationResult extends Result {
   results?: LocationWebResult;
   /** IANA timezone identifier. */
   timezone?: string;
-  /** The utc offset of the timezone. */
+  /** The UTC offset of the timezone, in minutes from UTC. */
   timezone_offset?: number;
 }
 
