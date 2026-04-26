@@ -150,8 +150,22 @@ export const RequestParamsSchema = z.object({
       'Query cannot exceed 50 words'
     )
     .describe(
-      'Optional query string used to refine the points-of-interest search. When omitted (and at least one of `latitude`/`longitude` or `location` is supplied), the endpoint returns general points of interest in the supplied area. Maximum of 400 characters and 50 words.'
+      'Query string to search for points of interest in an area. If no query is provided, the endpoint will return general points of interest in the given area.'
     )
+    .optional(),
+  radius: z
+    .number()
+    .min(0)
+    .describe(
+      'Search radius around the supplied coordinates, in meters. If omitted, the search is performed globally.'
+    )
+    .optional(),
+  count: z
+    .number()
+    .int()
+    .min(1)
+    .max(50)
+    .describe('Number of results to return. Maximum is 50. Default is 20.')
     .optional(),
   latitude: z
     .number()
@@ -176,20 +190,6 @@ export const RequestParamsSchema = z.object({
     .describe(
       "Location string to search around, used as an alternative to `latitude` and `longitude`. For US locations prefer the form '<city> <state> <country name>' (e.g. 'san francisco ca united states'); for non-US locations use '<city> <country name>' (e.g. 'tokyo japan'). No commas or special characters needed; capitalization does not matter."
     )
-    .optional(),
-  radius: z
-    .number()
-    .min(0)
-    .describe(
-      'Search radius around the supplied coordinates, in meters. If omitted, the search is performed globally.'
-    )
-    .optional(),
-  count: z
-    .number()
-    .int()
-    .min(1)
-    .max(50)
-    .describe('Number of results to return. Maximum is 50. Default is 20.')
     .optional(),
   country: CountryCodesSchema.describe(
     "Two-letter country code (ISO 3166-1 alpha-2) used to scope the search. Defaults to 'US'."
