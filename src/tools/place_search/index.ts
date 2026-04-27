@@ -40,12 +40,12 @@ export const execute = async (params: QueryParams) => {
     parsedParams,
     parsedHeaders
   );
-  const { success, data, error } = PlaceSearchApiResponseSchema.safeParse(response);
-  const payload = success ? data : z.treeifyError(error);
+  const parsed = PlaceSearchApiResponseSchema.safeParse(response);
+  const payload = parsed.success ? parsed.data : response;
 
   return {
     content: [{ type: 'text', text: JSON.stringify(payload) } as TextContent],
-    isError: !success,
+    isError: false,
     structuredContent: payload,
   };
 };
