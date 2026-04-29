@@ -54,18 +54,16 @@ jobs:
           set -euo pipefail
           PKG=$(node -p "require('./package.json').name")
           PKG_JSON_VERSION=$(node -p "require('./package.json').version")
-          NPM_LATEST=$(npm view "$PKG" version 2>/dev/null || true)
-          if [ -z "$NPM_LATEST" ]; then
-            echo "::warning::Could not read npm latest for ${PKG}; using 0.0.0 for comparison."
-            NPM_LATEST=0.0.0
-          fi
-
           EXPLICIT_RAW=$(printf '%s' "${EXPLICIT_VERSION:-}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
           if [ -z "$EXPLICIT_RAW" ]; then
             TAG=$(npm version patch --no-git-tag-version)
             VERSION=${TAG#v}
           else
+            NPM_LATEST=$(npm view "$PKG" version) || {
+              echo "::error::Could not read the published version for comparison from npm for '${PKG}'."
+              exit 1
+            }
             CLEANED=$(node -e "const semver=require('semver');const c=semver.clean(process.argv[1]);if(!c){process.exit(1)};process.stdout.write(c)" "$EXPLICIT_RAW") || {
               echo "::error::Invalid semver for explicit version: ${EXPLICIT_RAW}"
               exit 1
