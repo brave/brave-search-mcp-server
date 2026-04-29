@@ -44,7 +44,6 @@ const normalizeGoggle = (value: unknown): string | null => {
 async function issueRequest<T extends keyof Endpoints>(
   endpoint: T,
   parameters: Endpoints[T]['params'],
-  // TODO (Sampson): Implement support for custom request headers (helpful for POIs, etc.)
   requestHeaders: Endpoints[T]['requestHeaders'] = {} as Endpoints[T]['requestHeaders']
 ): Promise<Endpoints[T]['response']> {
   // TODO (Sampson): Improve rate-limit logic to support self-throttling and n-keys
