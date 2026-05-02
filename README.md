@@ -196,14 +196,6 @@ Options:
 
 ## Installation
 
-### Installing via Smithery
-
-To install Brave Search automatically via [Smithery](https://smithery.ai/server/brave):
-
-```bash
-npx -y @smithery/cli install brave
-```
-
 ### Usage with Claude Desktop
 
 Add this to your `claude_desktop_config.json`:
@@ -371,11 +363,6 @@ npx @modelcontextprotocol/inspector node dist/index.js
 
 STDIO is the default mode. For HTTP mode testing, add `--transport http` to the arguments in the Inspector UI.
 
-### Testing via Smithery.AI
-
-1. Establish and acquire a smithery.ai account and API key
-2. Run `npm run install`, `npm run smithery:build`, and lastly `npm run smithery:dev` to begin testing
-
 ### Available Scripts
 
 - `npm run build`: Build the TypeScript project
@@ -386,8 +373,6 @@ STDIO is the default mode. For HTTP mode testing, add `--transport http` to the 
 
 - `npm run inspector`: Launch an instance of MCP Inspector
 - `npm run inspector:stdio`: Launch a instance of MCP Inspector, configured for STDIO
-- `npm run smithery:build`: Build the project for smithery.ai
-- `npm run smithery:dev`: Launch the development environment for smithery.ai
 
 ### Docker Compose
 

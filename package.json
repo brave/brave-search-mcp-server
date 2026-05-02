@@ -27,8 +27,6 @@
   ],
   "scripts": {
     "build": "tsc && shx chmod +x dist/*.js",
-    "smithery:build": "smithery build",
-    "smithery:dev": "smithery dev",
     "prepare": "npm run format && npm run build",
     "watch": "tsc --watch",
     "format": "prettier --write \"src/**/*.ts\"",
@@ -45,16 +43,11 @@
   },
   "devDependencies": {
     "@types/express": "5.0.6",
-    "@smithery/cli": "2.2.1",
     "@types/node": "24.10.13",
     "prettier": "3.8.1",
     "semver": "7.7.3",
     "shx": "0.4.0",
     "tsx": "4.21.0",
     "typescript": "5.9.3"
-  },
-  "overrides": {
-    "formdata-node": "6.0.3",
-    "tmp": "0.2.5"
   }
 }

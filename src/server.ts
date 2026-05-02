@@ -2,16 +2,8 @@ import tools from './tools/index.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import pkg from '../package.json' with { type: 'json' };
 import { isToolPermittedByUser } from './config.js';
-import { type SmitheryConfig, setOptions } from './config.js';
-export { configSchema } from './config.js';
 
-type CreateMcpServerOptions = {
-  config: SmitheryConfig;
-};
-
-export default function createMcpServer(options?: CreateMcpServerOptions): McpServer {
-  if (options?.config) setOptions(options.config);
-
+export default function createMcpServer(): McpServer {
   const mcpServer = new McpServer(
     {
       version: pkg.version,

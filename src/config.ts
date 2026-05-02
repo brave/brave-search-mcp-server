@@ -1,7 +1,6 @@
 import { LoggingLevel, LoggingLevelSchema } from '@modelcontextprotocol/sdk/types.js';
 import { Command } from 'commander';
 import dotenv from 'dotenv';
-import { z } from 'zod';
 import tools from './tools/index.js';
 
 dotenv.config({ debug: false, quiet: true });
@@ -15,55 +14,6 @@ function parseToolNameList(value: string | string[] | undefined | null): string[
     .split(/\s+/)
     .filter((t: string) => t.length > 0);
 }
-
-// Config schema for Smithery.ai
-export const configSchema = z
-  .object({
-    braveApiKey: z
-      .string()
-      .describe('Your API key')
-      .default(process.env.BRAVE_API_KEY ?? ''),
-    enabledTools: z
-      .array(z.string())
-      .describe('Enforces a tool whitelist (cannot be used with disabledTools)')
-      .optional(),
-    disabledTools: z
-      .array(z.string())
-      .describe('Enforces a tool blacklist (cannot be used with enabledTools)')
-      .optional(),
-    loggingLevel: z
-      .enum([
-        'debug',
-        'error',
-        'info',
-        'notice',
-        'warning',
-        'critical',
-        'alert',
-        'emergency',
-      ] as const)
-      .default('info')
-      .describe('Desired logging level')
-      .optional(),
-    stateless: z
-      .boolean()
-      .default(false)
-      .describe('Whether the server should be stateless')
-      .optional(),
-  })
-  .refine(
-    (config) => {
-      const enabledTools = parseToolNameList(config.enabledTools);
-      const disabledTools = parseToolNameList(config.disabledTools);
-      return enabledTools.length === 0 || disabledTools.length === 0;
-    },
-    {
-      message: 'enabledTools and disabledTools cannot be used together',
-      path: ['enabledTools', 'disabledTools'],
-    }
-  );
-
-export type SmitheryConfig = z.infer<typeof configSchema>;
 
 type Configuration = {
   transport: 'stdio' | 'http';
@@ -203,10 +153,6 @@ export function getOptions(): Configuration | false {
   state.ready = true;
 
   return options as Configuration;
-}
-
-export function setOptions(options: SmitheryConfig) {
-  return Object.assign(state, options);
 }
 
 export default state;
