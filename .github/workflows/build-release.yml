@@ -61,11 +61,13 @@ jobs:
             VERSION=${TAG#v}
           else
             NPM_LATEST=$(npm view "$PKG" version) || {
-              echo "::error::Could not read the published version for comparison from npm for '${PKG}'."
+              printf 'Package name (raw): %q\n' "$PKG" >&2
+              echo "::error::Could not read the published version for comparison from npm (see log for package name)."
               exit 1
             }
             CLEANED=$(node -e "const semver=require('semver');const c=semver.clean(process.argv[1]);if(!c){process.exit(1)};process.stdout.write(c)" "$EXPLICIT_RAW") || {
-              echo "::error::Invalid semver for explicit version: ${EXPLICIT_RAW}"
+              printf 'Received explicit version input (raw): %q\n' "$EXPLICIT_RAW" >&2
+              echo "::error::Invalid semver for explicit version (see log for raw value)."
               exit 1
             }
             node -e "const semver=require('semver');const exp=process.argv[1];const latest=process.argv[2];const pkg=process.argv[3];\
