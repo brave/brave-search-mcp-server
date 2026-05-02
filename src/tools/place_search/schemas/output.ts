@@ -6,12 +6,19 @@ import { z } from 'zod';
  */
 
 const ThumbnailSchema = z.looseObject({
-  src: z.string().describe('The served URL of the picture thumbnail.').optional(),
-  original: z.string().describe('The original URL of the image.').optional(),
+  src: z.string().describe('The served URL of the picture thumbnail.'),
+  alt: z.string().describe('The alt text for the thumbnail.').optional(),
+  height: z.number().describe('The height of the thumbnail.').optional(),
+  width: z.number().describe('The width of the thumbnail.').optional(),
+  bg_color: z.string().describe('The background color of the thumbnail.').optional(),
+  original: z.url().describe('The original URL of the image.').optional(),
+  logo: z.boolean().describe('Whether the thumbnail is a logo.').optional(),
+  duplicated: z.boolean().describe('Whether the thumbnail is duplicated.').optional(),
+  theme: z.string().describe('The theme of the thumbnail (e.g. "light", "dark").').optional(),
 });
 
 const PostalAddressSchema = z.looseObject({
-  type: z.literal('PostalAddress').optional(),
+  type: z.literal('PostalAddress'),
   country: z.string().describe('The country associated with the location.').optional(),
   postalCode: z.string().describe('The postal code associated with the location.').optional(),
   streetAddress: z.string().describe('The street address associated with the location.').optional(),
@@ -23,7 +30,7 @@ const PostalAddressSchema = z.looseObject({
     .string()
     .describe('The address locality or subregion associated with the location.')
     .optional(),
-  displayAddress: z.string().describe('The displayed address string.').optional(),
+  displayAddress: z.string().describe('The displayed address string.'),
 });
 
 const DayOpeningHoursSchema = z.looseObject({
@@ -123,9 +130,9 @@ const MetaUrlSchema = z.looseObject({
 
 const ResultsSchema = z.looseObject({
   title: z.string().describe('The display title of the location.'),
-  url: z.string().describe('Primary URL associated with the location.'),
-  is_source_local: z.boolean().optional(),
-  is_source_both: z.boolean().optional(),
+  url: z.url().describe('Primary URL associated with the location.'),
+  is_source_local: z.boolean(),
+  is_source_both: z.boolean(),
   description: z
     .string()
     .describe('Short description of the location (e.g. "Plaza", "Theater").')
@@ -147,9 +154,9 @@ const ResultsSchema = z.looseObject({
 
 const ResultSchema = z.looseObject({
   title: z.string().describe('The display title of the location.'),
-  url: z.string().describe('Primary URL associated with the location.'),
-  is_source_local: z.boolean().optional(),
-  is_source_both: z.boolean().optional(),
+  url: z.url().describe('Primary URL associated with the location.'),
+  is_source_local: z.boolean(),
+  is_source_both: z.boolean(),
   description: z
     .string()
     .describe('Short description of the location (e.g. "Plaza", "Theater").')
@@ -168,11 +175,11 @@ const ResultSchema = z.looseObject({
   family_friendly: z.boolean().optional(),
   type: z.literal('location_result').describe('Result type identifier.').optional(),
   provider_url: z
-    .string()
+    .url()
     .describe('URL of the upstream provider for this result. May be an empty string.')
     .optional(),
   coordinates: z
-    .array(z.number())
+    .tuple([z.number(), z.number()])
     .describe('Latitude/longitude pair for the location, when available.')
     .optional(),
   zoom_level: z.number().describe('Suggested zoom level when displaying on a map.').optional(),
@@ -222,8 +229,97 @@ const QuerySchema = z.looseObject({
   show_strict_warning: z.boolean().optional(),
 });
 
+const PoiSchema = z.looseObject({
+  title: z.string().describe('The title of the POI.'),
+  url: z.url().describe('The URL of the POI.'),
+  is_source_local: z.boolean().describe('Whether the result is from local sources.'),
+  is_source_both: z.boolean().describe('Whether the result is from both local and global sources.'),
+  description: z.string().describe('A description of the result.').optional(),
+  page_age: z
+    .string()
+    .describe("The page's date, based on its published, or last-modified date.")
+    .optional(),
+  page_fetched: z
+    .string()
+    .describe('The date representing when the web page was last fetched.')
+    .optional(),
+  fetched_content_timestamp: z
+    .number()
+    .describe('The timestamp when the content was fetched.')
+    .optional(),
+  profile: ProfileSchema.describe('The profile associated with the result.').optional(),
+  language: z.string().describe('A language classification for the result.').optional(),
+  family_friendly: z.boolean().describe('Whether the result is family friendly.').optional(),
+  type: z.literal('location_result').describe('Result type identifier'),
+  provider_url: z.url().describe('Complete URL of the provider.'),
+  coordinates: z
+    .tuple([z.number(), z.number()])
+    .describe('Latitude/longitude of the location, when available.')
+    .optional(),
+  zoom_level: z.number().describe('Suggested zoom level when displaying on a map.'),
+  thumbnail: ThumbnailSchema.describe('The thumbnail associated with the location.').optional(),
+  postal_address: PostalAddressSchema.describe('The postal address of the location.').optional(),
+  opening_hours: OpeningHoursSchema.describe('The opening hours of the location.').optional(),
+  contact: ContactSchema.describe('The contact of the location.').optional(),
+  price_range: z
+    .string()
+    .describe('Price classification string for the business (e.g. "$", "$$").')
+    .optional(),
+  rating: RatingSchema.describe('The rating of the result.').optional(),
+  distance: DistanceSchema.describe(
+    "Distance from the user's geolocation, if available."
+  ).optional(),
+  profiles: z
+    .array(ProfileSchema)
+    .describe('External profiles (e.g. data providers) associated with the result.')
+    .optional(),
+  reviews: ReviewsSchema.describe('Reviews associated with the result.').optional(),
+  pictures: PicturesSchema.describe('Pictures associated with the result.').optional(),
+  action: ActionSchema.describe('The action associated with the result.').optional(),
+  serves_cuisine: z.array(z.string()).describe('List of cuisine categories served.').optional(),
+  categories: z.array(z.string()).describe('List of category labels.').optional(),
+  icon_category: z.string().describe('Suggested icon category (e.g. "cafe").').optional(),
+  timezone: z.string().describe('IANA timezone identifier for the location.').optional(),
+  timezone_offset: z
+    .number()
+    .describe("UTC offset of the location's timezone, in minutes.")
+    .optional(),
+  id: z
+    .string()
+    .describe(
+      'Temporary identifier for the location, valid for ~8 hours. Can be used with brave_local_search-style endpoints to fetch additional information.'
+    )
+    .optional(),
+  results: z.array(ResultsSchema).describe('Web results related to this location.').optional(),
+});
+
+const AddressSchema = z.looseObject({
+  type: z
+    .enum(['address', 'street'])
+    .describe(
+      'Result is "address" when the result refers to an explicit street + number, but "street" when it refers only to the street itself.'
+    ),
+  name: z.string().describe('The name of the address.'),
+  coordinates: z.tuple([z.number(), z.number()]).describe('Latitude/longitude of the address'),
+  pois: z.array(PoiSchema).describe('List of POIs located at this address.'),
+  pois_nearby: z.array(PoiSchema).describe('List of POIs nearby this address.'),
+  zoom_level: z.number().describe('Suggested zoom level when displaying on a map.'),
+  distance: DistanceSchema.describe(
+    "Distance from the user's geolocation, if available."
+  ).optional(),
+  postal_address: PostalAddressSchema.describe('The postal address of the address.').optional(),
+});
+
+const CitySchema = z.looseObject({
+  type: z.literal('city'),
+  name: z.string().describe('Name of the city'),
+  country: z.string().describe('ISO country code for the city'),
+  coordinates: z.tuple([z.number(), z.number()]).describe('Latitude/longitude of the city'),
+  thumbnail: ThumbnailSchema.describe('Primary image for the city'),
+});
+
 const LocationSchema = z.looseObject({
-  coordinates: z.array(z.number()).describe('Latitude/longitude of the resolved search area.'),
+  coordinates: z.tuple([z.number(), z.number()]).describe('Latitude/longitude of the resolved search area.'),
   name: z.string().describe('Human-readable name of the resolved search area.').optional(),
   country: z.string().describe('ISO country code for the resolved search area.').optional(),
 });
@@ -236,6 +332,15 @@ export const PlaceSearchApiResponseSchema = z.looseObject({
   results: z
     .array(ResultSchema)
     .describe('Array of points-of-interest matching the search.')
+    .optional(),
+  cities: z.array(CitySchema).describe('List of city results for the given query.').optional(),
+  addresses: z
+    .array(AddressSchema)
+    .describe('List of address results for the given query.')
+    .optional(),
+  streets: z
+    .array(AddressSchema)
+    .describe('List of street results for the given query.')
     .optional(),
   location: LocationSchema.describe(
     'The resolved search-area metadata, when available.'
