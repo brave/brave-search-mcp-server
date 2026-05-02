@@ -39,13 +39,11 @@ export const execute = async (params: QueryParams) => {
     parsedParams,
     parsedHeaders
   );
-  const parsed = PlaceSearchApiResponseSchema.safeParse(response);
-  const payload = parsed.success ? parsed.data : response;
 
   return {
-    content: [{ type: 'text', text: JSON.stringify(payload) } as TextContent],
+    content: [{ type: 'text', text: JSON.stringify(response) } as TextContent],
     isError: false,
-    structuredContent: payload,
+    structuredContent: response,
   };
 };
 
