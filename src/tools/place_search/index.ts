@@ -17,17 +17,20 @@ export const annotations: ToolAnnotations = {
 };
 
 export const description = `
-    Searches for points of interest (POIs) in a specified geographic area using Brave's Place Search API. Each result includes rich, structured data such as the place's name, URL, postal address, opening hours, contact info, ratings, photos, categories, and timezone.
+    Searches Brave's Place Search API. A single call may populate any combination of 'results' (POIs), 'cities', 'addresses', 'streets', and 'location' (the resolved search area), depending on the query's shape.
 
     When to use:
-        - Finding places near a set of coordinates or a named location (e.g. "coffee shops near me", "bookstores in Paris")
-        - Browsing general points of interest in an area when no query is supplied
-        - Building a place-finding experience that needs structured business data (hours, ratings, etc.)
-        - Augmenting an answer with the location's address, phone number, or rating
+        - POIs near coordinates or a named area (e.g. "coffee shops in Paris") -> 'results', each with structured business data (postal address, hours, contact, ratings, photos, categories, timezone).
+        - Browsing general POIs (omit 'query'; supply 'latitude'+'longitude' or 'location').
+        - Disambiguating a bare city name (e.g. "springfield") -> 'cities'.
+        - Resolving a specific address (e.g. "350 5th avenue" with NYC coords) -> 'addresses' (often plus 'streets').
+        - Looking up a street by name (e.g. "michigan avenue" with Chicago coords) -> 'streets'.
 
-    Provide a search area via 'latitude' + 'longitude' or a 'location' string (or both). When neither is provided, a 'query' is expected. Use 'count' to keep responses small (max 50, default 20).
-
-    For US locations the recommended 'location' format is '<city> <state> <country name>' (e.g. 'san francisco ca united states'); for non-US locations use '<city> <country name>' (e.g. 'tokyo japan').
+    Inputs:
+        - Anchor the search via 'latitude'+'longitude' or 'location' (or both). With neither, 'query' is required.
+        - 'addresses' / 'streets' only surface when the query is address-/street-shaped AND geographically anchored.
+        - 'location' format: US -- '<city> <state> <country>' (e.g. 'san francisco ca united states'); non-US -- '<city> <country>' (e.g. 'tokyo japan'). Capitalization and commas don't matter.
+        - 'count' caps results (max 50, default 20). 'radius' (meters) biases toward closer results; it does NOT hard-limit the search area.
 `.trim();
 
 export const execute = async (params: QueryParams) => {

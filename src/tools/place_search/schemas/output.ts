@@ -266,19 +266,28 @@ export const PlaceSearchApiResponseSchema = z.looseObject({
   query: QuerySchema.optional(),
   results: z
     .array(LocationResultSchema)
-    .describe('Array of points-of-interest matching the search.')
+    .describe('Points of interest matching the search. Populated for POI-shaped queries.')
     .optional(),
-  cities: z.array(CitySchema).describe('List of city results for the given query.').optional(),
+  cities: z
+    .array(CitySchema)
+    .describe(
+      'City matches for the query. Typically populated when the query is a bare or ambiguous city name (e.g. "springfield", "san francisco").'
+    )
+    .optional(),
   addresses: z
     .array(AddressSchema)
-    .describe('List of address results for the given query.')
+    .describe(
+      'Address matches. Typically populated when the query is a street + number AND is geographically anchored via `latitude`+`longitude` or a specific `location`.'
+    )
     .optional(),
   streets: z
     .array(AddressSchema)
-    .describe('List of street results for the given query.')
+    .describe(
+      'Street matches. Typically populated when the query is a street name AND is geographically anchored via `latitude`+`longitude` or a specific `location`.'
+    )
     .optional(),
   location: LocationSchema.describe(
-    'The resolved search-area metadata, when available.'
+    'The search area as resolved by the API (e.g. coordinates + city name). Useful for confirming the API interpreted the input as expected and for grounding follow-up queries.'
   ).optional(),
 });
 

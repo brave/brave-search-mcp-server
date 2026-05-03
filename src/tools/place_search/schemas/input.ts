@@ -151,14 +151,14 @@ export const RequestParamsSchema = z.object({
     )
     .transform((str) => (str.length === 0 ? undefined : str))
     .describe(
-      'Query string to search for points of interest in an area. If no query is provided, the endpoint will return general points of interest in the given area.'
+      'Query string. Shape influences the response: POI-like queries -> `results`; bare/ambiguous city names -> `cities`; address- or street-shaped queries with a geographic anchor -> `addresses` and/or `streets`. If omitted, returns general POIs in the supplied area.'
     )
     .optional(),
   radius: z
     .number()
     .min(0)
     .describe(
-      'Search radius around the supplied coordinates, in meters. If omitted, the search is performed globally.'
+      'Bias toward results closer to the supplied coordinates, in meters. NOT a hard cutoff -- the API may still return more distant results. If omitted, the search is performed globally.'
     )
     .optional(),
   count: z
