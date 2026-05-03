@@ -171,8 +171,7 @@ const WebResultSchema = WebResultBaseSchema.extend({
 
 /**
  * A location/POI result. Used both at the top level (`results[]`) and inside
- * addresses (`pois[]` / `pois_nearby[]`). `type`, `provider_url`, and
- * `zoom_level` are required, matching the Brave Place Search documentation.
+ * addresses (`pois[]` / `pois_nearby[]`).
  */
 const LocationResultSchema = WebResultBaseSchema.extend({
   type: z.literal('location_result').describe('Result type identifier.'),
