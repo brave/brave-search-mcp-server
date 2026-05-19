@@ -1,9 +1,29 @@
+import fs from 'node:fs';
 import { LoggingLevel, LoggingLevelSchema } from '@modelcontextprotocol/sdk/types.js';
 import { Command } from 'commander';
 import dotenv from 'dotenv';
 import tools from './tools/index.js';
 
 dotenv.config({ debug: false, quiet: true });
+
+/**
+ * Reads the Brave Search API key from a file. Used to support Docker
+ * secrets and similar setups where mounting a file is preferred over
+ * passing the key via an environment variable or CLI argument.
+ *
+ * Returns an empty string if `filePath` is empty/undefined. Throws if the
+ * file is set but cannot be read, so the user gets a clear failure
+ * instead of a silently empty key.
+ */
+function readApiKeyFromFile(filePath: string | undefined | null): string {
+  if (!filePath) return '';
+  try {
+    return fs.readFileSync(filePath, 'utf8').trim();
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    throw new Error(`Failed to read Brave API key from "${filePath}": ${message}`);
+  }
+}
 
 function parseToolNameList(value: string | string[] | undefined | null): string[] {
   if (value == null) return [];
@@ -47,6 +67,12 @@ export function isToolPermittedByUser(toolName: string): boolean {
 export function getOptions(): Configuration | false {
   const program = new Command()
     .option('--brave-api-key <string>', 'Brave API key', process.env.BRAVE_API_KEY ?? '')
+    .option(
+      '--brave-api-key-file <path>',
+      'Path to a file containing the Brave API key (useful for Docker secrets). ' +
+        'Takes precedence over --brave-api-key when set.',
+      process.env.BRAVE_API_KEY_FILE ?? ''
+    )
     .option('--logging-level <string>', 'Logging level', process.env.BRAVE_MCP_LOG_LEVEL ?? 'info')
     .option(
       '--transport <stdio|http>',
@@ -83,6 +109,18 @@ export function getOptions(): Configuration | false {
 
   const options = program.opts();
   const toolNames = Object.values(tools).map((tool) => tool.name);
+
+  // Resolve the API key: when --brave-api-key-file (or BRAVE_API_KEY_FILE)
+  // is set, read the key from that file. This lets users mount the key as
+  // a Docker secret instead of exposing it through an env var or CLI arg.
+  if (options.braveApiKeyFile) {
+    try {
+      options.braveApiKey = readApiKeyFromFile(options.braveApiKeyFile);
+    } catch (err) {
+      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      return false;
+    }
+  }
 
   // Validate tool inclusion configuration
   const enabledTools = parseToolNameList(options.enabledTools);
