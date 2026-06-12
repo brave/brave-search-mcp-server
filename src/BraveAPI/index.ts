@@ -3,6 +3,7 @@ import config from '../config.js';
 import { stringify } from '../utils.js';
 
 const typeToPathMap: Record<keyof Endpoints, string> = {
+  answers: '/res/v1/chat/completions',
   images: '/res/v1/images/search',
   localPois: '/res/v1/local/pois',
   localDescriptions: '/res/v1/local/descriptions',
@@ -14,11 +15,21 @@ const typeToPathMap: Record<keyof Endpoints, string> = {
   placeSearch: '/res/v1/local/place_search',
 };
 
-const getDefaultRequestHeaders = (): Record<string, string> => {
+const resolveApiKeyFromEndpoint = (endpoint: keyof Endpoints): string => {
+  if (endpoint === 'answers') {
+    if (config.braveAnswersApiKey) {
+      return config.braveAnswersApiKey;
+    }
+    console.warn('No Brave Answers API key provided, using Brave API key instead.');
+  }
+  return config.braveApiKey;
+};
+
+const getDefaultRequestHeaders = (endpoint: keyof Endpoints): Record<string, string> => {
   return {
     Accept: 'application/json',
     'Accept-Encoding': 'gzip',
-    'X-Subscription-Token': config.braveApiKey,
+    'X-Subscription-Token': resolveApiKeyFromEndpoint(endpoint),
   };
 };
 
@@ -108,7 +119,7 @@ async function issueRequest<T extends keyof Endpoints>(
 
   // Issue Request
   const urlWithParams = url.toString() + '?' + queryParams.toString();
-  const headers = new Headers(getDefaultRequestHeaders());
+  const headers = new Headers(getDefaultRequestHeaders(endpoint));
   for (const [key, value] of Object.entries(requestHeaders)) {
     if (value === undefined || value === null) continue;
     headers.set(key, String(value));

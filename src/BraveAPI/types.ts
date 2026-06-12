@@ -6,6 +6,8 @@ import type { LocalPoisParams, LocalDescriptionsParams } from '../tools/local/pa
 import type { SummarizerQueryParams } from '../tools/summarizer/params.js';
 import type { WebSearchApiResponse } from '../tools/web/types.js';
 import type { SummarizerSearchApiResponse } from '../tools/summarizer/types.js';
+import type { AnswersRequestBody, AnswersRequestHeaders } from '../tools/answers/schemas/input.js';
+import type { AnswersResponse } from '../tools/answers/schemas/output.js';
 import type { ImageSearchApiResponse } from '../tools/images/types.js';
 import type { VideoSearchApiResponse } from '../tools/videos/types.js';
 import type { NewsSearchApiResponse } from '../tools/news/types.js';
@@ -41,6 +43,11 @@ export interface RateLimitErrorResponse {
 }
 
 export type Endpoints = {
+  answers: {
+    params: AnswersRequestBody;
+    response: AnswersResponse;
+    requestHeaders: AnswersRequestHeaders;
+  };
   web: {
     params: WebQueryParams;
     response: WebSearchApiResponse;

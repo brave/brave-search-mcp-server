@@ -21,6 +21,7 @@ type Configuration = {
   port: number;
   host: string;
   braveApiKey: string;
+  braveAnswersApiKey: string;
   loggingLevel: LoggingLevel;
   enabledTools: string[];
   disabledTools: string[];
@@ -34,6 +35,7 @@ const state: Configuration & { ready: boolean } = {
   port: 8080,
   host: '127.0.0.1',
   braveApiKey: process.env.BRAVE_API_KEY ?? '',
+  braveAnswersApiKey: process.env.BRAVE_ANSWERS_API_KEY ?? '',
   loggingLevel: 'info',
   ready: false,
   enabledTools: [],
@@ -56,6 +58,11 @@ export function getOptions(): Configuration | false {
       '--brave-api-key-file <string>',
       'Path to file containing Brave API key',
       process.env.BRAVE_API_KEY_FILE ?? ''
+    )
+    .option(
+      '--brave-answers-api-key <string>',
+      'Brave Answers API key',
+      process.env.BRAVE_ANSWERS_API_KEY ?? ''
     )
     .option('--logging-level <string>', 'Logging level', process.env.BRAVE_MCP_LOG_LEVEL ?? 'info')
     .option(
@@ -137,11 +144,12 @@ export function getOptions(): Configuration | false {
     return false;
   }
 
-  const apiKeyFile =
-    typeof options.braveApiKeyFile === 'string' ? options.braveApiKeyFile.trim() : '';
-  let braveApiKey = typeof options.braveApiKey === 'string' ? options.braveApiKey.trim() : '';
+  // An API key is required
+  let braveApiKey = options.braveApiKey?.trim() ?? '';
+  const apiKeyFile = options.braveApiKeyFile?.trim() ?? '';
+  const braveAnswersApiKey = options.braveAnswersApiKey?.trim() ?? '';
 
-  if (apiKeyFile) {
+  if (apiKeyFile.length > 0) {
     const apiKeyFromFile = readBraveApiKeyFromFile(apiKeyFile);
     if (!apiKeyFromFile.ok) {
       console.error(`Error: ${apiKeyFromFile.error}`);
@@ -151,9 +159,11 @@ export function getOptions(): Configuration | false {
     braveApiKey = apiKeyFromFile.key;
   }
 
-  if (!braveApiKey) {
+  if (braveApiKey.length === 0 && braveAnswersApiKey.length === 0) {
     console.error(
-      'Error: A Brave API key is required via --brave-api-key, BRAVE_API_KEY, --brave-api-key-file, or BRAVE_API_KEY_FILE. You can get one at https://brave.com/search/api/.'
+      'Error: A Brave Search API key (--brave-api-key/BRAVE_API_KEY) or Brave Answers API key (--brave-answers-api-key/BRAVE_ANSWERS_API_KEY) is required,' +
+        'or a file containing the Search API key (--brave-api-key-file/BRAVE_API_KEY_FILE), depending on the endpoint(s) you intend to use. ' +
+        'You can get an API key at https://brave.com/search/api/.'
     );
     return false;
   }
@@ -186,6 +196,7 @@ export function getOptions(): Configuration | false {
 
   // Update state
   state.braveApiKey = braveApiKey;
+  state.braveAnswersApiKey = options.braveAnswersApiKey;
   state.transport = options.transport;
   state.port = options.port;
   state.host = options.host;

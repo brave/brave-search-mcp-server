@@ -8,6 +8,7 @@ import { getOptions } from './config.js';
 const CONFIG_ENV_VARS = [
   'BRAVE_API_KEY',
   'BRAVE_API_KEY_FILE',
+  'BRAVE_ANSWERS_API_KEY',
   'BRAVE_MCP_LOG_LEVEL',
   'BRAVE_MCP_TRANSPORT',
   'BRAVE_MCP_ENABLED_TOOLS',
@@ -24,6 +25,7 @@ describe('getOptions', () => {
   const originalEnv = Object.fromEntries(CONFIG_ENV_VARS.map((key) => [key, process.env[key]]));
   const originalConsoleError = console.error;
 
+  // For testing purposes, we need to assume no environment overrides are present.
   beforeEach(() => {
     for (const key of CONFIG_ENV_VARS) {
       delete process.env[key];
