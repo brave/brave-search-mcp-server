@@ -384,11 +384,11 @@ For local development with Docker:
 docker-compose up --build
 ```
 
-Set `BRAVE_API_KEY` in your shell or a `.env` file before starting the stack. The default `docker-compose.yml` also accepts `BRAVE_API_KEY_FILE` if you prefer to pass a host file path through the environment.
+Set `BRAVE_API_KEY` in your shell or a `.env` file before starting the stack. The default `docker-compose.yml` also accepts `BRAVE_API_KEY_FILE` when the path is valid inside the container (for example, from a bind mount or Docker secret).
 
 #### Docker Compose secrets (optional)
 
-To avoid putting the API key in an environment variable, you can use [Docker Compose secrets](https://docs.docker.com/compose/how-tos/use-secrets/). The server reads the key from the path in `BRAVE_API_KEY_FILE`.
+To avoid putting the API key in an environment variable, you can use [Docker Compose secrets](https://docs.docker.com/compose/how-tos/use-secrets/). The server reads the key from the path in `BRAVE_API_KEY_FILE`, which must exist inside the container.
 
 1. Copy the example secret file and add your key:
 
