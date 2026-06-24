@@ -31,6 +31,7 @@
     "watch": "tsc --watch",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
+    "test": "node --import tsx --test \"src/**/*.test.ts\"",
     "inspector": "npx @modelcontextprotocol/inspector",
     "inspector:http": "npx @modelcontextprotocol/inspector --transport http"
   },
