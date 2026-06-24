@@ -1,3 +1,5 @@
 /node_modules
 /dist
 .env
+secrets/*
+!secrets/brave_api_key.txt.example
