@@ -125,7 +125,7 @@ export function getOptions(): Configuration | false {
 
   const apiKeyFile =
     typeof options.braveApiKeyFile === 'string' ? options.braveApiKeyFile.trim() : '';
-  let braveApiKey = options.braveApiKey;
+  let braveApiKey = typeof options.braveApiKey === 'string' ? options.braveApiKey.trim() : '';
 
   if (apiKeyFile) {
     const apiKeyFromFile = readBraveApiKeyFromFile(apiKeyFile);
