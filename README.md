@@ -384,7 +384,7 @@ For local development with Docker:
 docker-compose up --build
 ```
 
-Set `BRAVE_API_KEY` in your shell or a `.env` file before starting the stack. The default `docker-compose.yml` also accepts `BRAVE_API_KEY_FILE` when the path is valid inside the container (for example, from a bind mount or Docker secret).
+Set `BRAVE_API_KEY` (or `BRAVE_API_KEY_FILE`) in your shell or a `.env` file before starting the stack. The default `docker-compose.yml` also accepts `BRAVE_API_KEY_FILE` when the path is valid inside the container (for example, from a bind mount or Docker secret).
 
 #### Docker Compose secrets (optional)
 
