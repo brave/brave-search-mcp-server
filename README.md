@@ -169,7 +169,8 @@ Retrieves pre-extracted web content optimized for AI agents, LLM grounding, and 
 
 The server supports the following environment variables:
 
-- `BRAVE_API_KEY`: Your Brave Search API key (required)
+- `BRAVE_API_KEY`: Your Brave Search API key (required unless `BRAVE_API_KEY_FILE` is set)
+- `BRAVE_API_KEY_FILE`: Path to a file containing your Brave Search API key. When set, this takes precedence over `BRAVE_API_KEY`. Useful for Docker secrets and similar mounted-secret setups.
 - `BRAVE_MCP_TRANSPORT`: Transport mode ("http" or "stdio", default: "stdio")
 - `BRAVE_MCP_PORT`: HTTP server port (default: 8080)
 - `BRAVE_MCP_HOST`: HTTP server host (default: "0.0.0.0")
@@ -184,7 +185,8 @@ The server supports the following environment variables:
 node dist/index.js [options]
 
 Options:
-  --brave-api-key <string>    Brave API key
+  --brave-api-key <string>        Brave API key
+  --brave-api-key-file <string>   Path to file containing Brave API key
   --transport <stdio|http>    Transport type (default: stdio)
   --port <number>             HTTP server port (default: 8080)
   --host <string>             HTTP server host (default: 0.0.0.0)

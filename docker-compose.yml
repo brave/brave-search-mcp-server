@@ -9,6 +9,7 @@ services:
         delay: 5s
     environment:
       - BRAVE_API_KEY
+      - BRAVE_API_KEY_FILE
       - BRAVE_MCP_TRANSPORT=http
       - BRAVE_MCP_PORT=8080
       - BRAVE_MCP_STATELESS

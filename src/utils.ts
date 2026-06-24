@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { RATE_LIMIT } from './constants.js';
 
 let requestCount = {
@@ -21,6 +22,24 @@ export function checkRateLimit() {
 
 export function stringify(data: any, pretty = false) {
   return pretty ? JSON.stringify(data, null, 2) : JSON.stringify(data);
+}
+
+export type ReadBraveApiKeyFromFileResult =
+  | { ok: true; key: string }
+  | { ok: false; error: string };
+
+export function readBraveApiKeyFromFile(filePath: string): ReadBraveApiKeyFromFileResult {
+  try {
+    const key = readFileSync(filePath, 'utf8').trim();
+    if (key.length === 0) {
+      return { ok: false, error: `API key file is empty: ${filePath}` };
+    }
+
+    return { ok: true, key };
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    return { ok: false, error: `Unable to read API key file '${filePath}': ${reason}` };
+  }
 }
 
 export function parsePort(value: unknown): number | null {

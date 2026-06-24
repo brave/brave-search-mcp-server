@@ -2,7 +2,7 @@ import { LoggingLevel, LoggingLevelSchema } from '@modelcontextprotocol/sdk/type
 import { Command } from 'commander';
 import dotenv from 'dotenv';
 import tools from './tools/index.js';
-import { parsePort } from './utils.js';
+import { parsePort, readBraveApiKeyFromFile } from './utils.js';
 
 dotenv.config({ debug: false, quiet: true });
 
@@ -48,6 +48,11 @@ export function isToolPermittedByUser(toolName: string): boolean {
 export function getOptions(): Configuration | false {
   const program = new Command()
     .option('--brave-api-key <string>', 'Brave API key', process.env.BRAVE_API_KEY ?? '')
+    .option(
+      '--brave-api-key-file <string>',
+      'Path to file containing Brave API key',
+      process.env.BRAVE_API_KEY_FILE ?? ''
+    )
     .option('--logging-level <string>', 'Logging level', process.env.BRAVE_MCP_LOG_LEVEL ?? 'info')
     .option(
       '--transport <stdio|http>',
@@ -118,9 +123,23 @@ export function getOptions(): Configuration | false {
     return false;
   }
 
-  if (!options.braveApiKey) {
+  const apiKeyFile =
+    typeof options.braveApiKeyFile === 'string' ? options.braveApiKeyFile.trim() : '';
+  let braveApiKey = options.braveApiKey;
+
+  if (apiKeyFile) {
+    const apiKeyFromFile = readBraveApiKeyFromFile(apiKeyFile);
+    if (!apiKeyFromFile.ok) {
+      console.error(`Error: ${apiKeyFromFile.error}`);
+      return false;
+    }
+
+    braveApiKey = apiKeyFromFile.key;
+  }
+
+  if (!braveApiKey) {
     console.error(
-      'Error: --brave-api-key is required. You can get one at https://brave.com/search/api/.'
+      'Error: A Brave API key is required via --brave-api-key, BRAVE_API_KEY, --brave-api-key-file, or BRAVE_API_KEY_FILE. You can get one at https://brave.com/search/api/.'
     );
     return false;
   }
@@ -143,9 +162,10 @@ export function getOptions(): Configuration | false {
 
   // Normalize stateless to boolean (CLI passes it as string)
   options.stateless = options.stateless === true || options.stateless === 'true';
+  options.braveApiKey = braveApiKey;
 
   // Update state
-  state.braveApiKey = options.braveApiKey;
+  state.braveApiKey = braveApiKey;
   state.transport = options.transport;
   state.port = options.port;
   state.host = options.host;
