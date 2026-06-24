@@ -5,20 +5,36 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { getOptions } from './config.js';
 
+const CONFIG_ENV_VARS = [
+  'BRAVE_API_KEY',
+  'BRAVE_API_KEY_FILE',
+  'BRAVE_MCP_LOG_LEVEL',
+  'BRAVE_MCP_TRANSPORT',
+  'BRAVE_MCP_ENABLED_TOOLS',
+  'BRAVE_MCP_DISABLED_TOOLS',
+  'BRAVE_MCP_PORT',
+  'BRAVE_MCP_HOST',
+  'BRAVE_MCP_STATELESS',
+] as const;
+
 describe('getOptions', () => {
   const originalArgv = process.argv;
-  const originalBraveApiKey = process.env.BRAVE_API_KEY;
+  const originalEnv = Object.fromEntries(CONFIG_ENV_VARS.map((key) => [key, process.env[key]]));
 
   beforeEach(() => {
-    delete process.env.BRAVE_API_KEY;
+    for (const key of CONFIG_ENV_VARS) {
+      delete process.env[key];
+    }
   });
 
   afterEach(() => {
     process.argv = originalArgv;
-    if (originalBraveApiKey === undefined) {
-      delete process.env.BRAVE_API_KEY;
-    } else {
-      process.env.BRAVE_API_KEY = originalBraveApiKey;
+    for (const key of CONFIG_ENV_VARS) {
+      if (originalEnv[key] === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = originalEnv[key];
+      }
     }
   });
 
