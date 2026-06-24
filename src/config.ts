@@ -2,6 +2,7 @@ import { LoggingLevel, LoggingLevelSchema } from '@modelcontextprotocol/sdk/type
 import { Command } from 'commander';
 import dotenv from 'dotenv';
 import tools from './tools/index.js';
+import { parsePort } from './utils.js';
 
 dotenv.config({ debug: false, quiet: true });
 
@@ -125,12 +126,14 @@ export function getOptions(): Configuration | false {
   }
 
   if (options.transport === 'http') {
-    if (options.port < 1 || options.port > 65535) {
+    const port = parsePort(options.port);
+    if (port === null) {
       console.error(
         `Invalid --port value: '${options.port}'. Must be a valid port number between 1 and 65535.`
       );
       return false;
     }
+    options.port = port;
 
     if (!options.host) {
       console.error('Error: --host is required');
