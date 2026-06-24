@@ -1,1 +1,7 @@
-secrets/
+.git
+node_modules
+dist
+.env
+.env.*
+secrets
+.cursor
