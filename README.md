@@ -384,6 +384,26 @@ For local development with Docker:
 docker-compose up --build
 ```
 
+Set `BRAVE_API_KEY` in your shell or a `.env` file before starting the stack. The default `docker-compose.yml` also accepts `BRAVE_API_KEY_FILE` if you prefer to pass a host file path through the environment.
+
+#### Docker Compose secrets (optional)
+
+To avoid putting the API key in an environment variable, you can use [Docker Compose secrets](https://docs.docker.com/compose/how-tos/use-secrets/). The server reads the key from the path in `BRAVE_API_KEY_FILE`.
+
+1. Copy the example secret file and add your key:
+
+```bash
+cp secrets/brave_api_key.txt.example secrets/brave_api_key.txt
+```
+
+2. Start the stack with the optional secrets override:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.secrets.example.yml up --build
+```
+
+The override mounts the secret at `/run/secrets/brave_api_key` and sets `BRAVE_API_KEY_FILE` accordingly. See `docker-compose.secrets.example.yml` for the full configuration.
+
 ## License
 
 This MCP server is licensed under the MIT License. This means you are free to use, modify, and distribute the software, subject to the terms and conditions of the MIT License. For more details, please see the LICENSE file in the project repository.
