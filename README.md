@@ -62,7 +62,7 @@ Searches for videos with comprehensive metadata and thumbnail information.
 - `freshness` (string, optional): Time filter ("pd", "pw", "pm", "py", or date range)
 
 ### Image Search (`brave_image_search`)
-Searches for images with automatic fetching and base64 encoding for direct display.
+Searches for images with metadata including URLs, dimensions, and confidence scores.
 
 **Parameters:**
 - `query` (string, required): Search terms (max 400 chars, 50 words)
@@ -171,7 +171,7 @@ The server supports the following environment variables:
 
 - `BRAVE_API_KEY`: Your Brave Search API key (required)
 - `BRAVE_MCP_TRANSPORT`: Transport mode ("http" or "stdio", default: "stdio")
-- `BRAVE_MCP_PORT`: HTTP server port (default: 8000)
+- `BRAVE_MCP_PORT`: HTTP server port (default: 8080)
 - `BRAVE_MCP_HOST`: HTTP server host (default: "0.0.0.0")
 - `BRAVE_MCP_LOG_LEVEL`: Desired logging level("debug", "info", "notice", "warning", "error", "critical", "alert", or "emergency", default: "info")
 - `BRAVE_MCP_ENABLED_TOOLS`: When used, specifies a space-separated whitelist for supported tools
