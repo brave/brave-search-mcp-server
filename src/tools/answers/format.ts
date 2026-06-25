@@ -7,8 +7,7 @@ export type FormatAnswersContentResult =
   | { ok: true; text: string }
   | { ok: false; reason: 'incomplete_research' | 'empty' };
 
-const TAGGED_BLOCK_PATTERN = (tag: string) =>
-  new RegExp(`<${tag}>[\\s\\S]*?</${tag}>`, 'g');
+const TAGGED_BLOCK_PATTERN = (tag: string) => new RegExp(`<${tag}>[\\s\\S]*?</${tag}>`, 'g');
 
 export function stripTaggedBlocks(text: string, tag: string): string {
   return text.replace(TAGGED_BLOCK_PATTERN(tag), '');

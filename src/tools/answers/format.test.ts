@@ -20,8 +20,7 @@ describe('extractResearchAnswer', () => {
   });
 
   it('returns null when no answer tag is present', () => {
-    const raw =
-      '<queries>{"queries":["test"]}</queries><thinking>{"urls_selected":[]}</thinking>';
+    const raw = '<queries>{"queries":["test"]}</queries><thinking>{"urls_selected":[]}</thinking>';
 
     assert.equal(extractResearchAnswer(raw), null);
   });
