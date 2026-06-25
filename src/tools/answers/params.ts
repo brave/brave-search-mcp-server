@@ -46,7 +46,9 @@ export const answersQueryParams = z
       .boolean()
       .default(false)
       .optional()
-      .describe('Whether to include entity information in the response.'),
+      .describe(
+        'Whether to include entity information in the response. Requires streaming on the upstream API; the MCP tool buffers the stream before returning.'
+      ),
     enable_citations: z
       .boolean()
       .default(false)

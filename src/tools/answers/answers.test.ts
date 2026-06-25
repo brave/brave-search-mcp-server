@@ -57,6 +57,23 @@ describe('buildAnswersRequestBody', () => {
     assert.equal(body.enable_research, true);
     assert.equal(body.research_maximum_number_of_iterations, 3);
   });
+
+  it('forces streaming when entities are enabled', () => {
+    const body = buildAnswersRequestBody({
+      query: 'Who founded Tesla?',
+      model: 'brave',
+      country: 'US',
+      language: 'en',
+      safesearch: 'moderate',
+      enable_entities: true,
+      enable_citations: false,
+      enable_research: false,
+      research_allow_thinking: true,
+    });
+
+    assert.equal(body.stream, true);
+    assert.equal(body.enable_entities, true);
+  });
 });
 
 describe('answersQueryParams', () => {

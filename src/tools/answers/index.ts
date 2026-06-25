@@ -3,6 +3,7 @@ import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { issuePostRequest, issueStreamingPostRequest } from '../../BraveAPI/post.js';
 import { answersQueryParams, type AnswersQueryParams } from './params.js';
 import type { AnswersRequestBody, ChatCompletionResponse } from './types.js';
+import { formatAnswersContent, INCOMPLETE_RESEARCH_MESSAGE } from './format.js';
 
 export const name = 'brave_answers';
 
@@ -26,13 +27,16 @@ export const description = `
         - Single-search (default): Fast grounded answer from one search. Supports enable_citations.
         - Research (enable_research=true): Iterative multi-search synthesis. Slower; may take up to several minutes.
 
-    Note: Citations and research mode require streaming on the upstream API. This MCP tool buffers the stream and returns the complete answer as text, which fits MCP's request/response tool model.
+    Note: Citations, entities, and research mode require streaming on the upstream API. This MCP tool buffers the stream before returning. Research responses are reduced to the synthesized <answer> text; citation metadata tags are stripped from the returned text.
 
     Requires an Answers plan. See https://api-dashboard.search.brave.com/app/subscriptions/subscribe
 `.trim();
 
 export const buildAnswersRequestBody = (params: AnswersQueryParams): AnswersRequestBody => {
-  const mustStream = params.enable_citations === true || params.enable_research === true;
+  const mustStream =
+    params.enable_citations === true ||
+    params.enable_research === true ||
+    params.enable_entities === true;
 
   const body: AnswersRequestBody = {
     messages: [{ role: 'user', content: params.query }],
@@ -81,27 +85,35 @@ export const execute = async (params: AnswersQueryParams): Promise<CallToolResul
   const body = buildAnswersRequestBody(params);
 
   try {
-    let answerText = '';
+    let rawText = '';
 
     if (body.stream) {
-      answerText = await issueStreamingPostRequest(ANSWERS_PATH, body);
+      rawText = await issueStreamingPostRequest(ANSWERS_PATH, body);
     } else {
       const result = await issuePostRequest<ChatCompletionResponse>(ANSWERS_PATH, body);
-      answerText = result.choices?.[0]?.message?.content ?? '';
+      rawText = result.choices?.[0]?.message?.content ?? '';
     }
 
-    if (!answerText) {
+    const formatted = formatAnswersContent(rawText, {
+      enable_research: params.enable_research === true,
+      enable_citations: params.enable_citations === true,
+    });
+
+    if (!formatted.ok) {
       response.isError = true;
       response.content.push({
         type: 'text',
-        text: 'No answer content was returned by the Answers API.',
+        text:
+          formatted.reason === 'incomplete_research'
+            ? INCOMPLETE_RESEARCH_MESSAGE
+            : 'No answer content was returned by the Answers API.',
       });
       return response;
     }
 
     response.content.push({
       type: 'text',
-      text: answerText,
+      text: formatted.text,
     });
   } catch (error) {
     response.isError = true;
