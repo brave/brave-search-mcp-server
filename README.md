@@ -1,6 +1,6 @@
 # Brave Search MCP Server
 
-An MCP server implementation that integrates the Brave Search API, providing comprehensive search capabilities including web search, local business search, place search, image search, video search, news search, LLM context, and AI-powered summarization. This project supports both STDIO and HTTP transports, with STDIO as the default mode.
+An MCP server implementation that integrates the Brave Search API, providing comprehensive search capabilities including web search, local business search, place search, image search, video search, news search, LLM context, AI-powered summarization, and grounded Answers. This project supports both STDIO and HTTP transports, with STDIO as the default mode.
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/brave/brave-search-mcp-server)
 
@@ -97,6 +97,32 @@ Generates AI-powered summaries from web search results using Brave's summarizati
 - `inline_references` (boolean, optional): Add source URL references (default: false)
 
 **Usage:** First perform a web search with `summary: true`, then use the returned summary key with this tool.
+
+### Answers (`brave_answers`)
+Generates AI-grounded answers backed by real-time Brave Search using the [Answers API](https://api-dashboard.search.brave.com/api-reference/summarizer/answers) (`POST /res/v1/chat/completions`). Returns a finished answer rather than raw search results.
+
+**Parameters:**
+- `query` (string, required): The question to answer
+- `model` (string, optional): Answers model (`brave` or `brave-pro`, default: `brave`)
+- `country` (string, optional): Search country code (default: `US`)
+- `language` (string, optional): Response language (default: `en`)
+- `safesearch` (string, optional): Content filtering (`off`, `moderate`, `strict`, default: `moderate`)
+- `max_completion_tokens` (number, optional): Upper bound on completion tokens
+- `enable_entities` (boolean, optional): Include entity information (default: false)
+- `enable_citations` (boolean, optional): Include inline citation tags (requires upstream streaming; buffered by this tool)
+- `enable_research` (boolean, optional): Enable multi-iteration deep research mode (requires upstream streaming; buffered by this tool)
+- `research_allow_thinking` (boolean, optional): Enable extended thinking in research mode (default: true)
+- `research_maximum_number_of_tokens_per_query` (number, optional): Max tokens per research query (1024-16384)
+- `research_maximum_number_of_queries` (number, optional): Max total search queries (1-50)
+- `research_maximum_number_of_iterations` (number, optional): Max research iterations (1-5)
+- `research_maximum_number_of_seconds` (number, optional): Research time budget in seconds (1-300)
+- `research_maximum_number_of_results_per_query` (number, optional): Max results per search query (1-60)
+- `web_search_options` (object, optional): OpenAI-compatible options such as `search_context_size` (`low`, `medium`, `high`)
+
+**Notes:**
+- Requires an Answers plan subscription.
+- `enable_research` and `enable_citations` cannot be used together.
+- Citations and research mode require streaming on the upstream API; this MCP tool buffers the stream and returns the complete answer as text.
 
 ### Place Search (`brave_place_search`)
 Searches for points of interest (POIs) in a specified geographic area using Brave's Place Search API. Returns rich, structured place data including name, address, opening hours, contact info, ratings, photos, categories, and timezone.
