@@ -94,7 +94,9 @@ export const answersQueryParams = z
       .int()
       .min(1)
       .max(300)
-      .describe('Research time budget in seconds (1-300).')
+      .describe(
+        'Research time budget in seconds (1-300). The MCP server allows budget plus 180 seconds of overhead before timing out.'
+      )
       .optional(),
     research_maximum_number_of_results_per_query: z
       .number()

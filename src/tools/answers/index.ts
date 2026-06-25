@@ -4,6 +4,7 @@ import { issuePostRequest, issueStreamingPostRequest } from '../../BraveAPI/post
 import { answersQueryParams, type AnswersQueryParams } from './params.js';
 import type { AnswersRequestBody, ChatCompletionResponse } from './types.js';
 import { formatAnswersContent, INCOMPLETE_RESEARCH_MESSAGE } from './format.js';
+import { getAnswersStreamingTimeoutMs } from './timeout.js';
 
 export const name = 'brave_answers';
 
@@ -88,7 +89,12 @@ export const execute = async (params: AnswersQueryParams): Promise<CallToolResul
     let rawText = '';
 
     if (body.stream) {
-      rawText = await issueStreamingPostRequest(ANSWERS_PATH, body);
+      rawText = await issueStreamingPostRequest(
+        ANSWERS_PATH,
+        body,
+        {},
+        { timeoutMs: getAnswersStreamingTimeoutMs(body) }
+      );
     } else {
       const result = await issuePostRequest<ChatCompletionResponse>(ANSWERS_PATH, body);
       rawText = result.choices?.[0]?.message?.content ?? '';

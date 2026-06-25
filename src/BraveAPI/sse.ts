@@ -30,7 +30,10 @@ export function extractContentFromSseText(sseText: string): string {
   return content;
 }
 
-export async function consumeSseResponse(response: Response): Promise<string> {
+export async function consumeSseResponse(
+  response: Response,
+  signal?: AbortSignal
+): Promise<string> {
   if (!response.body) {
     throw new Error('Streaming response has no body');
   }
@@ -40,34 +43,45 @@ export async function consumeSseResponse(response: Response): Promise<string> {
   let buffer = '';
   let content = '';
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
+  const throwIfAborted = () => {
+    if (signal?.aborted) {
+      throw signal.reason ?? new Error('Streaming response aborted');
+    }
+  };
 
-    buffer += decoder.decode(value, { stream: true });
+  try {
+    while (true) {
+      throwIfAborted();
+      const { done, value } = await reader.read();
+      if (done) break;
 
-    const lines = buffer.split('\n');
-    buffer = lines.pop() ?? '';
+      buffer += decoder.decode(value, { stream: true });
 
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed.startsWith('data:')) continue;
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
 
-      const data = trimmed.slice(5).trim();
-      if (data.length === 0 || data === '[DONE]') continue;
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data:')) continue;
 
-      try {
-        const chunk = JSON.parse(data) as {
-          choices?: Array<{ delta?: { content?: string } }>;
-        };
-        const delta = chunk.choices?.[0]?.delta?.content;
-        if (typeof delta === 'string') {
-          content += delta;
+        const data = trimmed.slice(5).trim();
+        if (data.length === 0 || data === '[DONE]') continue;
+
+        try {
+          const chunk = JSON.parse(data) as {
+            choices?: Array<{ delta?: { content?: string } }>;
+          };
+          const delta = chunk.choices?.[0]?.delta?.content;
+          if (typeof delta === 'string') {
+            content += delta;
+          }
+        } catch {
+          // Skip malformed SSE payloads.
         }
-      } catch {
-        // Skip malformed SSE payloads.
       }
     }
+  } finally {
+    reader.releaseLock();
   }
 
   if (buffer.length > 0) {
