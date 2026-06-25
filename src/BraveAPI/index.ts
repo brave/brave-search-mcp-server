@@ -137,6 +137,9 @@ async function issueRequest<T extends keyof Endpoints>(
   return responseBody as Endpoints[T]['response'];
 }
 
+export { issuePostRequest, issueStreamingPostRequest } from './post.js';
+export { consumeSseResponse, extractContentFromSseText } from './sse.js';
+
 export default {
   issueRequest,
 };
