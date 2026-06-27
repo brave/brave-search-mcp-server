@@ -25,18 +25,23 @@ type Configuration = {
   enabledTools: string[];
   disabledTools: string[];
   stateless: boolean;
+  allowedHosts: string[];
 };
 
 const state: Configuration & { ready: boolean } = {
   transport: 'stdio',
   port: 8080,
-  host: '0.0.0.0',
+  // Bind to loopback by default. The HTTP transport is unauthenticated, so binding to
+  // 0.0.0.0 exposes it to other hosts on the network. Deployments that intentionally
+  // expose it (e.g. behind a gateway) can set --host/BRAVE_MCP_HOST explicitly.
+  host: '127.0.0.1',
   braveApiKey: process.env.BRAVE_API_KEY ?? '',
   loggingLevel: 'info',
   ready: false,
   enabledTools: [],
   disabledTools: [],
   stateless: false,
+  allowedHosts: [],
 };
 
 export function isToolPermittedByUser(toolName: string): boolean {
@@ -77,7 +82,15 @@ export function getOptions(): Configuration | false {
     .option(
       '--host <string>',
       'desired host for HTTP transport',
-      process.env.BRAVE_MCP_HOST ?? '0.0.0.0'
+      process.env.BRAVE_MCP_HOST ?? '127.0.0.1'
+    )
+    .option(
+      '--allowed-hosts <hosts...>',
+      'Host header values accepted by the HTTP transport (DNS-rebinding protection). ' +
+        'Defaults to the bind host plus loopback; set this for proxied/remote deployments.',
+      process.env.BRAVE_MCP_ALLOWED_HOSTS?.trim()
+        .split(/[\s,]+/)
+        .filter(Boolean) ?? []
     )
     .option(
       '--stateless <boolean>',
@@ -158,6 +171,19 @@ export function getOptions(): Configuration | false {
       console.error('Error: --host is required');
       return false;
     }
+
+    // Build the Host-header allowlist (DNS-rebinding protection). Always include the
+    // bind host and loopback so the documented local usage works out of the box; any
+    // additional names (e.g. a public domain behind a gateway) come from --allowed-hosts.
+    const configuredAllowedHosts = parseToolNameList(options.allowedHosts);
+    options.allowedHosts = [
+      ...new Set([
+        `${options.host}:${port}`,
+        `127.0.0.1:${port}`,
+        `localhost:${port}`,
+        ...configuredAllowedHosts,
+      ]),
+    ];
   }
 
   // Normalize stateless to boolean (CLI passes it as string)
@@ -173,6 +199,7 @@ export function getOptions(): Configuration | false {
   state.enabledTools = enabledTools;
   state.disabledTools = disabledTools;
   state.stateless = options.stateless;
+  state.allowedHosts = Array.isArray(options.allowedHosts) ? options.allowedHosts : [];
   state.ready = true;
 
   return options as Configuration;
