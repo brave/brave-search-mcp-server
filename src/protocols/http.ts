@@ -30,6 +30,8 @@ const getTransport = async (request: Request): Promise<StreamableHTTPServerTrans
   if (!sessionId && isListToolsRequest(request.body)) {
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
+      enableDnsRebindingProtection: true,
+      allowedHosts: config.allowedHosts,
     });
 
     const mcpServer = createMcpServer();
@@ -43,11 +45,15 @@ const getTransport = async (request: Request): Promise<StreamableHTTPServerTrans
     // Some contexts (e.g. AgentCore) may prefer or require a stateless transport
     transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
+      enableDnsRebindingProtection: true,
+      allowedHosts: config.allowedHosts,
     });
   } else {
     // Otherwise, start a new transport/session
     transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: () => randomUUID(),
+      enableDnsRebindingProtection: true,
+      allowedHosts: config.allowedHosts,
       onsessioninitialized: (sessionId) => {
         transports.set(sessionId, transport);
       },
