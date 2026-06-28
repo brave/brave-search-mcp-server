@@ -101,6 +101,8 @@ export const AnswersInputSchema = z.object({
   research_maximum_number_of_seconds: z
     .number()
     .int()
+    .min(1)
+    .max(300)
     .describe(
       'Research time budget in seconds (1-300). The MCP server allows budget plus 180 seconds of overhead before timing out.'
     )
