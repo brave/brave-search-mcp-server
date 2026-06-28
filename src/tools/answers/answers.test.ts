@@ -88,6 +88,26 @@ describe('AnswersInputSchema', () => {
       /Too big/i
     );
   });
+
+  it('rejects out-of-range research tuning values', () => {
+    assert.throws(
+      () =>
+        AnswersInputSchema.parse({
+          messages: [{ role: 'user', content: 'test' }],
+          research_maximum_number_of_tokens_per_query: 512,
+        }),
+      /Too small/i
+    );
+
+    assert.throws(
+      () =>
+        AnswersInputSchema.parse({
+          messages: [{ role: 'user', content: 'test' }],
+          research_maximum_number_of_iterations: 6,
+        }),
+      /Too big/i
+    );
+  });
 });
 
 describe('prepareAnswersRequestBody', () => {
