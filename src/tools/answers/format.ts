@@ -43,7 +43,11 @@ function formatEnumItemInner(inner: string): string {
     if (!label) return '';
 
     if (parsed.href) {
-      return `* [${label}](${parsed.href})`;
+      const href = parsed.href.trim();
+      if (/^https?:\/\//i.test(href)) {
+        return `* [${label}](<${href}>)`;
+      }
+      return `* ${label}`;
     }
     return `* ${label}`;
   } catch {
