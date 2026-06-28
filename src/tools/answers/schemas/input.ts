@@ -51,7 +51,7 @@ const ChatCompletionMessageSchema = z.object({
 export const AnswersInputSchema = z.object({
   messages: z
     .array(ChatCompletionMessageSchema)
-    .min(1)
+    .length(1)
     .describe('Chat messages. The Answers API expects a single user message.'),
   model: z.enum(['brave-pro', 'brave']).default('brave').describe('The Answers model to use.'),
   max_completion_tokens: z
