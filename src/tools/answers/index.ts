@@ -1,6 +1,7 @@
 import type { CallToolResult, ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { issuePostRequest, issueStreamingPostRequest } from '../../BraveAPI/index.js';
+import { omitEmptyObjects } from '../../objects.js';
 import { AnswersInputSchema, type AnswersInput } from './schemas/input.js';
 import type { ChatCompletionResponse } from './schemas/output.js';
 import { formatAnswersContent, INCOMPLETE_RESEARCH_MESSAGE } from './format.js';
@@ -33,27 +34,13 @@ export const description = `
     Requires an Answers plan. See https://api-dashboard.search.brave.com/app/subscriptions/subscribe
 `.trim();
 
-/** Drop optional object fields that MCP clients may send as `{}` but should not be forwarded. */
-export function prepareAnswersRequestBody(body: AnswersInput): AnswersInput {
-  const prepared: Record<string, unknown> = { ...body, stream: body.stream ?? true };
-
-  for (const [key, value] of Object.entries(prepared)) {
-    if (
-      value !== null &&
-      typeof value === 'object' &&
-      !Array.isArray(value) &&
-      Object.keys(value).length === 0
-    ) {
-      delete prepared[key];
-    }
-  }
-
-  return prepared as AnswersInput;
-}
-
 export const execute = async (params: AnswersInput): Promise<CallToolResult> => {
   const response: CallToolResult = { content: [], isError: false };
-  const body = prepareAnswersRequestBody(AnswersInputSchema.parse(params));
+  const parsedRequestBody = AnswersInputSchema.parse(params);
+  const body = omitEmptyObjects({
+    ...parsedRequestBody,
+    stream: parsedRequestBody.stream ?? true,
+  }) as AnswersInput;
 
   try {
     let rawText = '';

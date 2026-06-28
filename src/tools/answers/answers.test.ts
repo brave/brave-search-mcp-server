@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { AnswersInputSchema } from './schemas/input.js';
-import { prepareAnswersRequestBody } from './index.js';
 
 describe('AnswersInputSchema', () => {
   it('accepts an API-shaped request body', () => {
@@ -107,41 +106,5 @@ describe('AnswersInputSchema', () => {
         }),
       /Too big/i
     );
-  });
-});
-
-describe('prepareAnswersRequestBody', () => {
-  it('includes stream=true by default in the upstream request body', () => {
-    const body = prepareAnswersRequestBody(
-      AnswersInputSchema.parse({
-        messages: [{ role: 'user', content: 'Hello' }],
-      })
-    );
-
-    assert.equal(body.stream, true);
-  });
-
-  it('drops empty objects', () => {
-    const body = prepareAnswersRequestBody(
-      AnswersInputSchema.parse({
-        messages: [{ role: 'user', content: 'Hello' }],
-        model: 'brave',
-        metadata: {},
-      })
-    );
-
-    assert.equal('metadata' in body, false);
-  });
-
-  it('keeps non-empty object fields', () => {
-    const body = prepareAnswersRequestBody(
-      AnswersInputSchema.parse({
-        messages: [{ role: 'user', content: 'Hello' }],
-        model: 'brave',
-        metadata: { session_id: 'abc' },
-      })
-    );
-
-    assert.deepEqual(body.metadata, { session_id: 'abc' });
   });
 });

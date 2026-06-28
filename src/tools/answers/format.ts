@@ -16,7 +16,9 @@ const ENUM_END_BLOCK_PATTERN = /<enum_end>[\s\S]*?<\/enum_end>/g;
 const ANSWER_CAPTURE_PATTERN = /<answer>([\s\S]*?)<\/answer>/g;
 
 type EnumItemPayload = {
+  uuid?: string;
   original_tokens?: string;
+  citations?: string[];
   name?: string;
   href?: string;
 };
