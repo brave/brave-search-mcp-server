@@ -74,6 +74,9 @@ export async function consumeSseResponse(
     reader.releaseLock();
   }
 
+  // Not likely the case that the call was aborted during parsing, but doesn't hurt to check.
+  throwIfAborted();
+
   buffer += decoder.decode(undefined, { stream: false });
 
   if (buffer.length > 0) {

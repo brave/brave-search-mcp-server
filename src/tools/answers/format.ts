@@ -8,20 +8,20 @@ export type FormatAnswersContentResult =
   | { ok: true; text: string }
   | { ok: false; reason: 'incomplete_research' | 'empty' };
 
+export type EnumItemPayload = {
+  uuid?: string;
+  original_tokens?: string;
+  citations?: Record<string, unknown>;
+  name?: string;
+  href?: string;
+};
+
 const USAGE_BLOCK_PATTERN = /<usage>[\s\S]*?<\/usage>/g;
 const CITATION_BLOCK_PATTERN = /<citation>[\s\S]*?<\/citation>/g;
 const ENUM_ITEM_CAPTURE_PATTERN = /<enum_item>([\s\S]*?)<\/enum_item>/g;
 const ENUM_START_BLOCK_PATTERN = /<enum_start>[\s\S]*?<\/enum_start>/g;
 const ENUM_END_BLOCK_PATTERN = /<enum_end>[\s\S]*?<\/enum_end>/g;
 const ANSWER_CAPTURE_PATTERN = /<answer>([\s\S]*?)<\/answer>/g;
-
-type EnumItemPayload = {
-  uuid?: string;
-  original_tokens?: string;
-  citations?: string[];
-  name?: string;
-  href?: string;
-};
 
 export function stripUsageBlocks(text: string): string {
   return text.replace(USAGE_BLOCK_PATTERN, '');
@@ -47,7 +47,7 @@ function formatEnumItemInner(inner: string): string {
     if (parsed.href) {
       const href = parsed.href.trim();
       if (/^https?:\/\//i.test(href)) {
-        return `* [${label}](<${href}>)`;
+        return `* [${label}](${href})`;
       }
       return `* ${label}`;
     }
@@ -90,7 +90,7 @@ export function extractResearchAnswer(text: string): string | null {
     return inner;
   }
 
-  return null;
+  return inner;
 }
 
 function normalizeAnswerText(text: string, options: FormatAnswersContentOptions): string {
