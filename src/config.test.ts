@@ -47,11 +47,15 @@ describe('getOptions', () => {
 
   it('rejects whitespace-only API keys', () => {
     const error = mock.method(console, 'error', () => {});
-    process.argv = ['node', 'index.js', '--brave-api-key', '   '];
 
-    assert.equal(getOptions(), false);
-    assert.equal(error.mock.callCount(), 1);
-    mock.restoreAll();
+    try {
+      process.argv = ['node', 'index.js', '--brave-api-key', '   '];
+
+      assert.equal(getOptions(), false);
+      assert.equal(error.mock.callCount(), 1);
+    } finally {
+      mock.restoreAll();
+    }
   });
 
   it('reads API key from --brave-api-key-file', () => {

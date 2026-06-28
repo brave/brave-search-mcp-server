@@ -87,6 +87,21 @@ export function extractResearchAnswer(text: string): string | null {
   return null;
 }
 
+function normalizeAnswerText(text: string, options: FormatAnswersContentOptions): string {
+  let normalized = stripUsageBlocks(text);
+
+  if (options.enable_entities) {
+    normalized = replaceEnumItemBlocks(normalized);
+    normalized = stripEnumListMarkerBlocks(normalized);
+  }
+
+  if (options.enable_citations) {
+    normalized = stripCitationBlocks(normalized);
+  }
+
+  return normalized.trim();
+}
+
 export function formatAnswersContent(
   raw: string,
   options: FormatAnswersContentOptions = {}
@@ -96,21 +111,16 @@ export function formatAnswersContent(
     if (!answer) {
       return { ok: false, reason: 'incomplete_research' };
     }
-    return { ok: true, text: answer };
+
+    const text = normalizeAnswerText(answer, options);
+    if (text.length === 0) {
+      return { ok: false, reason: 'empty' };
+    }
+
+    return { ok: true, text };
   }
 
-  let text = stripUsageBlocks(raw);
-
-  if (options.enable_entities) {
-    text = replaceEnumItemBlocks(text);
-    text = stripEnumListMarkerBlocks(text);
-  }
-
-  if (options.enable_citations) {
-    text = stripCitationBlocks(text);
-  }
-
-  text = text.trim();
+  const text = normalizeAnswerText(raw, options);
   if (text.length === 0) {
     return { ok: false, reason: 'empty' };
   }

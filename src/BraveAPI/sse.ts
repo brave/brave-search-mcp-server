@@ -74,8 +74,12 @@ export async function consumeSseResponse(
     reader.releaseLock();
   }
 
+  buffer += decoder.decode(undefined, { stream: false });
+
   if (buffer.length > 0) {
-    content = extractContentFromSseText(buffer);
+    for (const line of buffer.split('\n')) {
+      content = appendContentFromSseLine(line, content);
+    }
   }
 
   return content;

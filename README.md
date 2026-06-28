@@ -102,8 +102,8 @@ Generates AI-powered summaries from web search results using Brave's summarizati
 Generates AI-grounded answers backed by real-time Brave Search using the [Answers API](https://api-dashboard.search.brave.com/api-reference/summarizer/answers) (`POST /res/v1/chat/completions`). Returns a finished answer rather than raw search results.
 
 **Parameters:** See the [Answers API reference](https://api-dashboard.search.brave.com/api-reference/summarizer/answers). Key fields include:
-- `messages` (array, required): Chat messages; the Answers API expects a single user message
-- `model` (string, required): Answers model (`brave` or `brave-pro`)
+- `messages` (array, required): A single user message in chat format
+- `model` (string, optional): Answers model (`brave` or `brave-pro`, default: `brave`)
 - `stream` (boolean, optional): Stream the response via Server-Sent Events (buffered by this tool when true)
 - `country`, `language`, `safesearch`, `max_completion_tokens`, `metadata`, `seed`
 - `enable_entities`, `enable_citations`, `enable_research`, and research tuning parameters

@@ -56,6 +56,15 @@ describe('formatAnswersContent', () => {
     assert.deepEqual(result, { ok: true, text: 'Final answer.' });
   });
 
+  it('strips citation tags from research answers when citations are enabled', () => {
+    const result = formatAnswersContent(
+      '<answer>{"answer":"Answer text<citation>{\\"number\\":1}</citation>"}</answer>',
+      { enable_research: true, enable_citations: true }
+    );
+
+    assert.deepEqual(result, { ok: true, text: 'Answer text' });
+  });
+
   it('flags incomplete research responses', () => {
     const result = formatAnswersContent(
       '<thinking>{"urls_selected":["https://example.com"]}</thinking><progress>{"number_of_iterations":2}</progress>',

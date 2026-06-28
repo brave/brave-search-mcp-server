@@ -47,6 +47,39 @@ describe('AnswersInputSchema', () => {
       },
     });
   });
+
+  it('rejects multiple messages', () => {
+    assert.throws(
+      () =>
+        AnswersInputSchema.parse({
+          messages: [
+            { role: 'user', content: 'First' },
+            { role: 'user', content: 'Second' },
+          ],
+        }),
+      /Too (big|many)/i
+    );
+  });
+
+  it('rejects out-of-range research_maximum_number_of_seconds', () => {
+    assert.throws(
+      () =>
+        AnswersInputSchema.parse({
+          messages: [{ role: 'user', content: 'test' }],
+          research_maximum_number_of_seconds: 0,
+        }),
+      /Too small/i
+    );
+
+    assert.throws(
+      () =>
+        AnswersInputSchema.parse({
+          messages: [{ role: 'user', content: 'test' }],
+          research_maximum_number_of_seconds: 301,
+        }),
+      /Too big/i
+    );
+  });
 });
 
 describe('prepareAnswersRequestBody', () => {
