@@ -1,6 +1,6 @@
 import type { CallToolResult, ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { issuePostRequest, issueStreamingPostRequest } from '../../BraveAPI/post.js';
+import { issuePostRequest, issueStreamingPostRequest } from '../../BraveAPI/index.js';
 import { AnswersInputSchema, type AnswersInput } from './schemas/input.js';
 import type { ChatCompletionResponse } from './schemas/output.js';
 import { formatAnswersContent, INCOMPLETE_RESEARCH_MESSAGE } from './format.js';
