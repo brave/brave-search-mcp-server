@@ -1,20 +1,14 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { buildAnswersRequestBody } from './index.js';
-import { answersQueryParams } from './params.js';
+import { AnswersInputSchema } from './schemas/input.js';
+import { prepareAnswersRequestBody } from './index.js';
 
-describe('buildAnswersRequestBody', () => {
-  it('builds a blocking single-search request by default', () => {
-    const body = buildAnswersRequestBody({
-      query: 'What is TypeScript?',
+describe('AnswersInputSchema', () => {
+  it('accepts an API-shaped request body', () => {
+    const body = AnswersInputSchema.parse({
+      messages: [{ role: 'user', content: 'What is TypeScript?' }],
       model: 'brave',
-      country: 'US',
-      language: 'en',
-      safesearch: 'moderate',
-      enable_entities: false,
-      enable_citations: false,
-      enable_research: false,
-      research_allow_thinking: true,
+      stream: false,
     });
 
     assert.deepEqual(body.messages, [{ role: 'user', content: 'What is TypeScript?' }]);
@@ -22,68 +16,61 @@ describe('buildAnswersRequestBody', () => {
     assert.equal(body.stream, false);
   });
 
-  it('forces streaming when citations are enabled', () => {
-    const body = buildAnswersRequestBody({
-      query: 'Latest fusion news',
+  it('accepts web_search_options.user_location', () => {
+    const body = AnswersInputSchema.parse({
+      messages: [{ role: 'user', content: 'best coffee shops nearby' }],
       model: 'brave',
-      country: 'US',
-      language: 'en',
-      safesearch: 'moderate',
-      enable_entities: false,
-      enable_citations: true,
-      enable_research: false,
-      research_allow_thinking: true,
+      web_search_options: {
+        search_context_size: 'medium',
+        user_location: {
+          type: 'approximate',
+          approximate: {
+            city: 'San Francisco',
+            country: 'US',
+            region: 'California',
+            timezone: 'America/Los_Angeles',
+          },
+        },
+      },
     });
 
-    assert.equal(body.stream, true);
-    assert.equal(body.enable_citations, true);
-  });
-
-  it('forces streaming when research mode is enabled', () => {
-    const body = buildAnswersRequestBody({
-      query: 'Compare quantum approaches',
-      model: 'brave',
-      country: 'US',
-      language: 'en',
-      safesearch: 'moderate',
-      enable_entities: false,
-      enable_citations: false,
-      enable_research: true,
-      research_allow_thinking: true,
-      research_maximum_number_of_iterations: 3,
+    assert.deepEqual(body.web_search_options, {
+      search_context_size: 'medium',
+      user_location: {
+        type: 'approximate',
+        approximate: {
+          city: 'San Francisco',
+          country: 'US',
+          region: 'California',
+          timezone: 'America/Los_Angeles',
+        },
+      },
     });
-
-    assert.equal(body.stream, true);
-    assert.equal(body.enable_research, true);
-    assert.equal(body.research_maximum_number_of_iterations, 3);
-  });
-
-  it('forces streaming when entities are enabled', () => {
-    const body = buildAnswersRequestBody({
-      query: 'Who founded Tesla?',
-      model: 'brave',
-      country: 'US',
-      language: 'en',
-      safesearch: 'moderate',
-      enable_entities: true,
-      enable_citations: false,
-      enable_research: false,
-      research_allow_thinking: true,
-    });
-
-    assert.equal(body.stream, true);
-    assert.equal(body.enable_entities, true);
   });
 });
 
-describe('answersQueryParams', () => {
-  it('rejects incompatible research and citation options', () => {
-    const result = answersQueryParams.safeParse({
-      query: 'test',
-      enable_research: true,
-      enable_citations: true,
-    });
+describe('prepareAnswersRequestBody', () => {
+  it('drops empty objects', () => {
+    const body = prepareAnswersRequestBody(
+      AnswersInputSchema.parse({
+        messages: [{ role: 'user', content: 'Hello' }],
+        model: 'brave',
+        metadata: {},
+      })
+    );
 
-    assert.equal(result.success, false);
+    assert.equal('metadata' in body, false);
+  });
+
+  it('keeps non-empty object fields', () => {
+    const body = prepareAnswersRequestBody(
+      AnswersInputSchema.parse({
+        messages: [{ role: 'user', content: 'Hello' }],
+        model: 'brave',
+        metadata: { session_id: 'abc' },
+      })
+    );
+
+    assert.deepEqual(body.metadata, { session_id: 'abc' });
   });
 });
