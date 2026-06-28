@@ -104,10 +104,23 @@ Generates AI-grounded answers backed by real-time Brave Search using the [Answer
 **Parameters:** See the [Answers API reference](https://api-dashboard.search.brave.com/api-reference/summarizer/answers). Key fields include:
 - `messages` (array, required): A single user message in chat format
 - `model` (string, optional): Answers model (`brave` or `brave-pro`, default: `brave`)
-- `stream` (boolean, optional): Stream the response via Server-Sent Events (buffered by this tool when true)
-- `country`, `language`, `safesearch`, `max_completion_tokens`, `metadata`, `seed`
-- `enable_entities`, `enable_citations`, `enable_research`, and research tuning parameters
-- `web_search_options` (object, optional): OpenAI-compatible options such as `search_context_size` and `user_location`
+- `stream` (boolean, optional): Stream the response via Server-Sent Events (default: `true`; buffered by this tool before returning). Required when using `enable_entities`, `enable_citations`, or `enable_research`.
+- `country` (string, optional): Search country (2-letter code or `ALL`)
+- `language` (string, optional): Response language
+- `safesearch` (string, optional): `off`, `moderate`, or `strict`
+- `max_completion_tokens`, `metadata`, `seed`
+- `enable_entities` (boolean, optional): Include entity tags in streamed output (requires `stream=true`)
+- `enable_citations` (boolean, optional): Include citation tags (requires `stream=true`; incompatible with `enable_research`)
+- `enable_research` (boolean, optional): Multi-search research mode (requires `stream=true`; incompatible with `enable_citations`)
+- `web_search_options` (object, optional): OpenAI-compatible options such as `search_context_size` (`low`, `medium`, `high`) and `user_location`
+
+**Research tuning** (when `enable_research=true`):
+- `research_allow_thinking` (boolean, optional)
+- `research_maximum_number_of_tokens_per_query` (integer, optional, range: 1024-16384)
+- `research_maximum_number_of_queries` (integer, optional, range: 1-50)
+- `research_maximum_number_of_iterations` (integer, optional, range: 1-5)
+- `research_maximum_number_of_seconds` (integer, optional, range: 1-300)
+- `research_maximum_number_of_results_per_query` (integer, optional, range: 1-60)
 
 **Notes:**
 - Requires an Answers plan subscription.
