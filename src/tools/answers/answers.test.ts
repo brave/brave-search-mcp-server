@@ -16,6 +16,14 @@ describe('AnswersInputSchema', () => {
     assert.equal(body.stream, false);
   });
 
+  it('defaults stream to true when omitted', () => {
+    const body = AnswersInputSchema.parse({
+      messages: [{ role: 'user', content: 'What is TypeScript?' }],
+    });
+
+    assert.equal(body.stream, true);
+  });
+
   it('accepts web_search_options.user_location', () => {
     const body = AnswersInputSchema.parse({
       messages: [{ role: 'user', content: 'best coffee shops nearby' }],
@@ -83,6 +91,16 @@ describe('AnswersInputSchema', () => {
 });
 
 describe('prepareAnswersRequestBody', () => {
+  it('includes stream=true by default in the upstream request body', () => {
+    const body = prepareAnswersRequestBody(
+      AnswersInputSchema.parse({
+        messages: [{ role: 'user', content: 'Hello' }],
+      })
+    );
+
+    assert.equal(body.stream, true);
+  });
+
   it('drops empty objects', () => {
     const body = prepareAnswersRequestBody(
       AnswersInputSchema.parse({

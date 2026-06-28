@@ -35,7 +35,7 @@ export const description = `
 
 /** Drop optional object fields that MCP clients may send as `{}` but should not be forwarded. */
 export function prepareAnswersRequestBody(body: AnswersInput): AnswersInput {
-  const prepared: Record<string, unknown> = { ...body };
+  const prepared: Record<string, unknown> = { ...body, stream: body.stream ?? true };
 
   for (const [key, value] of Object.entries(prepared)) {
     if (

@@ -66,9 +66,8 @@ export const AnswersInputSchema = z.object({
     .boolean()
     .default(true)
     .describe(
-      'Whether to stream the response via Server-Sent Events. When true, this MCP tool buffers the stream before returning.'
-    )
-    .optional(),
+      'Whether to stream the response via Server-Sent Events. Defaults to true. When true, this MCP tool buffers the stream before returning.'
+    ),
   web_search_options: WebSearchOptionsSchema.optional(),
   country: z.string().optional().describe('Search country (2-letter country code or "ALL").'),
   language: z.string().optional().describe('Response language.'),
