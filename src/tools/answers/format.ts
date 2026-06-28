@@ -1,24 +1,67 @@
 export type FormatAnswersContentOptions = {
   enable_research?: boolean;
   enable_citations?: boolean;
+  enable_entities?: boolean;
 };
 
 export type FormatAnswersContentResult =
   | { ok: true; text: string }
   | { ok: false; reason: 'incomplete_research' | 'empty' };
 
-const TAGGED_BLOCK_PATTERN = (tag: string) => new RegExp(`<${tag}>[\\s\\S]*?</${tag}>`, 'g');
+const USAGE_BLOCK_PATTERN = /<usage>[\s\S]*?<\/usage>/g;
+const CITATION_BLOCK_PATTERN = /<citation>[\s\S]*?<\/citation>/g;
+const ENUM_ITEM_CAPTURE_PATTERN = /<enum_item>([\s\S]*?)<\/enum_item>/g;
+const ENUM_START_BLOCK_PATTERN = /<enum_start>[\s\S]*?<\/enum_start>/g;
+const ENUM_END_BLOCK_PATTERN = /<enum_end>[\s\S]*?<\/enum_end>/g;
+const ANSWER_CAPTURE_PATTERN = /<answer>([\s\S]*?)<\/answer>/g;
 
-export function stripTaggedBlocks(text: string, tag: string): string {
-  return text.replace(TAGGED_BLOCK_PATTERN(tag), '');
+type EnumItemPayload = {
+  original_tokens?: string;
+  name?: string;
+  href?: string;
+};
+
+export function stripUsageBlocks(text: string): string {
+  return text.replace(USAGE_BLOCK_PATTERN, '');
 }
 
-export function extractTaggedBlocks(text: string, tag: string): string[] {
-  const pattern = new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`, 'g');
-  const blocks: string[] = [];
-  let match: RegExpExecArray | null;
+export function stripCitationBlocks(text: string): string {
+  return text.replace(CITATION_BLOCK_PATTERN, '');
+}
 
-  while ((match = pattern.exec(text)) !== null) {
+export function stripEnumListMarkerBlocks(text: string): string {
+  return text.replace(ENUM_START_BLOCK_PATTERN, '').replace(ENUM_END_BLOCK_PATTERN, '');
+}
+
+function formatEnumItemInner(inner: string): string {
+  const trimmed = inner.trim();
+  if (trimmed.length === 0) return '';
+
+  try {
+    const parsed = JSON.parse(trimmed) as EnumItemPayload;
+    const label = parsed.original_tokens?.trim() || parsed.name?.trim();
+    if (!label) return '';
+
+    if (parsed.href) {
+      return `* [${label}](${parsed.href})`;
+    }
+    return `* ${label}`;
+  } catch {
+    return '';
+  }
+}
+
+export function replaceEnumItemBlocks(text: string): string {
+  return text.replace(ENUM_ITEM_CAPTURE_PATTERN, (_match, inner: string) => {
+    const formatted = formatEnumItemInner(inner);
+    return formatted.length > 0 ? `\n${formatted}` : '';
+  });
+}
+
+export function extractAnswerBlocks(text: string): string[] {
+  const blocks: string[] = [];
+
+  for (const match of text.matchAll(ANSWER_CAPTURE_PATTERN)) {
     blocks.push(match[1]);
   }
 
@@ -26,7 +69,7 @@ export function extractTaggedBlocks(text: string, tag: string): string[] {
 }
 
 export function extractResearchAnswer(text: string): string | null {
-  const blocks = extractTaggedBlocks(text, 'answer');
+  const blocks = extractAnswerBlocks(text);
   if (blocks.length === 0) return null;
 
   const inner = blocks[blocks.length - 1].trim();
@@ -56,10 +99,15 @@ export function formatAnswersContent(
     return { ok: true, text: answer };
   }
 
-  let text = stripTaggedBlocks(raw, 'usage');
+  let text = stripUsageBlocks(raw);
+
+  if (options.enable_entities) {
+    text = replaceEnumItemBlocks(text);
+    text = stripEnumListMarkerBlocks(text);
+  }
 
   if (options.enable_citations) {
-    text = stripTaggedBlocks(text, 'citation');
+    text = stripCitationBlocks(text);
   }
 
   text = text.trim();

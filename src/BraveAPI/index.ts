@@ -1,6 +1,5 @@
 import type { Endpoints } from './types.js';
-import config from '../config.js';
-import { stringify } from '../utils.js';
+import { buildErrorMessage, mergeRequestHeaders } from './request.js';
 
 const typeToPathMap: Record<keyof Endpoints, string> = {
   images: '/res/v1/images/search',
@@ -12,14 +11,6 @@ const typeToPathMap: Record<keyof Endpoints, string> = {
   summarizer: '/res/v1/summarizer/search',
   llmContext: '/res/v1/llm/context',
   placeSearch: '/res/v1/local/place_search',
-};
-
-const getDefaultRequestHeaders = (): Record<string, string> => {
-  return {
-    Accept: 'application/json',
-    'Accept-Encoding': 'gzip',
-    'X-Subscription-Token': config.braveApiKey,
-  };
 };
 
 const isValidGoggleURL = (url: string): boolean => {
@@ -108,27 +99,14 @@ async function issueRequest<T extends keyof Endpoints>(
 
   // Issue Request
   const urlWithParams = url.toString() + '?' + queryParams.toString();
-  const headers = new Headers(getDefaultRequestHeaders());
-  for (const [key, value] of Object.entries(requestHeaders)) {
-    if (value === undefined || value === null) continue;
-    headers.set(key, String(value));
-  }
-
-  const response = await fetch(urlWithParams, { headers });
+  const response = await fetch(urlWithParams, {
+    headers: mergeRequestHeaders(requestHeaders),
+  });
 
   // Handle Error
   if (!response.ok) {
-    let errorMessage = `${response.status} ${response.statusText}`;
-
-    try {
-      const responseBody = await response.json();
-      errorMessage += `\n${stringify(responseBody, true)}`;
-    } catch (error) {
-      errorMessage += `\n${await response.text()}`;
-    }
-
     // TODO (Sampson): Setup proper error handling, updating state, etc.
-    throw new Error(errorMessage);
+    throw new Error(await buildErrorMessage(response));
   }
 
   // Return Response

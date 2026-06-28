@@ -28,7 +28,7 @@ export const description = `
         - Single-search (default): Fast grounded answer from one search. Supports enable_citations.
         - Research (enable_research=true): Iterative multi-search synthesis. Slower; may take up to several minutes.
 
-    Request parameters mirror the Answers API request body. Set stream=true to use Server-Sent Events; this MCP tool buffers streamed responses before returning. When enable_research is true, research responses are reduced to the synthesized <answer> text; citation metadata tags are stripped from the returned text when enable_citations is true.
+    Request parameters mirror the Answers API request body. Set stream=true to use Server-Sent Events; this MCP tool buffers streamed responses before returning. When enable_research is true, research responses are reduced to the synthesized <answer> text. When enable_entities is true, <enum_item> blocks are converted to markdown bullet lines. Citation metadata tags are stripped from the returned text when enable_citations is true.
 
     Requires an Answers plan. See https://api-dashboard.search.brave.com/app/subscriptions/subscribe
 `.trim();
@@ -73,6 +73,7 @@ export const execute = async (params: AnswersInput): Promise<CallToolResult> => 
     const formatted = formatAnswersContent(rawText, {
       enable_research: body.enable_research === true,
       enable_citations: body.enable_citations === true,
+      enable_entities: body.enable_entities === true,
     });
 
     if (!formatted.ok) {

@@ -4,27 +4,33 @@
  * Brave Answers returns OpenAI-compatible `data: {...}` lines with
  * `choices[0].delta.content` chunks, terminated by `data: [DONE]`.
  */
+function appendContentFromSseLine(line: string, content: string): string {
+  const trimmed = line.trim();
+  if (!trimmed.startsWith('data:')) return content;
+
+  const data = trimmed.slice(5).trim();
+  if (data.length === 0 || data === '[DONE]') return content;
+
+  try {
+    const chunk = JSON.parse(data) as {
+      choices?: Array<{ delta?: { content?: string } }>;
+    };
+    const delta = chunk.choices?.[0]?.delta?.content;
+    if (typeof delta === 'string') {
+      return content + delta;
+    }
+  } catch {
+    // Skip malformed SSE payloads.
+  }
+
+  return content;
+}
+
 export function extractContentFromSseText(sseText: string): string {
   let content = '';
 
   for (const line of sseText.split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed.startsWith('data:')) continue;
-
-    const data = trimmed.slice(5).trim();
-    if (data.length === 0 || data === '[DONE]') continue;
-
-    try {
-      const chunk = JSON.parse(data) as {
-        choices?: Array<{ delta?: { content?: string } }>;
-      };
-      const delta = chunk.choices?.[0]?.delta?.content;
-      if (typeof delta === 'string') {
-        content += delta;
-      }
-    } catch {
-      // Skip malformed SSE payloads.
-    }
+    content = appendContentFromSseLine(line, content);
   }
 
   return content;
@@ -61,23 +67,7 @@ export async function consumeSseResponse(
       buffer = lines.pop() ?? '';
 
       for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed.startsWith('data:')) continue;
-
-        const data = trimmed.slice(5).trim();
-        if (data.length === 0 || data === '[DONE]') continue;
-
-        try {
-          const chunk = JSON.parse(data) as {
-            choices?: Array<{ delta?: { content?: string } }>;
-          };
-          const delta = chunk.choices?.[0]?.delta?.content;
-          if (typeof delta === 'string') {
-            content += delta;
-          }
-        } catch {
-          // Skip malformed SSE payloads.
-        }
+        content = appendContentFromSseLine(line, content);
       }
     }
   } finally {
@@ -85,7 +75,7 @@ export async function consumeSseResponse(
   }
 
   if (buffer.length > 0) {
-    content += extractContentFromSseText(buffer);
+    content = extractContentFromSseText(buffer);
   }
 
   return content;

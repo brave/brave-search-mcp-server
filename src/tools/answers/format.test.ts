@@ -6,7 +6,9 @@ import {
   extractResearchAnswer,
   formatAnswersContent,
   INCOMPLETE_RESEARCH_MESSAGE,
-  stripTaggedBlocks,
+  replaceEnumItemBlocks,
+  stripEnumListMarkerBlocks,
+  stripUsageBlocks,
 } from './format.js';
 
 describe('extractResearchAnswer', () => {
@@ -77,6 +79,38 @@ describe('formatAnswersContent', () => {
 
     assert.deepEqual(result, { ok: true, text: 'Answer text' });
   });
+
+  it('converts enum_item blocks to markdown bullets when entities are enabled', () => {
+    const result = formatAnswersContent(
+      'Albums:<enum_start>ul</enum_start><enum_item>{"original_tokens":"The Fame","href":"https://example.com/fame"}</enum_item><enum_end></enum_end><usage>{}</usage>',
+      { enable_entities: true }
+    );
+
+    assert.deepEqual(result, {
+      ok: true,
+      text: 'Albums:\n* [The Fame](https://example.com/fame)',
+    });
+  });
+
+  it('formats multiple enum_item blocks as a markdown list', () => {
+    const result = formatAnswersContent(
+      'Albums:<enum_item>{"original_tokens":"The Fame"}</enum_item><enum_item>{"original_tokens":"Chromatica"}</enum_item>',
+      { enable_entities: true }
+    );
+
+    assert.deepEqual(result, {
+      ok: true,
+      text: 'Albums:\n* The Fame\n* Chromatica',
+    });
+  });
+
+  it('falls back to name when original_tokens is missing', () => {
+    const result = formatAnswersContent('<enum_item>{"name":"Chromatica"}</enum_item>', {
+      enable_entities: true,
+    });
+
+    assert.deepEqual(result, { ok: true, text: '* Chromatica' });
+  });
 });
 
 describe('INCOMPLETE_RESEARCH_MESSAGE', () => {
@@ -85,8 +119,28 @@ describe('INCOMPLETE_RESEARCH_MESSAGE', () => {
   });
 });
 
-describe('stripTaggedBlocks', () => {
-  it('removes all occurrences of a tagged block', () => {
-    assert.equal(stripTaggedBlocks('<usage>a</usage>x<usage>b</usage>', 'usage'), 'x');
+describe('stripUsageBlocks', () => {
+  it('removes all occurrences of a usage block', () => {
+    assert.equal(stripUsageBlocks('<usage>a</usage>x<usage>b</usage>'), 'x');
+  });
+});
+
+describe('replaceEnumItemBlocks', () => {
+  it('replaces enum_item JSON with a markdown bullet', () => {
+    assert.equal(
+      replaceEnumItemBlocks(
+        '<enum_item>{"original_tokens":"The Fame","href":"https://example.com/fame"}</enum_item>'
+      ),
+      '\n* [The Fame](https://example.com/fame)'
+    );
+  });
+});
+
+describe('stripEnumListMarkerBlocks', () => {
+  it('removes enum_start and enum_end markers', () => {
+    assert.equal(
+      stripEnumListMarkerBlocks('<enum_start>ul</enum_start>items<enum_end></enum_end>'),
+      'items'
+    );
   });
 });
