@@ -32,10 +32,6 @@ const ENUM_LIST_CONTAINER_CAPTURE_PATTERN =
   /<enum_start>([\s\S]*?)<\/enum_start>([\s\S]*?)<enum_end>[\s\S]*?<\/enum_end>/g;
 const ANSWER_CAPTURE_PATTERN = /<answer>([\s\S]*?)<\/answer>/g;
 
-export function stripUsageBlocks(text: string): string {
-  return text.replace(USAGE_BLOCK_PATTERN, '');
-}
-
 function citationLinkLabel(url: string): string {
   try {
     return new URL(url).hostname.replace(/^www\./i, '');
@@ -178,7 +174,7 @@ export function extractResearchAnswer(text: string): string | null {
 }
 
 function normalizeAnswerText(text: string, options: FormatAnswersContentOptions): string {
-  let normalized = stripUsageBlocks(text);
+  let normalized = text.replace(USAGE_BLOCK_PATTERN, '');
 
   if (options.enable_entities) {
     normalized = replaceEnumItemBlocks(normalized);

@@ -6,7 +6,6 @@ import {
   INCOMPLETE_RESEARCH_MESSAGE,
   replaceCitationBlocks,
   replaceEnumItemBlocks,
-  stripUsageBlocks,
 } from './format.js';
 
 describe('extractResearchAnswer', () => {
@@ -137,12 +136,6 @@ describe('replaceCitationBlocks', () => {
     const result = replaceCitationBlocks('No citations.');
 
     assert.deepEqual(result, { body: 'No citations.', citations: undefined });
-  });
-});
-
-describe('stripUsageBlocks', () => {
-  it('removes all occurrences of a usage block', () => {
-    assert.equal(stripUsageBlocks('<usage>a</usage>x<usage>b</usage>'), 'x');
   });
 });
 
