@@ -40,15 +40,15 @@ function citationLinkLabel(url: string): string {
   }
 }
 
+/** @returns Markdown footnote definition, e.g. `[^1]: [example.com](https://example.com) — A source.` */
 function formatCitationFootnote(citation: CitationPayload): string {
-  const number = citation.number;
-  const url = citation.url?.trim();
-  if (number === undefined || !url) return '';
+  const { number, url, snippet } = citation;
+  const href = url?.trim();
+  if (number === undefined || !href) return '';
 
-  const label = citationLinkLabel(url);
-  const snippet = citation.snippet?.trim();
-  const snippetSuffix = snippet ? ` — ${snippet}` : '';
-  return `[^${number}]: [${label}](${url})${snippetSuffix}`;
+  const footnote = `[^${number}]: [${citationLinkLabel(href)}](${href})`;
+  const excerpt = snippet?.trim();
+  return excerpt ? `${footnote} — ${excerpt}` : footnote;
 }
 
 /**
