@@ -1,13 +1,11 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { describe, it } from 'node:test';
 import {
   extractResearchAnswer,
   formatAnswersContent,
   INCOMPLETE_RESEARCH_MESSAGE,
+  replaceCitationBlocks,
   replaceEnumItemBlocks,
-  stripEnumListMarkerBlocks,
   stripUsageBlocks,
 } from './format.js';
 
@@ -27,22 +25,16 @@ describe('extractResearchAnswer', () => {
     assert.equal(extractResearchAnswer(raw), null);
   });
 
-  it('extracts from captured research probe fixture when present', () => {
-    const fixturePath = join(
-      'tmp',
-      'answers-probe',
-      'research',
-      'r04_minimal_budget_repeat.content.txt'
-    );
+  it('returns the answer text when it is not a JSON object', () => {
+    const raw = '<answer>Final answer.</answer>';
 
-    try {
-      const raw = readFileSync(fixturePath, 'utf8');
-      const answer = extractResearchAnswer(raw);
-      assert.ok(answer);
-      assert.match(answer, /Python and Rust for CLI tool development/);
-    } catch {
-      // Fixture is optional in CI; inline coverage above is sufficient.
-    }
+    assert.equal(extractResearchAnswer(raw), 'Final answer.');
+  });
+
+  it('returns the inner JSON when it lacks the answer field', () => {
+    const raw = '<answer>{"urls_selected":[]}</answer>';
+
+    assert.equal(extractResearchAnswer(raw), '{"urls_selected":[]}');
   });
 });
 
@@ -54,15 +46,6 @@ describe('formatAnswersContent', () => {
     );
 
     assert.deepEqual(result, { ok: true, text: 'Final answer.' });
-  });
-
-  it('strips citation tags from research answers when citations are enabled', () => {
-    const result = formatAnswersContent(
-      '<answer>{"answer":"Answer text<citation>{\\"number\\":1}</citation>"}</answer>',
-      { enable_research: true, enable_citations: true }
-    );
-
-    assert.deepEqual(result, { ok: true, text: 'Answer text' });
   });
 
   it('flags incomplete research responses', () => {
@@ -80,13 +63,23 @@ describe('formatAnswersContent', () => {
     assert.deepEqual(result, { ok: true, text: 'Hello world' });
   });
 
-  it('strips citation blocks when citations are enabled', () => {
+  it('converts citation blocks to markdown footnotes when citations are enabled', () => {
     const result = formatAnswersContent(
-      'Answer text<citation>{"number":1,"url":"https://example.com"}</citation><usage>{}</usage>',
+      'Answer text<citation>{"number":1,"url":"https://example.com","snippet":"A source."}</citation>',
       { enable_citations: true }
     );
 
-    assert.deepEqual(result, { ok: true, text: 'Answer text' });
+    assert.deepEqual(result, {
+      ok: true,
+      text: 'Answer text[^1]\n\n[^1]: [example.com](https://example.com) — A source.',
+    });
+  });
+
+  it('leaves citation blocks unchanged when citations are not enabled', () => {
+    const raw = 'Answer text<citation>{"number":1,"url":"https://example.com"}</citation>';
+    const result = formatAnswersContent(raw, {});
+
+    assert.deepEqual(result, { ok: true, text: raw });
   });
 
   it('converts enum_item blocks to markdown bullets when entities are enabled', () => {
@@ -128,6 +121,25 @@ describe('INCOMPLETE_RESEARCH_MESSAGE', () => {
   });
 });
 
+describe('replaceCitationBlocks', () => {
+  it('returns the body text and array of citations when citations are present', () => {
+    const result = replaceCitationBlocks(
+      'Claim.<citation>{"number":1,"url":"https://a.com","snippet":"First."}</citation><citation>{"number":2,"url":"https://b.com"}</citation> More text.'
+    );
+
+    assert.deepEqual(result, {
+      body: 'Claim.[^1][^2] More text.',
+      citations: ['[^1]: [a.com](https://a.com) — First.', '[^2]: [b.com](https://b.com)'],
+    });
+  });
+
+  it('returns the body text and undefined when no citations are present', () => {
+    const result = replaceCitationBlocks('No citations.');
+
+    assert.deepEqual(result, { body: 'No citations.', citations: undefined });
+  });
+});
+
 describe('stripUsageBlocks', () => {
   it('removes all occurrences of a usage block', () => {
     assert.equal(stripUsageBlocks('<usage>a</usage>x<usage>b</usage>'), 'x');
@@ -135,21 +147,27 @@ describe('stripUsageBlocks', () => {
 });
 
 describe('replaceEnumItemBlocks', () => {
-  it('replaces enum_item JSON with a markdown bullet', () => {
-    assert.equal(
-      replaceEnumItemBlocks(
-        '<enum_item>{"original_tokens":"The Fame","href":"https://example.com/fame"}</enum_item>'
-      ),
-      '\n* [The Fame](https://example.com/fame)'
+  it('converts an unordered enum list container to markdown bullets', () => {
+    const result = replaceEnumItemBlocks(
+      'Albums:<enum_start>ul</enum_start><enum_item>{"original_tokens":"The Fame","href":"https://example.com/fame"}</enum_item><enum_end></enum_end>'
     );
-  });
-});
 
-describe('stripEnumListMarkerBlocks', () => {
-  it('removes enum_start and enum_end markers', () => {
-    assert.equal(
-      stripEnumListMarkerBlocks('<enum_start>ul</enum_start>items<enum_end></enum_end>'),
-      'items'
+    assert.equal(result, 'Albums:\n* [The Fame](https://example.com/fame)');
+  });
+
+  it('converts an ordered enum list container to a numbered markdown list', () => {
+    const result = replaceEnumItemBlocks(
+      'Steps:<enum_start>ol</enum_start><enum_item>{"original_tokens":"First"}</enum_item><enum_item>{"original_tokens":"Second"}</enum_item><enum_end></enum_end>'
     );
+
+    assert.equal(result, 'Steps:\n1. First\n2. Second');
+  });
+
+  it('converts standalone enum_item blocks as an unordered list', () => {
+    const result = replaceEnumItemBlocks(
+      'Albums:<enum_item>{"original_tokens":"The Fame"}</enum_item><enum_item>{"original_tokens":"Chromatica"}</enum_item>'
+    );
+
+    assert.equal(result, 'Albums:\n* The Fame\n* Chromatica');
   });
 });

@@ -80,7 +80,7 @@ export const AnswersInputSchema = z.object({
     .boolean()
     .optional()
     .describe(
-      'Include inline citation tags in the answer. Requires stream=true. Incompatible with enable_research.'
+      'Include inline citation tags in the answer. Requires stream=true. Incompatible with enable_research. Citation tags are converted to markdown footnotes.'
     ),
   enable_research: z
     .boolean()
