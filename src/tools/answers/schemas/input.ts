@@ -120,7 +120,7 @@ export const AnswersInputSchema = z
       .min(1)
       .max(300)
       .describe(
-        'Research time budget in seconds (1-300). The MCP server allows budget plus 180 seconds of overhead before timing out.'
+        'Research time budget in seconds (1-300). Default 180. Controls upstream research duration; the MCP server uses a fixed 300 second streaming timeout for research mode.'
       )
       .optional(),
     research_maximum_number_of_results_per_query: z

@@ -1,9 +1,15 @@
 import type { CallToolResult, ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { ZodError } from 'zod';
 import { issuePostRequest, issueStreamingPostRequest } from '../../BraveAPI/index.js';
 import { AnswersInputSchema, type AnswersInput } from './schemas/input.js';
 import type { ChatCompletionResponse } from './schemas/output.js';
 import { formatAnswersContent, INCOMPLETE_RESEARCH_MESSAGE } from './format.js';
+import {
+  ANSWERS_PROGRESS_INTERVAL_MS,
+  createAnswersProgressNotifier,
+  type AnswersToolExtra,
+} from './progress.js';
 import { getAnswersStreamingTimeoutMs } from './timeout.js';
 
 export const name = 'brave_answers';
@@ -36,32 +42,35 @@ export const description = `
     Requires an Answers plan. See https://api-dashboard.search.brave.com/app/subscriptions/subscribe
 `.trim();
 
-export const execute = async (params: AnswersInput): Promise<CallToolResult> => {
+export const execute = async (
+  params: AnswersInput,
+  extra?: AnswersToolExtra
+): Promise<CallToolResult> => {
   const response: CallToolResult = { content: [], isError: false };
 
   try {
     const body = AnswersInputSchema.parse(params);
 
-    if (
-      (body.enable_entities === true ||
-        body.enable_citations === true ||
-        body.enable_research === true) &&
-      body.stream !== true
-    ) {
-      throw new Error(
-        'Invalid request: stream must be true when enable_entities, enable_citations, or enable_research is enabled.'
-      );
-    }
-
-    if (body.enable_citations === true && body.enable_research === true) {
-      throw new Error('Invalid request: enable_citations is incompatible with enable_research.');
-    }
-
     let rawText = '';
 
     if (body.stream) {
       const timeoutMs = getAnswersStreamingTimeoutMs(body);
-      rawText = await issueStreamingPostRequest(ANSWERS_PATH, body, {}, { timeoutMs });
+      const progressMessage = 'Waiting for answer…';
+      const progressTotalSteps = Math.ceil(timeoutMs / ANSWERS_PROGRESS_INTERVAL_MS);
+
+      rawText = await issueStreamingPostRequest(
+        ANSWERS_PATH,
+        body,
+        {},
+        {
+          timeoutMs,
+          signal: extra?.signal,
+          onProgress: createAnswersProgressNotifier(extra, progressMessage, {
+            totalSteps: progressTotalSteps,
+          }),
+          progressIntervalMs: ANSWERS_PROGRESS_INTERVAL_MS,
+        }
+      );
     } else {
       const result = await issuePostRequest<ChatCompletionResponse>(ANSWERS_PATH, body);
       rawText = result.choices?.[0]?.message?.content ?? '';
@@ -96,9 +105,15 @@ export const execute = async (params: AnswersInput): Promise<CallToolResult> => 
     });
   } catch (error) {
     response.isError = true;
+    const message =
+      error instanceof ZodError
+        ? (error.issues[0]?.message ?? 'Invalid request.')
+        : error instanceof Error
+          ? error.message
+          : String(error);
     response.content.push({
       type: 'text',
-      text: error instanceof Error ? error.message : String(error),
+      text: message,
     });
   }
 

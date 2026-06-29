@@ -21,9 +21,26 @@ export async function issuePostRequest<T>(
 
 export type StreamingPostRequestOptions = {
   timeoutMs?: number;
+  /** Client cancellation signal (merged with the streaming timeout). */
+  signal?: AbortSignal;
+  /** Called periodically while the stream is open to keep MCP clients alive. */
+  onProgress?: () => void | Promise<void>;
+  progressIntervalMs?: number;
 };
 
 const DEFAULT_STREAMING_TIMEOUT_MS = 90_000;
+const DEFAULT_PROGRESS_INTERVAL_MS = 5_000;
+
+function mergeAbortSignals(...signals: (AbortSignal | undefined)[]): AbortSignal {
+  const active = signals.filter((signal): signal is AbortSignal => signal !== undefined);
+  if (active.length === 0) {
+    return AbortSignal.timeout(DEFAULT_STREAMING_TIMEOUT_MS);
+  }
+  if (active.length === 1) {
+    return active[0];
+  }
+  return AbortSignal.any(active);
+}
 
 function isTimeoutError(error: unknown): boolean {
   return error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError');
@@ -36,7 +53,18 @@ export async function issueStreamingPostRequest(
   options: StreamingPostRequestOptions = {}
 ): Promise<string> {
   const timeoutMs = options.timeoutMs ?? DEFAULT_STREAMING_TIMEOUT_MS;
-  const signal = AbortSignal.timeout(timeoutMs);
+  const timeoutSignal = AbortSignal.timeout(timeoutMs);
+  const signal = mergeAbortSignals(timeoutSignal, options.signal);
+
+  let progressInterval: ReturnType<typeof setInterval> | undefined;
+
+  if (options.onProgress) {
+    const intervalMs = options.progressIntervalMs ?? DEFAULT_PROGRESS_INTERVAL_MS;
+    void options.onProgress();
+    progressInterval = setInterval(() => {
+      void options.onProgress?.();
+    }, intervalMs);
+  }
 
   try {
     const response = await fetch(`${BASE_URL}${path}`, {
@@ -56,5 +84,9 @@ export async function issueStreamingPostRequest(
       throw new Error(`Streaming request timed out after ${Math.round(timeoutMs / 1000)} seconds`);
     }
     throw error;
+  } finally {
+    if (progressInterval) {
+      clearInterval(progressInterval);
+    }
   }
 }
