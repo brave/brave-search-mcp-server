@@ -9,6 +9,7 @@ import { getAnswersStreamingTimeoutMs } from './timeout.js';
 export const name = 'brave_answers';
 
 const ANSWERS_PATH = '/res/v1/chat/completions';
+const EMPTY_ANSWER_MESSAGE = 'No answer content was returned by the Answers API.';
 
 export const annotations: ToolAnnotations = {
   title: 'Brave Answers',
@@ -43,12 +44,8 @@ export const execute = async (params: AnswersInput): Promise<CallToolResult> => 
     let rawText = '';
 
     if (body.stream) {
-      rawText = await issueStreamingPostRequest(
-        ANSWERS_PATH,
-        body,
-        {},
-        { timeoutMs: getAnswersStreamingTimeoutMs(body) }
-      );
+      const timeoutMs = getAnswersStreamingTimeoutMs(body);
+      rawText = await issueStreamingPostRequest(ANSWERS_PATH, body, {}, { timeoutMs });
     } else {
       const result = await issuePostRequest<ChatCompletionResponse>(ANSWERS_PATH, body);
       rawText = result.choices?.[0]?.message?.content ?? '';
@@ -61,14 +58,19 @@ export const execute = async (params: AnswersInput): Promise<CallToolResult> => 
     });
 
     if (!formatted.ok) {
+      let errorMessage = EMPTY_ANSWER_MESSAGE;
+
+      switch (formatted.reason) {
+        case 'incomplete_research':
+          errorMessage = INCOMPLETE_RESEARCH_MESSAGE;
+          break;
+        case 'empty':
+        default:
+          errorMessage = EMPTY_ANSWER_MESSAGE;
+      }
+
       response.isError = true;
-      response.content.push({
-        type: 'text',
-        text:
-          formatted.reason === 'incomplete_research'
-            ? INCOMPLETE_RESEARCH_MESSAGE
-            : 'No answer content was returned by the Answers API.',
-      });
+      response.content.push({ type: 'text', text: errorMessage });
       return response;
     }
 
