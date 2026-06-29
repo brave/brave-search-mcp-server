@@ -18,6 +18,8 @@ export const annotations: ToolAnnotations = {
 export const description = `
     Generates AI-grounded answers backed by real-time Brave Search using the Answers API (OpenAI-compatible /chat/completions endpoint).
 
+    Preferred replacement for brave_summarizer: Pass your question in messages instead of chaining brave_web_search (summary: true) + brave_summarizer.
+
     When to use:
         - When you need a finished, web-grounded answer rather than raw search results
         - For quick factual Q&A with optional inline citations

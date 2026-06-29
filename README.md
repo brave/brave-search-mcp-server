@@ -1,6 +1,6 @@
 # Brave Search MCP Server
 
-An MCP server implementation that integrates the Brave Search API, providing comprehensive search capabilities including web search, local business search, place search, image search, video search, news search, LLM context, AI-powered summarization, and grounded Answers. This project supports both STDIO and HTTP transports, with STDIO as the default mode.
+An MCP server implementation that integrates the Brave Search API, providing comprehensive search capabilities including web search, local business search, place search, image search, video search, news search, LLM context, grounded Answers, and legacy AI summarization. This project supports both STDIO and HTTP transports, with STDIO as the default mode.
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/brave/brave-search-mcp-server)
 
@@ -15,6 +15,42 @@ To follow established MCP conventions, the server now defaults to STDIO. If you 
 #### Response structure of `brave_image_search`
 
 Version 1.x of the MCP server would return base64-encoded image data along with image URLs. This dramatically slowed down the response, as well as consumed unnecessarily context in the session. Version 2.x removes the base64-encoded data, and returns a response object that more closely reflects the original Brave Search API response. The updated output schema is defined in [`src/tools/images/schemas/output.ts`](https://github.com/brave/brave-search-mcp-server/blob/main/src/tools/images/schemas/output.ts).
+
+### Summarizer to Answers
+
+`brave_summarizer` is **deprecated**. It remains available for existing Pro AI subscribers, but new integrations should use [`brave_answers`](#answers-brave_answers) instead.
+
+**Why migrate to Answers:**
+
+- Single request — no `brave_web_search` + summary key + `brave_summarizer` polling workflow
+- Optional inline citations (`enable_citations`) and multi-search research mode (`enable_research`)
+- Returns a finished, web-grounded answer rather than raw search results to summarize
+
+**Before (2 calls):**
+
+1. `brave_web_search({ query: "...", summary: true })` — extract the summarizer key from the response
+2. `brave_summarizer({ key: "..." })`
+
+**After (1 call):**
+
+```json
+{
+  "messages": [{ "role": "user", "content": "..." }],
+  "enable_citations": true
+}
+```
+
+**Parameter mapping:**
+
+| Summarizer | Answers |
+|---|---|
+| `inline_references: true` | `enable_citations: true` (requires `stream: true`, the default) |
+| `entity_info: true` | `enable_entities: true` |
+| Multi-source research via web search + summary | `enable_research: true` |
+
+**Subscription note:** Summarizer requires a **Pro AI** plan. Answers requires an [**Answers plan**](https://api-dashboard.search.brave.com/app/subscriptions/subscribe).
+
+Successful `brave_summarizer` responses include a separate deprecation notice block before the summary text so the notice is not confused with answer content.
 
 ## Tools
 
@@ -36,7 +72,7 @@ Performs comprehensive web searches with rich result types and advanced filterin
 - `goggles` (array, optional): Custom re-ranking definitions
 - `units` (string, optional): Measurement units ("metric" or "imperial")
 - `extra_snippets` (boolean, optional): Get additional excerpts (Pro plans only)
-- `summary` (boolean, optional): Enable summary key generation for AI summarization
+- `summary` (boolean, optional): Enable summary key generation for the deprecated `brave_summarizer` workflow; prefer `brave_answers` for new integrations
 
 ### Local Search (`brave_local_search`)
 Searches for local businesses and places with detailed information including ratings, hours, and AI-generated descriptions.
@@ -88,18 +124,8 @@ Searches for current news articles with freshness controls and breaking news ind
 - `extra_snippets` (boolean, optional): Get additional excerpts (Pro plans only)
 - `goggles` (array, optional): Custom re-ranking definitions
 
-### Summarizer Search (`brave_summarizer`)
-Generates AI-powered summaries from web search results using Brave's summarization API.
-
-**Parameters:**
-- `key` (string, required): Summary key from web search results (use `summary: true` in web search)
-- `entity_info` (boolean, optional): Include entity information (default: false)
-- `inline_references` (boolean, optional): Add source URL references (default: false)
-
-**Usage:** First perform a web search with `summary: true`, then use the returned summary key with this tool.
-
 ### Answers (`brave_answers`)
-Generates AI-grounded answers backed by real-time Brave Search using the [Answers API](https://api-dashboard.search.brave.com/api-reference/summarizer/answers) (`POST /res/v1/chat/completions`). Returns a finished answer rather than raw search results.
+Generates AI-grounded answers backed by real-time Brave Search using the [Answers API](https://api-dashboard.search.brave.com/api-reference/summarizer/answers) (`POST /res/v1/chat/completions`). Returns a finished answer rather than raw search results. **Preferred replacement for the deprecated `brave_summarizer` tool** — see [Summarizer to Answers](#summarizer-to-answers).
 
 **Parameters:** See the [Answers API reference](https://api-dashboard.search.brave.com/api-reference/summarizer/answers). Key fields include:
 - `messages` (array, required): A single user message in chat format
@@ -125,6 +151,19 @@ Generates AI-grounded answers backed by real-time Brave Search using the [Answer
 **Notes:**
 - Requires an Answers plan subscription.
 - Uses Server-Sent Events when streaming (default); this MCP tool buffers streamed responses and returns the completed answer.
+
+### Summarizer Search (`brave_summarizer`) — Deprecated
+
+> **Deprecated:** Prefer [`brave_answers`](#answers-brave_answers) for new integrations. See [Summarizer to Answers](#summarizer-to-answers). This tool remains available for existing Pro AI subscribers.
+
+Generates AI-powered summaries from web search results using Brave's summarization API.
+
+**Parameters:**
+- `key` (string, required): Summary key from web search results (use `summary: true` in web search)
+- `entity_info` (boolean, optional): Include entity information (default: false)
+- `inline_references` (boolean, optional): Add source URL references (default: false)
+
+**Usage:** First perform a web search with `summary: true`, then use the returned summary key with this tool. Responses include a separate deprecation notice block before the summary text.
 
 ### Place Search (`brave_place_search`)
 Searches for points of interest (POIs) in a specified geographic area using Brave's Place Search API. Returns rich, structured place data including name, address, opening hours, contact info, ratings, photos, categories, and timezone.
