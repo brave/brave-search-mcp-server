@@ -77,6 +77,7 @@ export async function consumeSseResponse(
   // Not likely the case that the call was aborted during parsing, but doesn't hurt to check.
   throwIfAborted();
 
+  // Flush any incomplete UTF-8 sequence held internally after stream: true decoding.
   buffer += decoder.decode(undefined, { stream: false });
 
   if (buffer.length > 0) {
