@@ -38,9 +38,25 @@ export const description = `
 
 export const execute = async (params: AnswersInput): Promise<CallToolResult> => {
   const response: CallToolResult = { content: [], isError: false };
-  const body = AnswersInputSchema.parse(params);
 
   try {
+    const body = AnswersInputSchema.parse(params);
+
+    if (
+      (body.enable_entities === true ||
+        body.enable_citations === true ||
+        body.enable_research === true) &&
+      body.stream !== true
+    ) {
+      throw new Error(
+        'Invalid request: stream must be true when enable_entities, enable_citations, or enable_research is enabled.'
+      );
+    }
+
+    if (body.enable_citations === true && body.enable_research === true) {
+      throw new Error('Invalid request: enable_citations is incompatible with enable_research.');
+    }
+
     let rawText = '';
 
     if (body.stream) {
