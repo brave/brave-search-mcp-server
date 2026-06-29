@@ -107,4 +107,55 @@ describe('AnswersInputSchema', () => {
       /Too big/i
     );
   });
+
+  it('requires stream when enable_entities, enable_citations, or enable_research is enabled', () => {
+    assert.throws(
+      () =>
+        AnswersInputSchema.parse({
+          messages: [{ role: 'user', content: 'test' }],
+          stream: false,
+          enable_citations: true,
+        }),
+      /stream must be true/
+    );
+  });
+
+  it('rejects enable_entities with enable_research', () => {
+    assert.throws(
+      () =>
+        AnswersInputSchema.parse({
+          messages: [{ role: 'user', content: 'test' }],
+          enable_entities: true,
+          enable_research: true,
+        }),
+      /doesn't support enable_entities/
+    );
+  });
+
+  it('rejects enable_citations with enable_research', () => {
+    assert.throws(
+      () =>
+        AnswersInputSchema.parse({
+          messages: [{ role: 'user', content: 'test' }],
+          enable_citations: true,
+          enable_research: true,
+        }),
+      /doesn't support enable_citations/
+    );
+  });
+
+  it('accepts compatible parameter combinations', () => {
+    assert.doesNotThrow(() =>
+      AnswersInputSchema.parse({
+        messages: [{ role: 'user', content: 'test' }],
+        enable_citations: true,
+      })
+    );
+    assert.doesNotThrow(() =>
+      AnswersInputSchema.parse({
+        messages: [{ role: 'user', content: 'test' }],
+        enable_research: true,
+      })
+    );
+  });
 });
