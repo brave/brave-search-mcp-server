@@ -426,12 +426,12 @@ Add a reference to your local build in `claude_desktop_config.json`:
 1. Build and start the server:
 ```bash
 npm run build
-node dist/index.js
+node dist/index.js --transport http
 ```
 
 2. In another terminal, start the MCP Inspector:
 ```bash
-npx @modelcontextprotocol/inspector node dist/index.js
+npm run inspector:http
 ```
 
 STDIO is the default mode. For HTTP mode testing, add `--transport http` to the arguments in the Inspector UI.
