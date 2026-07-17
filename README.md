@@ -174,6 +174,8 @@ The server supports the following environment variables:
 - `BRAVE_MCP_TRANSPORT`: Transport mode ("http" or "stdio", default: "stdio")
 - `BRAVE_MCP_PORT`: HTTP server port (default: 8080)
 - `BRAVE_MCP_HOST`: HTTP server host (default: "127.0.0.1"). Binds to loopback only by default; set to "0.0.0.0" to expose the server on all interfaces (required inside containers and on Amazon Bedrock AgentCore). Only do this on a trusted network, since the HTTP endpoint is unauthenticated.
+- `BRAVE_MCP_ALLOWED_ORIGINS`: Space- or comma-separated list of additional `Origin` header values permitted for the HTTP transport. Loopback origins are always allowed; browser requests carrying any other `Origin` are rejected with HTTP 403 to guard against DNS rebinding. Set this when a browser-based client on a real domain needs access.
+- `BRAVE_MCP_ALLOWED_HOSTS`: Space- or comma-separated list of hostnames permitted in the `Host` header of the HTTP transport. Matching is on the hostname only and is case-insensitive; a numeric port in an entry (e.g. `mcp.example.com:8080`) is accepted but ignored for matching. Optional, opt-in defense-in-depth: when unset (default) the `Host` header is not validated, so reverse-proxy and custom-domain deployments are unaffected. When set, only loopback hosts and the listed hostnames are accepted; any other `Host` (including malformed/non-numeric ports) is rejected with HTTP 403.
 - `BRAVE_MCP_LOG_LEVEL`: Desired logging level("debug", "info", "notice", "warning", "error", "critical", "alert", or "emergency", default: "info")
 - `BRAVE_MCP_ENABLED_TOOLS`: When used, specifies a space-separated whitelist for supported tools
 - `BRAVE_MCP_DISABLED_TOOLS`: When used, specifies a space-separated blacklist for supported tools
@@ -190,6 +192,8 @@ Options:
   --transport <stdio|http>    Transport type (default: stdio)
   --port <number>             HTTP server port (default: 8080)
   --host <string>             HTTP server host (default: 127.0.0.1)
+  --allowed-origins <origins...>  Allowed Origin header values for HTTP transport (DNS rebinding protection)
+  --allowed-hosts <hosts...>  Allowed Host header values for HTTP transport (opt-in DNS rebinding protection)
   --logging-level <string>    Desired logging level (one of _debug_, _info_, _notice_, _warning_, _error_, _critical_, _alert_, or _emergency_)
   --enabled-tools             Tools whitelist (only the specified tools will be enabled)
   --disabled-tools            Tools blacklist (included tools will be disabled)

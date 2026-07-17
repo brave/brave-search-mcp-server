@@ -2,7 +2,7 @@ import { LoggingLevel, LoggingLevelSchema } from '@modelcontextprotocol/sdk/type
 import { Command } from 'commander';
 import dotenv from 'dotenv';
 import tools from './tools/index.js';
-import { parsePort, readBraveApiKeyFromFile } from './utils.js';
+import { parseDelimitedList, parsePort, readBraveApiKeyFromFile } from './utils.js';
 
 dotenv.config({ debug: false, quiet: true });
 
@@ -25,6 +25,8 @@ type Configuration = {
   enabledTools: string[];
   disabledTools: string[];
   stateless: boolean;
+  allowedOrigins: string[];
+  allowedHosts: string[];
 };
 
 const state: Configuration & { ready: boolean } = {
@@ -37,6 +39,8 @@ const state: Configuration & { ready: boolean } = {
   enabledTools: [],
   disabledTools: [],
   stateless: false,
+  allowedOrigins: [],
+  allowedHosts: [],
 };
 
 export function isToolPermittedByUser(toolName: string): boolean {
@@ -78,6 +82,16 @@ export function getOptions(): Configuration | false {
       '--host <string>',
       'desired host for HTTP transport',
       process.env.BRAVE_MCP_HOST ?? '127.0.0.1'
+    )
+    .option(
+      '--allowed-origins <origins...>',
+      'allowed Origin header values for HTTP transport (DNS rebinding protection)',
+      process.env.BRAVE_MCP_ALLOWED_ORIGINS ?? ''
+    )
+    .option(
+      '--allowed-hosts <hosts...>',
+      'allowed Host header values for HTTP transport (opt-in DNS rebinding protection)',
+      process.env.BRAVE_MCP_ALLOWED_HOSTS ?? ''
     )
     .option(
       '--stateless <boolean>',
@@ -164,6 +178,12 @@ export function getOptions(): Configuration | false {
   options.stateless = options.stateless === true || options.stateless === 'true';
   options.braveApiKey = braveApiKey;
 
+  const allowedOrigins = parseDelimitedList(options.allowedOrigins);
+  options.allowedOrigins = allowedOrigins;
+
+  const allowedHosts = parseDelimitedList(options.allowedHosts);
+  options.allowedHosts = allowedHosts;
+
   // Update state
   state.braveApiKey = braveApiKey;
   state.transport = options.transport;
@@ -173,6 +193,8 @@ export function getOptions(): Configuration | false {
   state.enabledTools = enabledTools;
   state.disabledTools = disabledTools;
   state.stateless = options.stateless;
+  state.allowedOrigins = allowedOrigins;
+  state.allowedHosts = allowedHosts;
   state.ready = true;
 
   return options as Configuration;

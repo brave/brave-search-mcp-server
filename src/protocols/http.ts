@@ -4,6 +4,7 @@ import config from '../config.js';
 import createMcpServer from '../server.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { ListToolsRequest, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { createDnsRebindingGuard } from './rebinding.js';
 
 const yieldGenericServerError = (res: Response) => {
   res.status(500).json({
@@ -62,7 +63,15 @@ const getTransport = async (request: Request): Promise<StreamableHTTPServerTrans
 const createApp = () => {
   const app = express();
 
-  app.use(express.json());
+  app.use(
+    '/mcp',
+    createDnsRebindingGuard({
+      allowedHosts: config.allowedHosts,
+      allowedOrigins: config.allowedOrigins,
+    })
+  );
+
+  app.use('/mcp', express.json());
 
   app.all('/mcp', async (req: Request, res: Response) => {
     try {
