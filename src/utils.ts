@@ -42,6 +42,41 @@ export function readBraveApiKeyFromFile(filePath: string): ReadBraveApiKeyFromFi
   }
 }
 
+export function parseDelimitedList(value: string | string[] | undefined | null): string[] {
+  if (value == null) return [];
+
+  // Value may be variadic as string[]. Normalize to a single string first.
+  const raw = Array.isArray(value) ? value.join(' ') : value;
+
+  return raw
+    .split(/[\s,]+/)
+    .map((o: string) => o.trim())
+    .filter((o: string) => o.length > 0);
+}
+
+function isIpv4Loopback(value: string): boolean {
+  // Check complete range of loopback addresses: 127.0.0.0/8
+  const parts = value.split('.');
+  return (
+    parts.length === 4 &&
+    parts[0] === '127' &&
+    parts.every((part: string) => {
+      if (!/^\d+$/.test(part)) return false;
+      // Leading zeros are not allowed.
+      if (part.length > 1 && part.startsWith('0')) return false;
+      // Parse the part as an integer and check if it's in the range 0-255.
+      const num = Number.parseInt(part, 10);
+      return num >= 0 && num <= 255;
+    })
+  );
+}
+
+// Determines whether a bare hostname refers to the loopback interface: any
+// IPv4 127.0.0.0/8 address, the IPv6 loopback (::1), or "localhost".
+export function isLoopbackHostname(value: string): boolean {
+  return value === 'localhost' || value === '::1' || isIpv4Loopback(value);
+}
+
 export function parsePort(value: unknown): number | null {
   if (value === undefined || value === null || value === '') {
     return null;

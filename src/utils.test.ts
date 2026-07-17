@@ -3,7 +3,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
-import { parsePort, readBraveApiKeyFromFile } from './utils.js';
+import { isLoopbackHostname, parsePort, readBraveApiKeyFromFile } from './utils.js';
 
 describe('parsePort', () => {
   it('accepts valid integer ports', () => {
@@ -23,6 +23,55 @@ describe('parsePort', () => {
     assert.equal(parsePort(''), null);
     assert.equal(parsePort(null), null);
     assert.equal(parsePort(undefined), null);
+  });
+});
+
+describe('isLoopbackHostname', () => {
+  it('accepts localhost and the IPv6 loopback', () => {
+    assert.equal(isLoopbackHostname('localhost'), true);
+    assert.equal(isLoopbackHostname('::1'), true);
+  });
+
+  it('accepts addresses across the whole IPv4 127.0.0.0/8 range', () => {
+    assert.equal(isLoopbackHostname('127.0.0.1'), true);
+    assert.equal(isLoopbackHostname('127.0.0.0'), true);
+    assert.equal(isLoopbackHostname('127.1.2.3'), true);
+    assert.equal(isLoopbackHostname('127.255.255.255'), true);
+    assert.equal(isLoopbackHostname('127.0.0.255'), true);
+  });
+
+  it('rejects non-loopback IPv4 addresses', () => {
+    assert.equal(isLoopbackHostname('128.0.0.1'), false);
+    assert.equal(isLoopbackHostname('126.255.255.255'), false);
+    assert.equal(isLoopbackHostname('0.0.0.0'), false);
+    assert.equal(isLoopbackHostname('192.168.0.1'), false);
+    assert.equal(isLoopbackHostname('10.0.0.1'), false);
+  });
+
+  it('rejects IPv4 octets outside 0-255', () => {
+    assert.equal(isLoopbackHostname('127.0.0.256'), false);
+    assert.equal(isLoopbackHostname('127.0.0.999'), false);
+  });
+
+  it('rejects addresses without exactly four octets', () => {
+    assert.equal(isLoopbackHostname('127'), false);
+    assert.equal(isLoopbackHostname('127.0.0'), false);
+    assert.equal(isLoopbackHostname('127.0.0.1.2'), false);
+    assert.equal(isLoopbackHostname(''), false);
+  });
+
+  it('rejects non-numeric or malformed IPv4 octets', () => {
+    assert.equal(isLoopbackHostname('127.0.0.x'), false);
+    assert.equal(isLoopbackHostname('127.0.0.-1'), false);
+    assert.equal(isLoopbackHostname('127.0.0.1abc'), false);
+    assert.equal(isLoopbackHostname('127.0.0. 1'), false);
+    assert.equal(isLoopbackHostname('0127.0.0.1'), false);
+  });
+
+  it('rejects non-loopback hostnames and non-normalized input', () => {
+    assert.equal(isLoopbackHostname('example.com'), false);
+    // Callers normalize (lowercase) before calling, so uppercase is not matched.
+    assert.equal(isLoopbackHostname('LOCALHOST'), false);
   });
 });
 
