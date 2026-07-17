@@ -26,6 +26,11 @@ COPY --from=builder /app/package-lock.json /app/package-lock.json
 
 ENV NODE_ENV=production
 
+# The server defaults to binding 127.0.0.1 for safe local execution. Inside a
+# container the port must be reachable through the published mapping, so bind to
+# all interfaces here. Deployments can still override BRAVE_MCP_HOST.
+ENV BRAVE_MCP_HOST=0.0.0.0
+
 RUN npm ci --ignore-scripts --omit-dev
 
 USER node

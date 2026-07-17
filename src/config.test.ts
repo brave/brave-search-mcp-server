@@ -78,4 +78,15 @@ describe('getOptions', () => {
       assert.equal(options.braveApiKey, 'from-file');
     }
   });
+
+  it('defaults host to loopback (127.0.0.1)', () => {
+    process.argv = ['node', 'index.js', '--brave-api-key', 'key', '--transport', 'http'];
+
+    const options = getOptions();
+
+    assert.notEqual(options, false);
+    if (options) {
+      assert.equal(options.host, '127.0.0.1');
+    }
+  });
 });

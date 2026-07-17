@@ -30,7 +30,7 @@ type Configuration = {
 const state: Configuration & { ready: boolean } = {
   transport: 'stdio',
   port: 8080,
-  host: '0.0.0.0',
+  host: '127.0.0.1',
   braveApiKey: process.env.BRAVE_API_KEY ?? '',
   loggingLevel: 'info',
   ready: false,
@@ -77,7 +77,7 @@ export function getOptions(): Configuration | false {
     .option(
       '--host <string>',
       'desired host for HTTP transport',
-      process.env.BRAVE_MCP_HOST ?? '0.0.0.0'
+      process.env.BRAVE_MCP_HOST ?? '127.0.0.1'
     )
     .option(
       '--stateless <boolean>',

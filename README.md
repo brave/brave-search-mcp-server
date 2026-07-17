@@ -173,7 +173,7 @@ The server supports the following environment variables:
 - `BRAVE_API_KEY_FILE`: Path to a file containing your Brave Search API key. When set, this takes precedence over `BRAVE_API_KEY`. Useful for Docker secrets and similar mounted-secret setups.
 - `BRAVE_MCP_TRANSPORT`: Transport mode ("http" or "stdio", default: "stdio")
 - `BRAVE_MCP_PORT`: HTTP server port (default: 8080)
-- `BRAVE_MCP_HOST`: HTTP server host (default: "0.0.0.0")
+- `BRAVE_MCP_HOST`: HTTP server host (default: "127.0.0.1"). Binds to loopback only by default; set to "0.0.0.0" to expose the server on all interfaces (required inside containers and on Amazon Bedrock AgentCore). Only do this on a trusted network, since the HTTP endpoint is unauthenticated.
 - `BRAVE_MCP_LOG_LEVEL`: Desired logging level("debug", "info", "notice", "warning", "error", "critical", "alert", or "emergency", default: "info")
 - `BRAVE_MCP_ENABLED_TOOLS`: When used, specifies a space-separated whitelist for supported tools
 - `BRAVE_MCP_DISABLED_TOOLS`: When used, specifies a space-separated blacklist for supported tools
@@ -189,7 +189,7 @@ Options:
   --brave-api-key-file <string>   Path to file containing Brave API key
   --transport <stdio|http>    Transport type (default: stdio)
   --port <number>             HTTP server port (default: 8080)
-  --host <string>             HTTP server host (default: 0.0.0.0)
+  --host <string>             HTTP server host (default: 127.0.0.1)
   --logging-level <string>    Desired logging level (one of _debug_, _info_, _notice_, _warning_, _error_, _critical_, _alert_, or _emergency_)
   --enabled-tools             Tools whitelist (only the specified tools will be enabled)
   --disabled-tools            Tools blacklist (included tools will be disabled)
