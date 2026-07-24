@@ -1,6 +1,7 @@
 import type { CallToolResult, ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 import { summarizerQueryParams, type SummarizerQueryParams } from './params.js';
-import API from '../../BraveAPI/index.js';
+import API, { BraveApiError } from '../../BraveAPI/index.js';
+import { SUMMARIZER_POLL } from '../../constants.js';
 import { type SummarizerSearchApiResponse } from './types.js';
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
@@ -26,11 +27,11 @@ export const description = `
     Requirements: Must first perform a web search using brave_web_search with summary=true parameter. Requires a Pro AI subscription to access the summarizer functionality.
 `.trim();
 
-export const execute = async (params: SummarizerQueryParams) => {
+export const execute = async (params: SummarizerQueryParams, extra?: { signal?: AbortSignal }) => {
   const response: CallToolResult = { content: [], isError: false };
 
   try {
-    const { summary } = await pollForSummary(params);
+    const { summary } = await pollForSummary(params, undefined, undefined, extra?.signal);
 
     if (!summary || summary.length === 0) {
       response.isError = true;
@@ -80,31 +81,74 @@ export const register = (mcpServer: McpServer) => {
   );
 };
 
+/**
+ * A summary that is still being generated is worth waiting for; a request the
+ * API has already rejected is not. Retry only on throttling (429) and upstream
+ * failures (5xx). Every other status -- an invalid or unsubscribed key (401,
+ * 403), a malformed request (422) -- is deterministic and will return the same
+ * result on every attempt, so retrying it only multiplies outbound requests.
+ *
+ * Errors that are not BraveApiError (network faults, JSON parse failures) have
+ * no status to judge and are treated as transient.
+ */
+export const isRetryableError = (error: unknown): boolean => {
+  if (!(error instanceof BraveApiError)) return true;
+  return error.status === 429 || error.status >= 500;
+};
+
+const sleep = (ms: number, signal?: AbortSignal): Promise<void> =>
+  new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(signal.reason ?? new Error('Aborted'));
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      signal?.removeEventListener('abort', onAbort);
+      resolve();
+    }, ms);
+
+    const onAbort = () => {
+      clearTimeout(timer);
+      reject(signal?.reason ?? new Error('Aborted'));
+    };
+
+    signal?.addEventListener('abort', onAbort, { once: true });
+  });
+
 const pollForSummary = async (
   params: SummarizerQueryParams,
-  pollInterval: number = 50,
-  attempts: number = 20
+  pollInterval: number = SUMMARIZER_POLL.pollIntervalMs,
+  attempts: number = SUMMARIZER_POLL.pollAttempts,
+  signal?: AbortSignal
 ): Promise<SummarizerSearchApiResponse> => {
-  let result: SummarizerSearchApiResponse | null = null;
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    // Wait between attempts, not before the first one. The previous
+    // implementation only slept on the error path, so a well-formed response
+    // that was not yet 'complete' re-polled immediately -- issuing all
+    // remaining attempts back to back with no delay at all.
+    if (attempt > 0) {
+      await sleep(pollInterval, signal);
+    }
 
-  while (!result && attempts > 0) {
+    if (signal?.aborted) {
+      throw signal.reason ?? new Error('Aborted');
+    }
+
     try {
       const response = await API.issueRequest<'summarizer'>('summarizer', params);
       if (response.status === 'complete') {
-        result = response;
+        return response;
       }
     } catch (error) {
-      await new Promise((resolve) => setTimeout(resolve, pollInterval));
+      // Stop immediately on a failure that repeating cannot resolve.
+      if (!isRetryableError(error)) {
+        throw error;
+      }
     }
-
-    attempts--;
   }
 
-  if (!result) {
-    throw new Error('Summarizer summary could not be retrieved after multiple attempts.');
-  }
-
-  return result;
+  throw new Error('Summarizer summary could not be retrieved after multiple attempts.');
 };
 
 export default {

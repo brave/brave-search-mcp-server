@@ -2,6 +2,21 @@ import type { Endpoints } from './types.js';
 import config from '../config.js';
 import { stringify } from '../utils.js';
 
+/**
+ * Error thrown when the Brave Search API returns a non-2xx response. Carries
+ * the HTTP status so callers can distinguish transient failures (429, 5xx)
+ * from deterministic ones (401, 403, 422) that will not change on retry.
+ */
+export class BraveApiError extends Error {
+  readonly status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = 'BraveApiError';
+    this.status = status;
+  }
+}
+
 const typeToPathMap: Record<keyof Endpoints, string> = {
   images: '/res/v1/images/search',
   localPois: '/res/v1/local/pois',
@@ -128,7 +143,7 @@ async function issueRequest<T extends keyof Endpoints>(
     }
 
     // TODO (Sampson): Setup proper error handling, updating state, etc.
-    throw new Error(errorMessage);
+    throw new BraveApiError(response.status, errorMessage);
   }
 
   // Return Response

@@ -5,6 +5,8 @@ import createMcpServer from '../server.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { ListToolsRequest, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { createDnsRebindingGuard } from './rebinding.js';
+import { createBatchLimitGuard } from './batch.js';
+import { HTTP_LIMITS } from '../constants.js';
 
 const yieldGenericServerError = (res: Response) => {
   res.status(500).json({
@@ -71,7 +73,9 @@ const createApp = () => {
     })
   );
 
-  app.use('/mcp', express.json());
+  app.use('/mcp', express.json({ limit: HTTP_LIMITS.maxBodySize }));
+
+  app.use('/mcp', createBatchLimitGuard({ maxBatchSize: HTTP_LIMITS.maxBatchSize }));
 
   app.all('/mcp', async (req: Request, res: Response) => {
     try {
