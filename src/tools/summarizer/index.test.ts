@@ -2,21 +2,31 @@ import assert from 'node:assert/strict';
 import { afterEach, describe, it, mock } from 'node:test';
 import API, { BraveApiError } from '../../BraveAPI/index.js';
 import { SUMMARIZER_POLL } from '../../constants.js';
+import { describeAccessFailure } from '../../plans.js';
 import { execute, isRetryableError } from './index.js';
 
 const params = { key: 'test-key' } as Parameters<typeof execute>[0];
 
 describe('summarizer retry classification', () => {
   it('treats throttling and upstream failures as retryable', () => {
-    assert.equal(isRetryableError(new BraveApiError(429, 'Too Many Requests')), true);
-    assert.equal(isRetryableError(new BraveApiError(500, 'Internal Server Error')), true);
-    assert.equal(isRetryableError(new BraveApiError(503, 'Service Unavailable')), true);
+    assert.equal(isRetryableError(new BraveApiError(429, 'summarizer', 'Too Many Requests')), true);
+    assert.equal(
+      isRetryableError(new BraveApiError(500, 'summarizer', 'Internal Server Error')),
+      true
+    );
+    assert.equal(
+      isRetryableError(new BraveApiError(503, 'summarizer', 'Service Unavailable')),
+      true
+    );
   });
 
   it('treats deterministic client errors as permanent', () => {
-    assert.equal(isRetryableError(new BraveApiError(401, 'Unauthorized')), false);
-    assert.equal(isRetryableError(new BraveApiError(403, 'Forbidden')), false);
-    assert.equal(isRetryableError(new BraveApiError(422, 'Unprocessable Entity')), false);
+    assert.equal(isRetryableError(new BraveApiError(401, 'summarizer', 'Unauthorized')), false);
+    assert.equal(isRetryableError(new BraveApiError(403, 'summarizer', 'Forbidden')), false);
+    assert.equal(
+      isRetryableError(new BraveApiError(422, 'summarizer', 'Unprocessable Entity')),
+      false
+    );
   });
 
   it('treats errors without a status as transient', () => {
@@ -29,7 +39,7 @@ describe('summarizer polling', () => {
 
   it('issues one request -- not twenty -- when the API key is invalid', async () => {
     const issueRequest = mock.method(API, 'issueRequest', async () => {
-      throw new BraveApiError(401, 'Unauthorized');
+      throw new BraveApiError(401, 'summarizer', 'Unauthorized');
     });
 
     const result = await execute(params);
@@ -40,7 +50,7 @@ describe('summarizer polling', () => {
 
   it('still exhausts its attempts on retryable failures', async () => {
     const issueRequest = mock.method(API, 'issueRequest', async () => {
-      throw new BraveApiError(503, 'Service Unavailable');
+      throw new BraveApiError(503, 'summarizer', 'Service Unavailable');
     });
 
     const result = await execute(params);
@@ -89,5 +99,27 @@ describe('summarizer polling', () => {
 
     assert.ok(issueRequest.mock.callCount() < SUMMARIZER_POLL.pollAttempts);
     assert.equal(result.isError, true);
+  });
+});
+
+describe('summarizer error reporting', () => {
+  afterEach(() => mock.restoreAll());
+
+  it('tells the caller which plan the summarizer needs', async () => {
+    mock.method(API, 'issueRequest', async () => {
+      throw new BraveApiError(
+        403,
+        'summarizer',
+        'HTTP 403\n\n' + describeAccessFailure('summarizer')
+      );
+    });
+
+    const result = await execute(params);
+    const [block] = result.content;
+    const text = block.type === 'text' ? block.text : '';
+
+    assert.equal(result.isError, true);
+    assert.match(text, /Answers/);
+    assert.match(text, /retrying will not help/);
   });
 });

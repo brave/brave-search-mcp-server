@@ -9,6 +9,7 @@ import {
   type LlmContextInput as QueryParams,
 } from './schemas/input.js';
 import { LlmContextSearchApiResponseSchema } from './schemas/output.js';
+import { describePlanRequirement } from '../../plans.js';
 
 export const name = 'brave_llm_context';
 
@@ -17,7 +18,8 @@ export const annotations: ToolAnnotations = {
   openWorldHint: true,
 };
 
-export const description = `
+export const description =
+  `
     Retrieves pre-extracted, relevance-ranked web content using Brave's LLM Context API, optimized for AI agents, LLM grounding, and RAG pipelines. Unlike a traditional web search that returns links and short descriptions, this tool returns the actual substance of matching pages — text chunks, tables, code blocks, and structured data — so the model can reason over it directly.
 
     When to use:
@@ -28,7 +30,7 @@ export const description = `
         - When you need the contents of pages, not just titles, descriptions, and URLs
 
     When relaying results in markdown-supporting environments, cite the source URLs from the "sources" map.
-`.trim();
+`.trim() + `\n\n${describePlanRequirement('llmContext')}`;
 
 export const execute = async (params: QueryParams) => {
   const parsedParams = RequestParamsSchema.parse(params);

@@ -1,6 +1,7 @@
 import type { Endpoints } from './types.js';
 import config from '../config.js';
 import { stringify } from '../utils.js';
+import { describeAccessFailure, ENDPOINT_PLANS, isAccessFailure, type PlanId } from '../plans.js';
 
 /**
  * Error thrown when the Brave Search API returns a non-2xx response. Carries
@@ -9,11 +10,15 @@ import { stringify } from '../utils.js';
  */
 export class BraveApiError extends Error {
   readonly status: number;
+  readonly endpoint: keyof Endpoints;
+  readonly requiredPlan: PlanId;
 
-  constructor(status: number, message: string) {
+  constructor(status: number, endpoint: keyof Endpoints, message: string) {
     super(message);
     this.name = 'BraveApiError';
     this.status = status;
+    this.endpoint = endpoint;
+    this.requiredPlan = ENDPOINT_PLANS[endpoint];
   }
 }
 
@@ -142,8 +147,14 @@ async function issueRequest<T extends keyof Endpoints>(
       errorMessage += `\n${await response.text()}`;
     }
 
+    // A 401/403/422 is usually a plan mismatch rather than a malformed key.
+    // Say which plan this endpoint needs, so the caller can act on it.
+    if (isAccessFailure(response.status)) {
+      errorMessage += `\n\n${describeAccessFailure(endpoint)}`;
+    }
+
     // TODO (Sampson): Setup proper error handling, updating state, etc.
-    throw new BraveApiError(response.status, errorMessage);
+    throw new BraveApiError(response.status, endpoint, errorMessage);
   }
 
   // Return Response

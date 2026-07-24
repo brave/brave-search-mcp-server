@@ -8,6 +8,7 @@ import {
   type PlaceSearchInput as QueryParams,
 } from './schemas/input.js';
 import { PlaceSearchApiResponseSchema } from './schemas/output.js';
+import { describePlanRequirement } from '../../plans.js';
 
 export const name = 'brave_place_search';
 
@@ -16,7 +17,8 @@ export const annotations: ToolAnnotations = {
   openWorldHint: true,
 };
 
-export const description = `
+export const description =
+  `
     Searches Brave's Place Search API. A single call may populate any combination of 'results' (POIs), 'cities', 'addresses', 'streets', and 'location' (the resolved search area), depending on the query's shape.
 
     When to use:
@@ -31,7 +33,7 @@ export const description = `
         - 'addresses' / 'streets' only surface when the query is address-/street-shaped AND geographically anchored.
         - 'location' format: US -- '<city> <state> <country>' (e.g. 'san francisco ca united states'); non-US -- '<city> <country>' (e.g. 'tokyo japan'). Capitalization and commas don't matter.
         - 'count' caps results (max 50, default 20). 'radius' (meters) biases toward closer results; it does NOT hard-limit the search area.
-`.trim();
+`.trim() + `\n\n${describePlanRequirement('placeSearch')}`;
 
 export const execute = async (params: QueryParams) => {
   const parsedParams = RequestParamsSchema.parse(params);

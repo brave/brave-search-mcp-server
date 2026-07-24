@@ -4,6 +4,7 @@ import API, { BraveApiError } from '../../BraveAPI/index.js';
 import { SUMMARIZER_POLL } from '../../constants.js';
 import { type SummarizerSearchApiResponse } from './types.js';
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { describePlanRequirement } from '../../plans.js';
 
 export const name = 'brave_summarizer';
 
@@ -12,7 +13,8 @@ export const annotations: ToolAnnotations = {
   openWorldHint: true,
 };
 
-export const description = `
+export const description =
+  `
     Retrieves AI-generated summaries of web search results using Brave's Summarizer API. This tool processes search results to create concise, coherent summaries of information gathered from multiple sources.
 
     When to use:
@@ -25,7 +27,7 @@ export const description = `
     Returns a text summary that consolidates information from the search results. Optional features include inline references to source URLs and additional entity information.
 
     Requirements: Must first perform a web search using brave_web_search with summary=true parameter. Requires a Pro AI subscription to access the summarizer functionality.
-`.trim();
+`.trim() + `\n\n${describePlanRequirement('summarizer')}`;
 
 export const execute = async (params: SummarizerQueryParams, extra?: { signal?: AbortSignal }) => {
   const response: CallToolResult = { content: [], isError: false };
@@ -61,7 +63,13 @@ export const execute = async (params: SummarizerQueryParams, extra?: { signal?: 
     response.isError = true;
     response.content.push({
       type: 'text' as const,
-      text: 'Unable to retrieve a Summarizer summary.',
+      // Surface why it failed. A plan mismatch is the most common cause here --
+      // brave_summarizer needs a different plan than the search tools -- and a
+      // bare 'unable to retrieve' gives the caller nothing to act on.
+      text:
+        error instanceof BraveApiError
+          ? `Unable to retrieve a Summarizer summary.\n\n${error.message}`
+          : 'Unable to retrieve a Summarizer summary.',
     });
   }
 

@@ -5,6 +5,7 @@ import type { ImageResult } from './types.js';
 import OutputSchema, { SimplifiedImageResultSchema } from './schemas/output.js';
 import { z } from 'zod';
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { describePlanRequirement } from '../../plans.js';
 
 export const name = 'brave_image_search';
 
@@ -13,9 +14,13 @@ export const annotations: ToolAnnotations = {
   openWorldHint: true,
 };
 
-export const description = `
+export const description =
+  `
     Performs an image search using the Brave Search API. Helpful for when you need pictures of people, places, things, graphic design ideas, art inspiration, and more. When relaying results in a markdown environment, it may be helpful to include images in the results (e.g., ![image.title](image.properties.url)).
-`;
+`.trim() +
+  `
+
+${describePlanRequirement('images')}`;
 
 export const execute = async (params: QueryParams) => {
   const response = await API.issueRequest<'images'>('images', params);
