@@ -1,5 +1,7 @@
 # Brave Search MCP Server
 
+[![MCP Toplist](https://mcptoplist.com/badge/io.github.brave%2Fbrave-search-mcp-server.svg)](https://mcptoplist.com/server/io.github.brave%2Fbrave-search-mcp-server)
+
 An MCP server implementation that integrates the Brave Search API, providing comprehensive search capabilities including web search, local business search, place search, image search, video search, news search, LLM context, and AI-powered summarization. This project supports both STDIO and HTTP transports, with STDIO as the default mode.
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/brave/brave-search-mcp-server)
