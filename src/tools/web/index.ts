@@ -15,6 +15,7 @@ import type {
 } from './types.js';
 import { stringify } from '../../utils.js';
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { describePlanRequirement } from '../../plans.js';
 
 export const name = 'brave_web_search';
 
@@ -23,7 +24,8 @@ export const annotations: ToolAnnotations = {
   openWorldHint: true,
 };
 
-export const description = `
+export const description =
+  `
     Performs web searches using the Brave Search API and returns comprehensive search results with rich metadata.
 
     When to use:
@@ -36,7 +38,7 @@ export const description = `
     Returns a JSON list of web results with title, description, and URL.
     
     When the "results_filter" parameter is empty, JSON results may also contain FAQ, Discussions, News, and Video results.
-`.trim();
+`.trim() + `\n\n${describePlanRequirement('web')}`;
 
 export const execute = async (params: QueryParams) => {
   const response = { content: [] as TextContent[], isError: false };

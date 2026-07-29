@@ -3,6 +3,7 @@ import params, { type QueryParams } from './params.js';
 import API from '../../BraveAPI/index.js';
 import { stringify } from '../../utils.js';
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { describePlanRequirement } from '../../plans.js';
 
 export const name = 'brave_video_search';
 
@@ -11,7 +12,8 @@ export const annotations: ToolAnnotations = {
   openWorldHint: true,
 };
 
-export const description = `
+export const description =
+  `
     Searches for videos using Brave's Video Search API and returns structured video results with metadata.
 
     When to use:
@@ -19,7 +21,7 @@ export const description = `
         - Useful for discovering video content, getting video metadata, or finding videos from specific creators/publishers.
 
     Returns a JSON list of video-related results with title, url, description, duration, and thumbnail_url.
-`.trim();
+`.trim() + `\n\n${describePlanRequirement('videos')}`;
 
 export const execute = async (params: QueryParams) => {
   const response = await API.issueRequest<'videos'>('videos', params);

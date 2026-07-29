@@ -11,6 +11,7 @@ import { formatWebResults } from '../web/index.js';
 import { stringify } from '../../utils.js';
 import { type WebSearchApiResponse } from '../web/types.js';
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { describePlanRequirement } from '../../plans.js';
 
 export const name = 'brave_local_search';
 
@@ -19,7 +20,8 @@ export const annotations: ToolAnnotations = {
   openWorldHint: true,
 };
 
-export const description = `
+export const description =
+  `
     Brave Local Search API provides enrichments for location search results. Access to this API is available only through the Brave Search API Pro plans; confirm the user's plan before using this tool (if the user does not have a Pro plan, use the brave_web_search tool). Searches for local businesses and places using Brave's Local Search API. Best for queries related to physical locations, businesses, restaurants, services, etc.
     
     Returns detailed information including:
@@ -28,7 +30,7 @@ export const description = `
         - Phone numbers and opening hours
 
     Use this when the query implies 'near me', 'in my area', or mentions specific locations (e.g., 'in San Francisco'). This tool automatically falls back to brave_web_search if no local results are found.
-`.trim();
+`.trim() + `\n\n${describePlanRequirement('localPois')}`;
 
 // Access to Local API is available through the Pro plans.
 export const execute = async (params: WebQueryParams) => {
