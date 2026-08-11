@@ -1,5 +1,6 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
+import { after, before } from 'node:test';
 import createMcpServer from '../server.js';
 
 /**
@@ -44,4 +45,27 @@ export function stubFetch(handler: (url: URL) => unknown): () => void {
   return () => {
     globalThis.fetch = originalFetch;
   };
+}
+
+/**
+ * Registers before/after hooks on the enclosing `describe` block that stub
+ * the Brave API via `responder` and connect a fresh test client, tearing
+ * both down afterward. Returns a getter for the connected client.
+ */
+export function useTestClient(responder: (url: URL) => unknown): () => Client {
+  let client: Client;
+  let close: () => Promise<void>;
+  let restoreFetch: () => void;
+
+  before(async () => {
+    restoreFetch = stubFetch(responder);
+    ({ client, close } = await connectTestClient());
+  });
+
+  after(async () => {
+    restoreFetch();
+    await close();
+  });
+
+  return () => client;
 }
