@@ -1,43 +1,29 @@
 import assert from 'node:assert/strict';
-import { after, before, describe, it } from 'node:test';
-import type { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { connectTestClient, stubFetch } from '../../testUtils/mcpTestHarness.js';
+import { describe, it } from 'node:test';
+import { useTestClient } from '../../testUtils/mcpTestHarness.js';
 import { name } from './index.js';
 
 describe(name, () => {
-  let client: Client;
-  let close: () => Promise<void>;
-  let restoreFetch: () => void;
+  const getClient = useTestClient((url) => {
+    if (url.pathname === '/res/v1/web/search') {
+      return {
+        type: 'search',
+        locations: {
+          results: [{ id: 'poi-1', title: 'Brave Coffee Shop' }],
+        },
+      };
+    }
 
-  before(async () => {
-    restoreFetch = stubFetch((url) => {
-      if (url.pathname === '/res/v1/web/search') {
-        return {
-          type: 'search',
-          locations: {
-            results: [{ id: 'poi-1', title: 'Brave Coffee Shop' }],
-          },
-        };
-      }
-
-      if (url.pathname === '/res/v1/local/descriptions') {
-        return {
-          type: 'local_descriptions',
-          results: [{ type: 'local_description', id: 'poi-1', description: 'A cozy coffee shop.' }],
-        };
-      }
-    });
-
-    ({ client, close } = await connectTestClient());
-  });
-
-  after(async () => {
-    restoreFetch();
-    await close();
+    if (url.pathname === '/res/v1/local/descriptions') {
+      return {
+        type: 'local_descriptions',
+        results: [{ type: 'local_description', id: 'poi-1', description: 'A cozy coffee shop.' }],
+      };
+    }
   });
 
   it('returns enriched location results for a simple query', async () => {
-    const result = await client.callTool({
+    const result = await getClient().callTool({
       name,
       arguments: { query: 'coffee shops in san francisco' },
     });
@@ -48,39 +34,26 @@ describe(name, () => {
 });
 
 describe(`${name} (no locations, web fallback available)`, () => {
-  let client: Client;
-  let close: () => Promise<void>;
-  let restoreFetch: () => void;
-
-  before(async () => {
-    restoreFetch = stubFetch((url) => {
-      if (url.pathname === '/res/v1/web/search') {
-        return {
-          type: 'search',
-          web: {
-            results: [
-              {
-                url: 'https://example.com/cafe',
-                title: 'Local Cafe',
-                description: 'A nice cafe.',
-                extra_snippets: [],
-              },
-            ],
-          },
-        };
-      }
-    });
-
-    ({ client, close } = await connectTestClient());
-  });
-
-  after(async () => {
-    restoreFetch();
-    await close();
+  const getClient = useTestClient((url) => {
+    if (url.pathname === '/res/v1/web/search') {
+      return {
+        type: 'search',
+        web: {
+          results: [
+            {
+              url: 'https://example.com/cafe',
+              title: 'Local Cafe',
+              description: 'A nice cafe.',
+              extra_snippets: [],
+            },
+          ],
+        },
+      };
+    }
   });
 
   it('falls back to formatted web results', async () => {
-    const result = await client.callTool({
+    const result = await getClient().callTool({
       name,
       arguments: { query: 'coffee shops in san francisco' },
     });
@@ -95,27 +68,14 @@ describe(`${name} (no locations, web fallback available)`, () => {
 });
 
 describe(`${name} (no locations, no web results)`, () => {
-  let client: Client;
-  let close: () => Promise<void>;
-  let restoreFetch: () => void;
-
-  before(async () => {
-    restoreFetch = stubFetch((url) => {
-      if (url.pathname === '/res/v1/web/search') {
-        return { type: 'search' };
-      }
-    });
-
-    ({ client, close } = await connectTestClient());
-  });
-
-  after(async () => {
-    restoreFetch();
-    await close();
+  const getClient = useTestClient((url) => {
+    if (url.pathname === '/res/v1/web/search') {
+      return { type: 'search' };
+    }
   });
 
   it('reports that no location data was found', async () => {
-    const result = await client.callTool({
+    const result = await getClient().callTool({
       name,
       arguments: { query: 'coffee shops in san francisco' },
     });
