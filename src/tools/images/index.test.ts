@@ -1,0 +1,51 @@
+import assert from 'node:assert/strict';
+import { after, before, describe, it } from 'node:test';
+import type { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { connectTestClient, stubFetch } from '../../testUtils/mcpTestHarness.js';
+import { name } from './index.js';
+
+describe(name, () => {
+  let client: Client;
+  let close: () => Promise<void>;
+  let restoreFetch: () => void;
+
+  before(async () => {
+    restoreFetch = stubFetch((url) => {
+      if (url.pathname === '/res/v1/images/search') {
+        return {
+          type: 'images',
+          query: { original: 'brave browser' },
+          results: [
+            {
+              type: 'image_result',
+              title: 'Brave Browser Logo',
+              url: 'https://example.com/logo.png',
+              page_fetched: '2024-01-01T00:00:00Z',
+              confidence: 'high',
+              properties: {
+                url: 'https://example.com/logo-full.png',
+                width: 512,
+                height: 512,
+              },
+            },
+          ],
+          extra: { might_be_offensive: false },
+        };
+      }
+    });
+
+    ({ client, close } = await connectTestClient());
+  });
+
+  after(async () => {
+    restoreFetch();
+    await close();
+  });
+
+  it('returns image results for a simple query', async () => {
+    const result = await client.callTool({ name, arguments: { query: 'brave browser' } });
+
+    assert.equal(result.isError ?? false, false, JSON.stringify(result.content));
+    assert.ok(Array.isArray(result.content) && result.content.length > 0);
+  });
+});
