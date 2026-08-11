@@ -127,8 +127,13 @@ interface PostalAddress {
 export interface OpeningHours {
   /** The current day opening hours. Can have two sets of opening hours. */
   current_day?: DayOpeningHours[];
-  /** The opening hours for the whole week. */
-  days?: DayOpeningHours[] | [DayOpeningHours][];
+  /**
+   * The opening hours for the rest of the week, excluding `current_day`. Days
+   * on which the location is closed are omitted entirely. Each entry may be a
+   * single day's hours or an array of them, since a day can have more than one
+   * open/close interval (e.g. separate lunch and dinner service).
+   */
+  days?: DayOpeningHours[] | DayOpeningHours[][];
 }
 
 interface Contact {
