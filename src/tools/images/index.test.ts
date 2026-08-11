@@ -46,6 +46,61 @@ describe(name, () => {
     const result = await client.callTool({ name, arguments: { query: 'brave browser' } });
 
     assert.equal(result.isError ?? false, false, JSON.stringify(result.content));
-    assert.ok(Array.isArray(result.content) && result.content.length > 0);
+    assert.deepEqual(result.structuredContent, {
+      type: 'object',
+      items: [
+        {
+          title: 'Brave Browser Logo',
+          url: 'https://example.com/logo.png',
+          page_fetched: '2024-01-01T00:00:00Z',
+          confidence: 'high',
+          properties: {
+            url: 'https://example.com/logo-full.png',
+            width: 512,
+            height: 512,
+          },
+        },
+      ],
+      count: 1,
+      might_be_offensive: false,
+    });
+  });
+});
+
+describe(`${name} (malformed upstream response)`, () => {
+  let client: Client;
+  let close: () => Promise<void>;
+  let restoreFetch: () => void;
+
+  before(async () => {
+    restoreFetch = stubFetch((url) => {
+      if (url.pathname === '/res/v1/images/search') {
+        return {
+          type: 'images',
+          query: { original: 'brave browser' },
+          results: [],
+          // `might_be_offensive` is required by the output schema; omitting it
+          // simulates an upstream response that fails validation.
+          extra: {},
+        };
+      }
+    });
+
+    ({ client, close } = await connectTestClient());
+  });
+
+  after(async () => {
+    restoreFetch();
+    await close();
+  });
+
+  it('surfaces the validation failure as an error result', async () => {
+    const result = await client.callTool({ name, arguments: { query: 'brave browser' } });
+
+    assert.equal(result.isError, true);
+    assert.ok(
+      JSON.stringify(result.content).includes('might_be_offensive'),
+      JSON.stringify(result.content)
+    );
   });
 });

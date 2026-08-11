@@ -31,6 +31,6 @@ describe(name, () => {
     });
 
     assert.equal(result.isError ?? false, false, JSON.stringify(result.content));
-    assert.ok(Array.isArray(result.content) && result.content.length > 0);
+    assert.deepEqual(result.structuredContent, { type: 'locations' });
   });
 });
