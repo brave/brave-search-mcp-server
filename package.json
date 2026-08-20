@@ -1,7 +1,7 @@
 {
   "name": "@brave/brave-search-mcp-server",
   "mcpName": "io.github.brave/brave-search-mcp-server",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Brave Search MCP Server: web results, images, videos, rich results, AI summaries, and more.",
   "keywords": [
     "api",
