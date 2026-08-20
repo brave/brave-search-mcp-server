@@ -113,7 +113,7 @@ jobs:
           make_latest: true
 
       - name: Publish NPM package
-        run: npm publish --no-git-checks --access public
+        run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
