@@ -56,8 +56,8 @@ export const register = (mcpServer: McpServer) => {
     {
       title: name,
       description: description,
-      inputSchema: PlaceSearchInputSchema.shape,
-      outputSchema: PlaceSearchApiResponseSchema.shape,
+      inputSchema: PlaceSearchInputSchema,
+      outputSchema: PlaceSearchApiResponseSchema,
       annotations: annotations,
     },
     execute

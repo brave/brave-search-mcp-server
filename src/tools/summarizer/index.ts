@@ -73,7 +73,7 @@ export const register = (mcpServer: McpServer) => {
     {
       title: name,
       description: description,
-      inputSchema: summarizerQueryParams.shape,
+      inputSchema: summarizerQueryParams,
       annotations: annotations,
     },
     execute
