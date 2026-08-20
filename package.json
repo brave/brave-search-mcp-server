@@ -15,7 +15,7 @@
   "bugs": "https://github.com/brave/brave-search-mcp-server/issues",
   "repository": {
     "type": "git",
-    "url": "https://github.com/brave/brave-search-mcp-server.git"
+    "url": "git+https://github.com/brave/brave-search-mcp-server.git"
   },
   "type": "module",
   "module": "dist/server.js",
