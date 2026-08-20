@@ -51,8 +51,8 @@ export const register = (mcpServer: McpServer) => {
     {
       title: name,
       description: description,
-      inputSchema: LlmContextInputSchema.shape,
-      outputSchema: LlmContextSearchApiResponseSchema.shape,
+      inputSchema: LlmContextInputSchema,
+      outputSchema: LlmContextSearchApiResponseSchema,
       annotations: annotations,
     },
     execute

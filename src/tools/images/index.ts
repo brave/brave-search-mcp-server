@@ -45,8 +45,8 @@ export const register = (mcpServer: McpServer) => {
     {
       title: name,
       description: description,
-      inputSchema: params.shape,
-      outputSchema: OutputSchema.shape,
+      inputSchema: params,
+      outputSchema: OutputSchema,
       annotations: annotations,
     },
     execute
