@@ -3,7 +3,51 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
-import { isLoopbackHostname, parsePort, readBraveApiKeyFromFile } from './utils.js';
+import {
+  isLoopbackHostname,
+  parseIntervalMs,
+  parsePort,
+  parseRetryAfterMs,
+  readBraveApiKeyFromFile,
+  resetRateLimitState,
+  waitForRateLimit,
+} from './utils.js';
+
+describe('parseIntervalMs', () => {
+  it('accepts 0 and typical gaps', () => {
+    assert.equal(parseIntervalMs(0), 0);
+    assert.equal(parseIntervalMs('1000'), 1000);
+    assert.equal(parseIntervalMs(250), 250);
+  });
+
+  it('rejects junk and values over a minute', () => {
+    assert.equal(parseIntervalMs('nope'), null);
+    assert.equal(parseIntervalMs(-1), null);
+    assert.equal(parseIntervalMs(60001), null);
+    assert.equal(parseIntervalMs(undefined), null);
+  });
+});
+
+describe('parseRetryAfterMs', () => {
+  it('parses delta-seconds', () => {
+    assert.equal(parseRetryAfterMs('2', 1000), 2000);
+    assert.equal(parseRetryAfterMs('0', 1000), 0);
+  });
+
+  it('falls back when the header is missing or garbage', () => {
+    assert.equal(parseRetryAfterMs(null, 750), 750);
+    assert.equal(parseRetryAfterMs('soon', 750), 750);
+  });
+});
+
+describe('waitForRateLimit', () => {
+  it('no-ops when interval is 0', async () => {
+    resetRateLimitState();
+    const start = Date.now();
+    await Promise.all([waitForRateLimit(0), waitForRateLimit(0)]);
+    assert.ok(Date.now() - start < 50);
+  });
+});
 
 describe('parsePort', () => {
   it('accepts valid integer ports', () => {

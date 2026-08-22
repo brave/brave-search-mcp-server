@@ -180,6 +180,7 @@ The server supports the following environment variables:
 - `BRAVE_MCP_ENABLED_TOOLS`: When used, specifies a space-separated whitelist for supported tools
 - `BRAVE_MCP_DISABLED_TOOLS`: When used, specifies a space-separated blacklist for supported tools
 - `BRAVE_MCP_STATELESS`: HTTP stateless mode (default: "true").  When running on Amazon Bedrock Agentcore, set to "true".
+- `BRAVE_MCP_MIN_REQUEST_INTERVAL_MS`: Minimum gap between Brave Search API calls in milliseconds (default: `1000`, matching the free-tier 1 req/sec cap). Set to `0` to disable. Helps when an agent fires a few tools in parallel and would otherwise 429.
 
 ### Command Line Options
 
@@ -198,6 +199,7 @@ Options:
   --enabled-tools             Tools whitelist (only the specified tools will be enabled)
   --disabled-tools            Tools blacklist (included tools will be disabled)
   --stateless  <boolean>      HTTP Stateless flag
+  --min-request-interval-ms <number>  Min gap between Search API calls in ms (default: 1000, 0 disables)
 ```
 
 ## Installation
