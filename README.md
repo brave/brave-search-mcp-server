@@ -179,7 +179,7 @@ The server supports the following environment variables:
 - `BRAVE_MCP_LOG_LEVEL`: Desired logging level("debug", "info", "notice", "warning", "error", "critical", "alert", or "emergency", default: "info")
 - `BRAVE_MCP_ENABLED_TOOLS`: When used, specifies a space-separated whitelist for supported tools
 - `BRAVE_MCP_DISABLED_TOOLS`: When used, specifies a space-separated blacklist for supported tools
-- `BRAVE_MCP_STATELESS`: HTTP stateless mode (default: "true").  When running on Amazon Bedrock Agentcore, set to "true".
+- `BRAVE_MCP_STATELESS`: HTTP stateless mode (default: `"false"`). Set to `"true"` on Amazon Bedrock AgentCore.
 
 ### Command Line Options
 
@@ -377,8 +377,9 @@ STDIO is the default mode. For HTTP mode testing, add `--transport http` to the 
 - `npm run format:check`: Check code formatting
 - `npm run prepare`: Format and build (runs automatically on npm install)
 
-- `npm run inspector`: Launch an instance of MCP Inspector
-- `npm run inspector:stdio`: Launch a instance of MCP Inspector, configured for STDIO
+- `npm run inspector`: Launch MCP Inspector
+- `npm run inspector:stdio`: Launch MCP Inspector in STDIO mode
+- `npm run inspector:http`: Launch MCP Inspector in HTTP mode
 
 ### Docker Compose
 

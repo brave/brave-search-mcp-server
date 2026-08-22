@@ -33,6 +33,7 @@
     "format:check": "prettier --check \"src/**/*.ts\"",
     "test": "node --import tsx --test \"src/**/*.test.ts\"",
     "inspector": "npx @modelcontextprotocol/inspector",
+    "inspector:stdio": "npx @modelcontextprotocol/inspector --transport stdio",
     "inspector:http": "npx @modelcontextprotocol/inspector --transport http"
   },
   "dependencies": {
