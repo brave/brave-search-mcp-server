@@ -17,6 +17,7 @@ const CONFIG_ENV_VARS = [
   'BRAVE_MCP_ALLOWED_ORIGINS',
   'BRAVE_MCP_ALLOWED_HOSTS',
   'BRAVE_MCP_STATELESS',
+  'BRAVE_MCP_AUTH_TOKEN',
 ] as const;
 
 describe('getOptions', () => {
@@ -153,6 +154,17 @@ describe('getOptions', () => {
     assert.notEqual(options, false);
     if (options) {
       assert.deepEqual(options.allowedOrigins, ['https://a.example', 'https://b.example']);
+    }
+  });
+
+  it('parses --auth-token', () => {
+    process.argv = ['node', 'index.js', '--brave-api-key', 'key', '--auth-token', 'secret'];
+
+    const options = getOptions();
+
+    assert.notEqual(options, false);
+    if (options) {
+      assert.equal(options.httpAuthToken, 'secret');
     }
   });
 
