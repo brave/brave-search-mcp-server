@@ -1,6 +1,8 @@
 import type { Endpoints } from './types.js';
 import config from '../config.js';
-import { stringify } from '../utils.js';
+import { parseRetryAfterMs, stringify, waitForRateLimit } from '../utils.js';
+
+const MAX_429_RETRIES = 3;
 
 const typeToPathMap: Record<keyof Endpoints, string> = {
   images: '/res/v1/images/search',
@@ -46,9 +48,6 @@ async function issueRequest<T extends keyof Endpoints>(
   parameters: Endpoints[T]['params'],
   requestHeaders: Endpoints[T]['requestHeaders'] = {} as Endpoints[T]['requestHeaders']
 ): Promise<Endpoints[T]['response']> {
-  // TODO (Sampson): Improve rate-limit logic to support self-throttling and n-keys
-  // checkRateLimit();
-
   // Determine URL, and setup parameters
   const url = new URL(`https://api.search.brave.com${typeToPathMap[endpoint]}`);
   const queryParams = new URLSearchParams();
@@ -114,27 +113,41 @@ async function issueRequest<T extends keyof Endpoints>(
     headers.set(key, String(value));
   }
 
-  const response = await fetch(urlWithParams, { headers });
+  const intervalMs = config.ready ? config.minRequestIntervalMs : 0;
+  let lastError = 'Request failed';
 
-  // Handle Error
-  if (!response.ok) {
-    let errorMessage = `${response.status} ${response.statusText}`;
+  for (let attempt = 0; attempt <= MAX_429_RETRIES; attempt++) {
+    await waitForRateLimit(intervalMs);
 
-    try {
+    const response = await fetch(urlWithParams, { headers });
+
+    if (response.ok) {
       const responseBody = await response.json();
-      errorMessage += `\n${stringify(responseBody, true)}`;
-    } catch (error) {
-      errorMessage += `\n${await response.text()}`;
+      return responseBody as Endpoints[T]['response'];
     }
 
-    // TODO (Sampson): Setup proper error handling, updating state, etc.
-    throw new Error(errorMessage);
+    lastError = `${response.status} ${response.statusText}`;
+    try {
+      const responseBody = await response.json();
+      lastError += `\n${stringify(responseBody, true)}`;
+    } catch {
+      lastError += `\n${await response.text()}`;
+    }
+
+    if (response.status !== 429 || attempt === MAX_429_RETRIES) {
+      throw new Error(lastError);
+    }
+
+    const retryAfterMs = parseRetryAfterMs(
+      response.headers.get('retry-after'),
+      Math.max(intervalMs, 1000)
+    );
+    if (retryAfterMs > 0) {
+      await new Promise<void>((resolve) => setTimeout(resolve, retryAfterMs));
+    }
   }
 
-  // Return Response
-  const responseBody = await response.json();
-
-  return responseBody as Endpoints[T]['response'];
+  throw new Error(lastError);
 }
 
 export default {

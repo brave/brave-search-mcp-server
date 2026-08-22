@@ -17,6 +17,7 @@ const CONFIG_ENV_VARS = [
   'BRAVE_MCP_ALLOWED_ORIGINS',
   'BRAVE_MCP_ALLOWED_HOSTS',
   'BRAVE_MCP_STATELESS',
+  'BRAVE_MCP_MIN_REQUEST_INTERVAL_MS',
 ] as const;
 
 describe('getOptions', () => {
@@ -153,6 +154,28 @@ describe('getOptions', () => {
     assert.notEqual(options, false);
     if (options) {
       assert.deepEqual(options.allowedOrigins, ['https://a.example', 'https://b.example']);
+    }
+  });
+
+  it('defaults minRequestIntervalMs to 1000', () => {
+    process.argv = ['node', 'index.js', '--brave-api-key', 'key'];
+
+    const options = getOptions();
+
+    assert.notEqual(options, false);
+    if (options) {
+      assert.equal(options.minRequestIntervalMs, 1000);
+    }
+  });
+
+  it('parses --min-request-interval-ms', () => {
+    process.argv = ['node', 'index.js', '--brave-api-key', 'key', '--min-request-interval-ms', '0'];
+
+    const options = getOptions();
+
+    assert.notEqual(options, false);
+    if (options) {
+      assert.equal(options.minRequestIntervalMs, 0);
     }
   });
 

@@ -1,23 +1,57 @@
 import { readFileSync } from 'node:fs';
 import { RATE_LIMIT } from './constants.js';
 
-let requestCount = {
-  second: 0,
-  month: 0,
-  lastReset: Date.now(),
-};
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-export function checkRateLimit() {
-  const now = Date.now();
-  if (now - requestCount.lastReset > 1000) {
-    requestCount.second = 0;
-    requestCount.lastReset = now;
+let rateLimitQueue: Promise<void> = Promise.resolve();
+let lastRequestStartedAt = 0;
+
+/** Default gap between Brave Search API calls (free tier is 1 req/sec). */
+export const DEFAULT_MIN_REQUEST_INTERVAL_MS = Math.ceil(1000 / RATE_LIMIT.perSecond);
+
+export function resetRateLimitState() {
+  rateLimitQueue = Promise.resolve();
+  lastRequestStartedAt = 0;
+}
+
+/**
+ * Serializes outbound API calls so we don't blow past the Search API's
+ * per-second cap when an agent fires a few tools at once.
+ */
+export async function waitForRateLimit(intervalMs: number): Promise<void> {
+  if (intervalMs <= 0) {
+    return;
   }
-  if (requestCount.second >= RATE_LIMIT.perSecond || requestCount.month >= RATE_LIMIT.perMonth) {
-    throw new Error('Rate limit exceeded');
+
+  const run = async () => {
+    const waitMs = lastRequestStartedAt + intervalMs - Date.now();
+    if (waitMs > 0) {
+      await sleep(waitMs);
+    }
+    lastRequestStartedAt = Date.now();
+  };
+
+  const next = rateLimitQueue.then(run, run);
+  rateLimitQueue = next;
+  await next;
+}
+
+export function parseRetryAfterMs(header: string | null, fallbackMs: number): number {
+  if (!header) {
+    return fallbackMs;
   }
-  requestCount.second++;
-  requestCount.month++;
+
+  const trimmed = header.trim();
+  if (/^\d+(\.\d+)?$/.test(trimmed)) {
+    return Math.max(0, Math.round(Number.parseFloat(trimmed) * 1000));
+  }
+
+  const dateMs = Date.parse(trimmed);
+  if (!Number.isNaN(dateMs)) {
+    return Math.max(0, dateMs - Date.now());
+  }
+
+  return fallbackMs;
 }
 
 export function stringify(data: any, pretty = false) {
@@ -96,6 +130,32 @@ export function parsePort(value: unknown): number | null {
 
   const parsed = Number.parseInt(text, 10);
   if (parsed < 1 || parsed > 65535) {
+    return null;
+  }
+
+  return parsed;
+}
+
+/** Non-negative integer milliseconds. `0` disables throttling. */
+export function parseIntervalMs(value: unknown): number | null {
+  if (value === undefined || value === null || value === '') {
+    return null;
+  }
+
+  if (typeof value === 'number') {
+    if (!Number.isInteger(value) || value < 0 || value > 60_000) {
+      return null;
+    }
+    return value;
+  }
+
+  const text = String(value).trim();
+  if (!/^\d+$/.test(text)) {
+    return null;
+  }
+
+  const parsed = Number.parseInt(text, 10);
+  if (parsed < 0 || parsed > 60_000) {
     return null;
   }
 
