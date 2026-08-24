@@ -3,6 +3,7 @@
 An MCP server implementation that integrates the Brave Search API, providing comprehensive search capabilities including web search, local business search, place search, image search, video search, news search, LLM context, and AI-powered summarization. This project supports both STDIO and HTTP transports, with STDIO as the default mode.
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/brave/brave-search-mcp-server)
+[![context cost](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fathakur3%2Fmcp-context-cost%2Fmain%2Fbadges%2Fbrave-search.json)](https://athakur3.github.io/mcp-context-cost/METHODOLOGY)
 
 ## Migration
 
