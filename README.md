@@ -198,8 +198,8 @@ Options:
   --logging-level <string>    Desired logging level (one of _debug_, _info_, _notice_, _warning_, _error_, _critical_, _alert_, or _emergency_)
   --enabled-tools             Tools whitelist (only the specified tools will be enabled)
   --disabled-tools            Tools blacklist (included tools will be disabled)
-  --stateless  <boolean>      HTTP Stateless flag
-  --auth-token <string>       Optional bearer token for HTTP /mcp
+  --stateless  <boolean>      HTTP Stateless flag (session handling only; does not affect auth)
+  --auth-token <string>       Optional bearer token for HTTP /mcp (e.g. Authorization: Bearer <token>)
 ```
 
 ## Installation
