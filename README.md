@@ -173,13 +173,14 @@ The server supports the following environment variables:
 - `BRAVE_API_KEY_FILE`: Path to a file containing your Brave Search API key. When set, this takes precedence over `BRAVE_API_KEY`. Useful for Docker secrets and similar mounted-secret setups.
 - `BRAVE_MCP_TRANSPORT`: Transport mode ("http" or "stdio", default: "stdio")
 - `BRAVE_MCP_PORT`: HTTP server port (default: 8080)
-- `BRAVE_MCP_HOST`: HTTP server host (default: "127.0.0.1"). Binds to loopback only by default; set to "0.0.0.0" to expose the server on all interfaces (required inside containers and on Amazon Bedrock AgentCore). Only do this on a trusted network, since the HTTP endpoint is unauthenticated.
+- `BRAVE_MCP_HOST`: HTTP server host (default: "127.0.0.1"). Binds to loopback only by default; set to "0.0.0.0" to expose the server on all interfaces (required inside containers and on Amazon Bedrock AgentCore). Only do this on a trusted network. HTTP `/mcp` is unauthenticated unless you set `BRAVE_MCP_AUTH_TOKEN`.
 - `BRAVE_MCP_ALLOWED_ORIGINS`: Space- or comma-separated list of additional `Origin` header values permitted for the HTTP transport. Loopback origins are always allowed; browser requests carrying any other `Origin` are rejected with HTTP 403 to guard against DNS rebinding. Set this when a browser-based client on a real domain needs access.
 - `BRAVE_MCP_ALLOWED_HOSTS`: Space- or comma-separated list of hostnames permitted in the `Host` header of the HTTP transport. Matching is on the hostname only and is case-insensitive; a numeric port in an entry (e.g. `mcp.example.com:8080`) is accepted but ignored for matching. Optional, opt-in defense-in-depth: when unset (default) the `Host` header is not validated, so reverse-proxy and custom-domain deployments are unaffected. When set, only loopback hosts and the listed hostnames are accepted; any other `Host` (including malformed/non-numeric ports) is rejected with HTTP 403.
 - `BRAVE_MCP_LOG_LEVEL`: Desired logging level("debug", "info", "notice", "warning", "error", "critical", "alert", or "emergency", default: "info")
 - `BRAVE_MCP_ENABLED_TOOLS`: When used, specifies a space-separated whitelist for supported tools
 - `BRAVE_MCP_DISABLED_TOOLS`: When used, specifies a space-separated blacklist for supported tools
 - `BRAVE_MCP_STATELESS`: HTTP stateless mode (default: "true").  When running on Amazon Bedrock Agentcore, set to "true".
+- `BRAVE_MCP_AUTH_TOKEN`: Optional shared secret for HTTP `/mcp`. When set, clients must send `Authorization: Bearer <token>`. `/ping` stays open. Leave unset for local stdio/loopback as today.
 
 ### Command Line Options
 
@@ -197,7 +198,8 @@ Options:
   --logging-level <string>    Desired logging level (one of _debug_, _info_, _notice_, _warning_, _error_, _critical_, _alert_, or _emergency_)
   --enabled-tools             Tools whitelist (only the specified tools will be enabled)
   --disabled-tools            Tools blacklist (included tools will be disabled)
-  --stateless  <boolean>      HTTP Stateless flag
+  --stateless  <boolean>      HTTP Stateless flag (session handling only; does not affect auth)
+  --auth-token <string>       Optional bearer token for HTTP /mcp (e.g. Authorization: Bearer <token>)
 ```
 
 ## Installation
