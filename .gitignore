@@ -2,5 +2,6 @@
 /dist
 /scratch
 .env
+tmp/
 secrets/*
 !secrets/brave_api_key.txt.example

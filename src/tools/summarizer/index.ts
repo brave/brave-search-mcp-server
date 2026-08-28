@@ -1,4 +1,8 @@
-import type { CallToolResult, ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
+import type {
+  CallToolResult,
+  TextContent,
+  ToolAnnotations,
+} from '@modelcontextprotocol/sdk/types.js';
 import { summarizerQueryParams, type SummarizerQueryParams } from './params.js';
 import API from '../../BraveAPI/index.js';
 import { type SummarizerSearchApiResponse } from './types.js';
@@ -6,12 +10,24 @@ import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 export const name = 'brave_summarizer';
 
+export const SUMMARIZER_DEPRECATION_NOTICE =
+  'Deprecation notice: brave_summarizer is deprecated. Prefer brave_answers for new integrations.';
+
+export function buildSuccessfulSummarizerContent(summaryText: string): TextContent[] {
+  return [
+    { type: 'text', text: SUMMARIZER_DEPRECATION_NOTICE },
+    { type: 'text', text: summaryText },
+  ];
+}
+
 export const annotations: ToolAnnotations = {
   title: 'Brave Summarizer',
   openWorldHint: true,
 };
 
 export const description = `
+    DEPRECATED: This tool is deprecated. Prefer brave_answers for new work — it returns a finished, web-grounded answer in a single call (no web-search + key + poll workflow). This tool remains available for existing Pro AI subscribers.
+
     Retrieves AI-generated summaries of web search results using Brave's Summarizer API. This tool processes search results to create concise, coherent summaries of information gathered from multiple sources.
 
     When to use:
@@ -51,10 +67,7 @@ export const execute = async (params: SummarizerQueryParams) => {
         })
         .join('');
 
-      response.content.push({
-        type: 'text' as const,
-        text: summaryText,
-      });
+      response.content.push(...buildSuccessfulSummarizerContent(summaryText));
     }
   } catch (error) {
     response.isError = true;
