@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import express, { type Request, type Response } from 'express';
 import config from '../config.js';
 import createMcpServer from '../server.js';
+import { isLoopbackHostname } from '../utils.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { ListToolsRequest, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { createDnsRebindingGuard } from './rebinding.js';
@@ -102,6 +103,13 @@ const start = () => {
 
   app.listen(config.port, config.host, () => {
     console.log(`Server is running on http://${config.host}:${config.port}/mcp`);
+
+    // /mcp has no auth today. Binding past loopback is an easy way to leak quota.
+    if (!isLoopbackHostname(config.host)) {
+      console.error(
+        `Warning: HTTP transport is bound to ${config.host} and /mcp is unauthenticated. Prefer 127.0.0.1 for local use, or put a reverse proxy with auth in front of this process.`
+      );
+    }
   });
 };
 
