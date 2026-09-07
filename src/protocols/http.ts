@@ -1,10 +1,43 @@
-import { randomUUID } from 'node:crypto';
-import express, { type Request, type Response } from 'express';
+import { randomUUID, timingSafeEqual } from 'node:crypto';
+import express, { type NextFunction, type Request, type Response } from 'express';
 import config from '../config.js';
 import createMcpServer from '../server.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { ListToolsRequest, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { createDnsRebindingGuard } from './rebinding.js';
+
+const isBearerAuthorized = (header: string | undefined, token: string): boolean => {
+  if (!header?.startsWith('Bearer ')) {
+    return false;
+  }
+
+  const provided = Buffer.from(header.slice('Bearer '.length));
+  const expected = Buffer.from(token);
+  if (provided.length !== expected.length) {
+    return false;
+  }
+
+  return timingSafeEqual(provided, expected);
+};
+
+const requireHttpAuth = (req: Request, res: Response, next: NextFunction) => {
+  const token = config.httpAuthToken;
+  if (!token) {
+    next();
+    return;
+  }
+
+  if (isBearerAuthorized(req.headers.authorization, token)) {
+    next();
+    return;
+  }
+
+  res.status(401).json({
+    jsonrpc: '2.0',
+    error: { code: -32001, message: 'Unauthorized' },
+    id: null,
+  });
+};
 
 const yieldGenericServerError = (res: Response) => {
   res.status(500).json({
@@ -72,6 +105,7 @@ const createApp = () => {
   );
 
   app.use('/mcp', express.json());
+  app.use('/mcp', requireHttpAuth);
 
   app.all('/mcp', async (req: Request, res: Response) => {
     try {

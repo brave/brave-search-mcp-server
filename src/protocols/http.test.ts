@@ -214,3 +214,63 @@ describe('http Host validation (opt-in)', () => {
     assert.equal(res.status, 403);
   });
 });
+
+describe('http bearer auth (opt-in)', () => {
+  let server: Server;
+  let baseUrl: string;
+  const originalToken = config.httpAuthToken;
+
+  const post = (authorization?: string) =>
+    fetch(`${baseUrl}/mcp`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        accept: 'application/json, text/event-stream',
+        ...(authorization ? { authorization } : {}),
+      },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} }),
+    });
+
+  before(async () => {
+    config.httpAuthToken = 'test-token';
+    const app = httpServer.createApp();
+    server = app.listen(0);
+    await new Promise<void>((resolve) => server.once('listening', resolve));
+    const port = (server.address() as AddressInfo).port;
+    baseUrl = `http://127.0.0.1:${port}`;
+  });
+
+  after(async () => {
+    config.httpAuthToken = originalToken;
+    await new Promise<void>((resolve, reject) =>
+      server.close((err) => (err ? reject(err) : resolve()))
+    );
+  });
+
+  it('rejects /mcp without a bearer token', async () => {
+    const res = await post();
+    const body = await res.json();
+
+    assert.equal(res.status, 401);
+    assert.deepEqual(body, {
+      jsonrpc: '2.0',
+      error: { code: -32001, message: 'Unauthorized' },
+      id: null,
+    });
+  });
+
+  it('rejects a bad bearer token', async () => {
+    const res = await post('Bearer nope');
+    assert.equal(res.status, 401);
+  });
+
+  it('allows /mcp with the configured bearer token', async () => {
+    const res = await post('Bearer test-token');
+    assert.notEqual(res.status, 401);
+  });
+
+  it('leaves /ping open', async () => {
+    const res = await fetch(`${baseUrl}/ping`);
+    assert.equal(res.status, 200);
+  });
+});
