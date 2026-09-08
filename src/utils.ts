@@ -101,3 +101,8 @@ export function parsePort(value: unknown): number | null {
 
   return parsed;
 }
+
+// Brave Search uses `jp` for Japanese. Agents usually send ISO 639-1 `ja`.
+export function normalizeSearchLang(value: string): string {
+  return value.toLowerCase() === 'ja' ? 'jp' : value;
+}
