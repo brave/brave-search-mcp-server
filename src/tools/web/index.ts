@@ -48,7 +48,7 @@ export const execute = async (params: QueryParams) => {
   if (summarizer) {
     response.content.push({
       type: 'text' as const,
-      text: `Summarizer key: ${summarizer.key}`,
+      text: `Summarizer key: ${summarizer.key} (deprecated — prefer brave_answers)`,
     });
   }
 
