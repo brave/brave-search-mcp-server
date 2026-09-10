@@ -46,7 +46,7 @@
     "@types/express": "5.0.6",
     "@types/node": "24.10.13",
     "ajv": "8.20.0",
-    "prettier": "3.8.1",
+    "prettier": "3.9.6",
     "semver": "7.7.3",
     "shx": "0.4.0",
     "tsx": "4.22.4",
