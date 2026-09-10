@@ -295,6 +295,44 @@ For manual installation, add the following to your User Settings (JSON) or `.vsc
 }
 ```
 
+### Usage with fx
+
+Add this to your `~/.fx/mcp.json`, creating the file if it does not exist:
+
+#### Docker
+
+```json
+{
+  "mcp": {
+    "brave-search": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "-e", "BRAVE_API_KEY", "docker.io/mcp/brave-search"],
+      "env": {
+        "BRAVE_API_KEY": "YOUR_API_KEY_HERE"
+      }
+    }
+  }
+}
+```
+
+#### NPX
+
+```json
+{
+  "mcp": {
+    "brave-search": {
+      "command": "npx",
+      "args": ["-y", "@brave/brave-search-mcp-server", "--transport", "stdio"],
+      "env": {
+        "BRAVE_API_KEY": "YOUR_API_KEY_HERE"
+      }
+    }
+  }
+}
+```
+
+Start fx, or type `/mcp reload` if it is already running. To verify the connection, type `/mcp list`.
+
 ## Build
 
 ### Docker
