@@ -3,7 +3,26 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
-import { isLoopbackHostname, parsePort, readBraveApiKeyFromFile } from './utils.js';
+import {
+  isLoopbackHostname,
+  normalizeSearchLang,
+  parsePort,
+  readBraveApiKeyFromFile,
+} from './utils.js';
+
+describe('normalizeSearchLang', () => {
+  it('maps ISO ja to Brave jp', () => {
+    assert.equal(normalizeSearchLang('ja'), 'jp');
+    assert.equal(normalizeSearchLang('JA'), 'jp');
+  });
+
+  it('leaves other language codes alone', () => {
+    assert.equal(normalizeSearchLang('jp'), 'jp');
+    assert.equal(normalizeSearchLang('en'), 'en');
+    assert.equal(normalizeSearchLang('el'), 'el');
+    assert.equal(normalizeSearchLang('zh-hans'), 'zh-hans');
+  });
+});
 
 describe('parsePort', () => {
   it('accepts valid integer ports', () => {

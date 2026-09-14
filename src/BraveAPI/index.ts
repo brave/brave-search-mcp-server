@@ -1,6 +1,6 @@
 import type { Endpoints } from './types.js';
 import config from '../config.js';
-import { stringify } from '../utils.js';
+import { normalizeSearchLang, stringify } from '../utils.js';
 
 const typeToPathMap: Record<keyof Endpoints, string> = {
   images: '/res/v1/images/search',
@@ -102,6 +102,11 @@ async function issueRequest<T extends keyof Endpoints>(
     }
 
     if (value !== undefined && value !== null) {
+      if (key === 'search_lang' && typeof value === 'string') {
+        queryParams.set(key, normalizeSearchLang(value));
+        continue;
+      }
+
       queryParams.set(key === 'query' ? 'q' : key, value.toString());
     }
   }
