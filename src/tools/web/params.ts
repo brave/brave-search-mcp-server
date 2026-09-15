@@ -241,7 +241,7 @@ export const params = z.object({
   summary: z
     .boolean()
     .describe(
-      'This parameter enables summary key generation in web search results. This is required for summarizer to be enabled.'
+      'Enables summary key generation in web search results for the deprecated brave_summarizer workflow. New integrations should use brave_answers directly instead of summary: true + brave_summarizer.'
     )
     .optional(),
 });

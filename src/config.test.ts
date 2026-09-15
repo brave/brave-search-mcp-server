@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, beforeEach, describe, it } from 'node:test';
+import { afterEach, beforeEach, describe, it, mock } from 'node:test';
 import { getOptions } from './config.js';
 
 const CONFIG_ENV_VARS = [
@@ -46,9 +46,16 @@ describe('getOptions', () => {
   });
 
   it('rejects whitespace-only API keys', () => {
-    process.argv = ['node', 'index.js', '--brave-api-key', '   '];
+    const error = mock.method(console, 'error', () => {});
 
-    assert.equal(getOptions(), false);
+    try {
+      process.argv = ['node', 'index.js', '--brave-api-key', '   '];
+
+      assert.equal(getOptions(), false);
+      assert.equal(error.mock.callCount(), 1);
+    } finally {
+      mock.restoreAll();
+    }
   });
 
   it('reads API key from --brave-api-key-file', () => {
