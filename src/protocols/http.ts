@@ -16,48 +16,72 @@ const yieldGenericServerError = (res: Response) => {
 
 const transports = new Map<string, StreamableHTTPServerTransport>();
 
+// Test seam: the number of sessions currently retained. Sessions are the only
+// thing this module holds across requests, so it is what a leak shows up in.
+export const activeSessionCount = (): number => transports.size;
+
 const isListToolsRequest = (value: unknown): value is ListToolsRequest =>
   ListToolsRequestSchema.safeParse(value).success;
 
-const getTransport = async (request: Request): Promise<StreamableHTTPServerTransport> => {
-  // Check for an existing session
-  const sessionId = request.headers['mcp-session-id'] as string;
+/**
+ * A session-less transport serves exactly one request: nothing can route back
+ * to it once the response ends. Tie its lifetime to the response, or every such
+ * request strands a transport and an McpServer for the life of the process.
+ */
+const createEphemeralTransport = async (res: Response): Promise<StreamableHTTPServerTransport> => {
+  const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+  const mcpServer = createMcpServer();
 
-  if (sessionId && transports.has(sessionId)) {
-    return transports.get(sessionId)!;
-  }
+  await mcpServer.connect(transport);
 
-  // We have a special case where we'll permit ListToolsRequest w/o a session ID
-  if (!sessionId && isListToolsRequest(request.body)) {
-    const transport = new StreamableHTTPServerTransport({
-      sessionIdGenerator: undefined,
-    });
+  res.on('close', () => {
+    void transport.close();
+    void mcpServer.close();
+  });
 
-    const mcpServer = createMcpServer();
-    await mcpServer.connect(transport);
-    return transport;
-  }
+  return transport;
+};
 
-  let transport: StreamableHTTPServerTransport;
+const createSessionTransport = async (): Promise<StreamableHTTPServerTransport> => {
+  const transport: StreamableHTTPServerTransport = new StreamableHTTPServerTransport({
+    sessionIdGenerator: () => randomUUID(),
+    onsessioninitialized: (sessionId) => {
+      transports.set(sessionId, transport);
+    },
+    onsessionclosed: (sessionId) => {
+      transports.delete(sessionId);
+    },
+  });
 
-  if (config.stateless) {
-    // Some contexts (e.g. AgentCore) may prefer or require a stateless transport
-    transport = new StreamableHTTPServerTransport({
-      sessionIdGenerator: undefined,
-    });
-  } else {
-    // Otherwise, start a new transport/session
-    transport = new StreamableHTTPServerTransport({
-      sessionIdGenerator: () => randomUUID(),
-      onsessioninitialized: (sessionId) => {
-        transports.set(sessionId, transport);
-      },
-    });
-  }
+  // A session can also end without a client DELETE (dropped connection,
+  // shutdown), which reaches us only as onclose.
+  transport.onclose = () => {
+    if (transport.sessionId) transports.delete(transport.sessionId);
+  };
 
   const mcpServer = createMcpServer();
   await mcpServer.connect(transport);
+
   return transport;
+};
+
+const getTransport = async (
+  request: Request,
+  res: Response
+): Promise<StreamableHTTPServerTransport> => {
+  // Check for an existing session
+  const sessionId = request.headers['mcp-session-id'] as string;
+  const existing = sessionId ? transports.get(sessionId) : undefined;
+
+  if (existing) return existing;
+
+  // Some contexts (e.g. AgentCore) may prefer or require a stateless transport.
+  // We also have a special case where we'll permit ListToolsRequest w/o a session ID.
+  if (config.stateless || (!sessionId && isListToolsRequest(request.body))) {
+    return createEphemeralTransport(res);
+  }
+
+  return createSessionTransport();
 };
 
 const createApp = () => {
@@ -75,7 +99,7 @@ const createApp = () => {
 
   app.all('/mcp', async (req: Request, res: Response) => {
     try {
-      const transport = await getTransport(req);
+      const transport = await getTransport(req, res);
       await transport.handleRequest(req, res, req.body);
     } catch (error) {
       console.error(error);
@@ -85,7 +109,7 @@ const createApp = () => {
     }
   });
 
-  app.all('/ping', (req: Request, res: Response) => {
+  app.all('/ping', (_req: Request, res: Response) => {
     res.status(200).json({ message: 'pong' });
   });
 
