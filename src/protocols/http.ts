@@ -16,14 +16,13 @@ const yieldGenericServerError = (res: Response) => {
 
 const transports = new Map<string, StreamableHTTPServerTransport>();
 
-// Test seam: the number of sessions currently retained.
+// Exported for tests.
 export const activeSessionCount = (): number => transports.size;
 
 const isListToolsRequest = (value: unknown): value is ListToolsRequest =>
   ListToolsRequestSchema.safeParse(value).success;
 
-// A session-less transport serves exactly one request, so its lifetime is the
-// response's.
+// A session-less transport serves one request; its lifetime is the response's.
 const createEphemeralTransport = async (res: Response): Promise<StreamableHTTPServerTransport> => {
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
   const mcpServer = createMcpServer();
@@ -49,8 +48,7 @@ const createSessionTransport = async (): Promise<StreamableHTTPServerTransport> 
     },
   });
 
-  // Covers the endings that arrive without a client DELETE: dropped
-  // connections and shutdown.
+  // Endings that arrive without a client DELETE: dropped connections, shutdown.
   transport.onclose = () => {
     if (transport.sessionId) transports.delete(transport.sessionId);
   };
@@ -65,14 +63,13 @@ const getTransport = async (
   request: Request,
   res: Response
 ): Promise<StreamableHTTPServerTransport> => {
-  // Check for an existing session
   const sessionId = request.headers['mcp-session-id'] as string;
-  const existing = sessionId ? transports.get(sessionId) : undefined;
+  const existing = transports.get(sessionId);
 
   if (existing) return existing;
 
-  // Some contexts (e.g. AgentCore) may prefer or require a stateless transport.
-  // We also have a special case where we'll permit ListToolsRequest w/o a session ID.
+  // Stateless suits contexts that require it (e.g. AgentCore); the session-less
+  // tools/list probe is allowed for discovery without a handshake.
   if (config.stateless || (!sessionId && isListToolsRequest(request.body))) {
     return createEphemeralTransport(res);
   }

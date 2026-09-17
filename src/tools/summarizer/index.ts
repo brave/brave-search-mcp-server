@@ -88,8 +88,7 @@ const pollForSummary = async (
   attempts: number = 20
 ): Promise<SummarizerSearchApiResponse> => {
   for (let attempt = 0; attempt < attempts; attempt++) {
-    // A pending status and a failed request both mean the summary is not
-    // ready, so both back off.
+    // A pending status and a failed request alike mean "not ready yet".
     if (attempt > 0) await sleep(pollInterval);
 
     try {
@@ -98,7 +97,7 @@ const pollForSummary = async (
         return response;
       }
     } catch {
-      // Retry until the attempt budget is exhausted.
+      // Retry until the budget is spent.
     }
   }
 

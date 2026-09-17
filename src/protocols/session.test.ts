@@ -35,8 +35,7 @@ describe('http session lifecycle', () => {
 
     assert.equal(activeSessionCount(), before + 1, 'initialize should register a session');
 
-    // A client DELETE ends the session; the server must drop its transport
-    // rather than retaining it for the lifetime of the process.
+    // A client DELETE ends the session; the server must drop its transport.
     await transport.terminateSession();
     await client.close();
 
@@ -91,7 +90,7 @@ describe('http session lifecycle', () => {
       assert.equal(init.status, 200);
       assert.equal(init.headers.get('mcp-session-id'), null, 'stateless mode issues no session id');
 
-      // A later request carries no session and is served by its own transport.
+      // No session to carry, so this gets its own transport.
       const list = await post({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} });
       const listBody = await list.text();
 

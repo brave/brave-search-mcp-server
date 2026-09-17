@@ -168,8 +168,7 @@ export function getOptions(): Configuration | false {
     }
   }
 
-  // Commander yields the port as a string; `state.port` is a number on every
-  // path, including stdio, where it is carried but never bound.
+  // Commander yields a string; keep the port numeric even under stdio.
   options.port = port ?? DEFAULT_PORT;
 
   // Normalize stateless to boolean (CLI passes it as string)

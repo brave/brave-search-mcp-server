@@ -21,10 +21,8 @@ import type {
 } from '../tools/place_search/schemas/input.js';
 import type { PlaceSearchApiResponse } from '../tools/place_search/schemas/output.js';
 
-/**
- * Per-request headers, merged over the defaults by `issueRequest`, which
- * enumerates them with `Object.entries` - so this must stay a plain object.
- */
+// `issueRequest` enumerates these with `Object.entries`, so a `Headers`
+// instance would contribute nothing - this must stay a plain object.
 export type RequestHeaders = Record<string, string | number | boolean | undefined>;
 
 export type Endpoints = {

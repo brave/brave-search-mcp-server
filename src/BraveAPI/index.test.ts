@@ -73,8 +73,7 @@ describe('BraveAPI.issueRequest', () => {
     await API.issueRequest('web', { query: 'brave', result_filter: ['web', 'locations'] });
     assert.equal(lastRequest.url.searchParams.get('result_filter'), 'web,locations');
 
-    // Sending result_filter alongside summary=true suppresses web results
-    // upstream, so it is deliberately omitted.
+    // result_filter alongside summary=true suppresses web results upstream.
     await API.issueRequest('web', {
       query: 'brave',
       summary: true,

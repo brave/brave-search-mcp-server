@@ -33,11 +33,11 @@ export const description = `
 // Access to Local API is available through the Pro plans.
 export const execute = async (params: WebQueryParams) => {
   // Both 'web' and 'locations' are required, each appearing once.
-  type ResultFilter = NonNullable<WebQueryParams['result_filter']>[number];
-  const resultFilter = new Set<ResultFilter>(params.result_filter);
-  resultFilter.add('web').add('locations');
+  const result_filter = [
+    ...new Set([...(params.result_filter ?? []), 'web', 'locations'] as const),
+  ];
 
-  params = { ...params, result_filter: [...resultFilter] };
+  params = { ...params, result_filter };
 
   // Starts with a web search to retrieve potential location IDs
   const { locations, web: web_fallback } = await API.issueRequest('web', params);

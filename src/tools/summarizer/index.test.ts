@@ -31,8 +31,7 @@ describe(`${name} (pending summary)`, () => {
     if (url.pathname === '/res/v1/summarizer/search') {
       requestCount++;
 
-      // The API answers 200 with a non-'complete' status while the summary is
-      // still being generated.
+      // The API answers 200 with a non-'complete' status while still generating.
       if (requestCount <= PENDING_RESPONSES) {
         return { type: 'summarizer', status: 'processing' };
       }
@@ -53,8 +52,7 @@ describe(`${name} (pending summary)`, () => {
     assert.equal(result.isError ?? false, false, JSON.stringify(result.content));
     assert.equal(requestCount, PENDING_RESPONSES + 1);
 
-    // Without a wait between attempts the pending responses are burned through
-    // back-to-back, hammering the API and finishing in ~0ms.
+    // Without a wait, the pending responses burn through back-to-back in ~0ms.
     assert.ok(
       elapsed >= PENDING_RESPONSES * POLL_INTERVAL_MS * 0.9,
       `expected to wait between polls, finished in ${elapsed}ms`
