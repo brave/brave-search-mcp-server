@@ -52,6 +52,36 @@ describe('MCP server <-> SDK Client wiring (in-memory)', () => {
       }
     }
   });
+
+  it('advertises additionalProperties in its portable boolean form', async () => {
+    const { tools: listedTools } = await client.listTools();
+
+    // Zod emits `{}` for every loose object; some clients misread it.
+    // See advertisedSchemas.ts.
+    const findEmpty = (node: unknown, path: string): string[] => {
+      if (Array.isArray(node)) return node.flatMap((entry, i) => findEmpty(entry, `${path}[${i}]`));
+      if (node === null || typeof node !== 'object') return [];
+
+      return Object.entries(node).flatMap(([keyword, value]) => {
+        const isEmpty =
+          value !== null &&
+          typeof value === 'object' &&
+          !Array.isArray(value) &&
+          Object.keys(value).length === 0;
+
+        if (keyword === 'additionalProperties' && isEmpty) return [`${path}.${keyword}`];
+
+        return findEmpty(value, `${path}.${keyword}`);
+      });
+    };
+
+    const offenders = listedTools.flatMap((tool) => [
+      ...findEmpty(tool.inputSchema, `${tool.name}.inputSchema`),
+      ...findEmpty(tool.outputSchema, `${tool.name}.outputSchema`),
+    ]);
+
+    assert.deepEqual(offenders, [], `empty additionalProperties: ${offenders.join(', ')}`);
+  });
 });
 
 describe('tool registration gating', () => {
