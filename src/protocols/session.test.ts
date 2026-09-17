@@ -102,6 +102,44 @@ describe('http session lifecycle', () => {
     }
   });
 
+  it('rejects an unrecognized session id with 404', async () => {
+    const post = (body: unknown) =>
+      fetch(baseUrl, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          accept: 'application/json, text/event-stream',
+          'mcp-session-id': 'expired-or-bogus',
+        },
+        body: JSON.stringify(body),
+      });
+
+    // The spec requires 404 so the client starts a new session. An `initialize`
+    // must not be answered by quietly minting one under a different id.
+    const init = await post({
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'initialize',
+      params: {
+        protocolVersion: '2025-06-18',
+        capabilities: {},
+        clientInfo: { name: 'stale-test', version: '0.0.0' },
+      },
+    });
+    await init.text();
+
+    assert.equal(init.status, 404);
+    assert.equal(init.headers.get('mcp-session-id'), null);
+
+    const list = await post({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} });
+    assert.equal(list.status, 404);
+    assert.deepEqual(JSON.parse(await list.text()), {
+      id: null,
+      jsonrpc: '2.0',
+      error: { code: -32001, message: 'Session not found' },
+    });
+  });
+
   it('releases every session once its client terminates', async () => {
     const before = activeSessionCount();
     const connections = await Promise.all([connect(), connect(), connect()]);

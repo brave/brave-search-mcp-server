@@ -6,6 +6,15 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { ListToolsRequest, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { createDnsRebindingGuard } from './rebinding.js';
 
+// Matches the SDK's own shape for an unrecognized session.
+const yieldSessionNotFound = (res: Response) => {
+  res.status(404).json({
+    id: null,
+    jsonrpc: '2.0',
+    error: { code: -32001, message: 'Session not found' },
+  });
+};
+
 const yieldGenericServerError = (res: Response) => {
   res.status(500).json({
     id: null,
@@ -59,10 +68,11 @@ const createSessionTransport = async (): Promise<StreamableHTTPServerTransport> 
   return transport;
 };
 
+// Returns null once it has answered the request itself.
 const getTransport = async (
   request: Request,
   res: Response
-): Promise<StreamableHTTPServerTransport> => {
+): Promise<StreamableHTTPServerTransport | null> => {
   const sessionId = request.headers['mcp-session-id'] as string;
   const existing = transports.get(sessionId);
 
@@ -72,6 +82,14 @@ const getTransport = async (
   // tools/list probe is allowed for discovery without a handshake.
   if (config.stateless || (!sessionId && isListToolsRequest(request.body))) {
     return createEphemeralTransport(res);
+  }
+
+  // An unrecognized session id is expired or bogus. The spec requires 404 so the
+  // client knows to start a new session; falling through would answer an
+  // `initialize` by minting one under a different id, unnoticed.
+  if (sessionId) {
+    yieldSessionNotFound(res);
+    return null;
   }
 
   return createSessionTransport();
@@ -93,7 +111,7 @@ const createApp = () => {
   app.all('/mcp', async (req: Request, res: Response) => {
     try {
       const transport = await getTransport(req, res);
-      await transport.handleRequest(req, res, req.body);
+      if (transport) await transport.handleRequest(req, res, req.body);
     } catch (error) {
       console.error(error);
       if (!res.headersSent) {
