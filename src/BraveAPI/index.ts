@@ -14,14 +14,6 @@ const typeToPathMap: Record<keyof Endpoints, string> = {
   placeSearch: '/res/v1/local/place_search',
 };
 
-const getDefaultRequestHeaders = (): Record<string, string> => {
-  return {
-    Accept: 'application/json',
-    'Accept-Encoding': 'gzip',
-    'X-Subscription-Token': config.braveApiKey,
-  };
-};
-
 const isValidGoggleURL = (url: string): boolean => {
   try {
     // Only allow HTTPS URLs
@@ -106,14 +98,20 @@ async function issueRequest<T extends keyof Endpoints>(
   }
 
   // Issue Request
-  const urlWithParams = url.toString() + '?' + queryParams.toString();
-  const headers = new Headers(getDefaultRequestHeaders());
+  url.search = queryParams.toString();
+
+  const headers = new Headers({
+    Accept: 'application/json',
+    'Accept-Encoding': 'gzip',
+    'X-Subscription-Token': config.braveApiKey,
+  });
+
   for (const [key, value] of Object.entries(requestHeaders)) {
     if (value === undefined || value === null) continue;
     headers.set(key, String(value));
   }
 
-  const response = await fetch(urlWithParams, { headers });
+  const response = await fetch(url, { headers });
 
   // Handle Error
   if (!response.ok) {
