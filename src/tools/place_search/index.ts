@@ -38,11 +38,7 @@ export const execute = async (params: QueryParams) => {
   const parsedParams = RequestParamsSchema.parse(params);
   const parsedHeaders = RequestHeadersSchema.parse(params);
 
-  const response = await API.issueRequest<'placeSearch'>(
-    'placeSearch',
-    parsedParams,
-    parsedHeaders
-  );
+  const response = await API.issueRequest('placeSearch', parsedParams, parsedHeaders);
 
   return {
     content: [{ type: 'text', text: stringify(response) } as TextContent],

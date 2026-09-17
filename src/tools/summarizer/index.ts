@@ -93,7 +93,7 @@ const pollForSummary = async (
     if (attempt > 0) await sleep(pollInterval);
 
     try {
-      const response = await API.issueRequest<'summarizer'>('summarizer', params);
+      const response = await API.issueRequest('summarizer', params);
       if (response.status === 'complete') {
         return response;
       }

@@ -40,10 +40,7 @@ export const description = `
 
 export const execute = async (params: QueryParams) => {
   const response = { content: [] as TextContent[], isError: false };
-  const { web, faq, discussions, news, videos, summarizer } = await API.issueRequest<'web'>(
-    'web',
-    params
-  );
+  const { web, faq, discussions, news, videos, summarizer } = await API.issueRequest('web', params);
 
   if (summarizer) {
     response.content.push({

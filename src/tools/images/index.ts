@@ -19,7 +19,7 @@ export const description = `
 `;
 
 export const execute = async (params: QueryParams) => {
-  const response = await API.issueRequest<'images'>('images', params);
+  const response = await API.issueRequest('images', params);
   const items = response.results.map(simplifySchemaForLLM).filter((o) => o !== null);
 
   const structuredContent = OutputSchema.safeParse({

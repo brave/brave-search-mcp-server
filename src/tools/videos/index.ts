@@ -22,7 +22,7 @@ export const description = `
 `.trim();
 
 export const execute = async (params: QueryParams) => {
-  const response = await API.issueRequest<'videos'>('videos', params);
+  const response = await API.issueRequest('videos', params);
 
   return {
     content: response.results.map(({ url, title, description, video, thumbnail }) => {

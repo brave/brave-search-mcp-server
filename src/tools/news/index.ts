@@ -31,7 +31,7 @@ export const description = `
 `.trim();
 
 export const execute = async (params: QueryParams) => {
-  const response = await API.issueRequest<'news'>('news', params);
+  const response = await API.issueRequest('news', params);
 
   return {
     content: response.results.map((newsResult) => {

@@ -40,7 +40,7 @@ export const execute = async (params: WebQueryParams) => {
   params = { ...params, result_filter: [...resultFilter] };
 
   // Starts with a web search to retrieve potential location IDs
-  const { locations, web: web_fallback } = await API.issueRequest<'web'>('web', params);
+  const { locations, web: web_fallback } = await API.issueRequest('web', params);
 
   // We can send up to 20 location IDs at a time to the Local API
   // TODO (Sampson): Add support for multiple requests
@@ -65,7 +65,7 @@ export const execute = async (params: WebQueryParams) => {
   }
 
   // Fetch AI-generated descriptions
-  const descriptions = await API.issueRequest<'localDescriptions'>('localDescriptions', {
+  const descriptions = await API.issueRequest('localDescriptions', {
     ids: locationIDs,
   });
 

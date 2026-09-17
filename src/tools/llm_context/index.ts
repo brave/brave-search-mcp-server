@@ -35,7 +35,7 @@ export const execute = async (params: QueryParams) => {
   const parsedParams = RequestParamsSchema.parse(params);
   const parsedHeaders = RequestHeadersSchema.parse(params);
 
-  const response = await API.issueRequest<'llmContext'>('llmContext', parsedParams, parsedHeaders);
+  const response = await API.issueRequest('llmContext', parsedParams, parsedHeaders);
   const { success, data, error } = LlmContextSearchApiResponseSchema.safeParse(response);
   const payload = success ? data : z.treeifyError(error);
 
