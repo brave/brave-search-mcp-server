@@ -26,14 +26,15 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc && shx chmod +x dist/*.js",
+    "build": "shx rm -rf dist && tsc && shx chmod +x dist/*.js",
     "prepare": "npm run format && npm run build",
     "watch": "tsc --watch",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
     "test": "node --import tsx --test \"src/**/*.test.ts\"",
+    "serve:http": "npm run build && node dist/index.js --transport http",
     "inspector": "npx @modelcontextprotocol/inspector",
-    "inspector:http": "npx @modelcontextprotocol/inspector --transport http"
+    "inspector:http": "npx @modelcontextprotocol/inspector --transport http --server-url http://127.0.0.1:8080/mcp"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.30.0",

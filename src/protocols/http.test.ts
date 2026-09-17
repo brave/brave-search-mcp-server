@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
 import http, { type Server } from 'node:http';
-import type { AddressInfo } from 'node:net';
+import net, { type AddressInfo } from 'node:net';
 import { after, before, describe, it } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import config from '../config.js';
 import httpServer from './http.js';
 
@@ -212,5 +214,46 @@ describe('http Host validation (opt-in)', () => {
     const res = await rawRequest(port, { host: 'allowed.example.com:80evil' });
 
     assert.equal(res.status, 403);
+  });
+});
+
+const entrypoint = fileURLToPath(new URL('../index.ts', import.meta.url));
+
+// `start()` exits the process on a bind failure, so drive it from a child.
+const startServer = (port: number): Promise<{ code: number | null; out: string; err: string }> => {
+  const child = spawn(
+    process.execPath,
+    ['--import', 'tsx', entrypoint, '--transport', 'http', '--port', String(port)],
+    { env: { ...process.env, BRAVE_API_KEY: 'test-key' } }
+  );
+
+  let out = '';
+  let err = '';
+  child.stdout.on('data', (chunk: Buffer) => (out += chunk.toString()));
+  child.stderr.on('data', (chunk: Buffer) => (err += chunk.toString()));
+
+  return new Promise((resolve) => {
+    child.on('exit', (code) => resolve({ code, out, err }));
+  });
+};
+
+describe('HTTP transport startup', () => {
+  let blocker: net.Server;
+  let takenPort: number;
+
+  before(async () => {
+    blocker = net.createServer();
+    await new Promise<void>((resolve) => blocker.listen(0, '127.0.0.1', () => resolve()));
+    takenPort = (blocker.address() as AddressInfo).port;
+  });
+
+  after(() => new Promise<void>((resolve) => blocker.close(() => resolve())));
+
+  it('exits with an error when the port is already in use', async () => {
+    const { code, out, err } = await startServer(takenPort);
+
+    assert.equal(code, 1, err);
+    assert.match(err, /already in use/);
+    assert.doesNotMatch(out, /Server is running/);
   });
 });

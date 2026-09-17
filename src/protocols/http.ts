@@ -99,9 +99,19 @@ const start = () => {
   }
 
   const app = createApp();
+  const server = app.listen(config.port, config.host);
 
-  app.listen(config.port, config.host, () => {
+  server.on('listening', () => {
+    // A failed bind still emits 'listening', with a null address.
+    if (server.address() === null) return;
     console.log(`Server is running on http://${config.host}:${config.port}/mcp`);
+  });
+
+  server.on('error', (error: NodeJS.ErrnoException) => {
+    const detail =
+      error.code === 'EADDRINUSE' ? `port ${config.port} is already in use` : error.message;
+    console.error(`Unable to start HTTP server: ${detail}`);
+    process.exit(1);
   });
 };
 

@@ -46,8 +46,7 @@ async function issueRequest<T extends keyof Endpoints>(
   parameters: Endpoints[T]['params'],
   requestHeaders: Endpoints[T]['requestHeaders'] = {} as Endpoints[T]['requestHeaders']
 ): Promise<Endpoints[T]['response']> {
-  // TODO (Sampson): Improve rate-limit logic to support self-throttling and n-keys
-  // checkRateLimit();
+  // TODO (Sampson): Add rate-limit logic supporting self-throttling and n-keys
 
   // Determine URL, and setup parameters
   const url = new URL(`https://api.search.brave.com${typeToPathMap[endpoint]}`);
@@ -123,7 +122,7 @@ async function issueRequest<T extends keyof Endpoints>(
     try {
       const responseBody = await response.json();
       errorMessage += `\n${stringify(responseBody, true)}`;
-    } catch (error) {
+    } catch {
       errorMessage += `\n${await response.text()}`;
     }
 
