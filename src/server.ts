@@ -14,7 +14,6 @@ export default function createMcpServer(): McpServer {
     {
       capabilities: {
         logging: {},
-        tools: { listChanged: false },
       },
       instructions: `Use this server to search the Web for various types of data via the Brave Search API.`,
     }
