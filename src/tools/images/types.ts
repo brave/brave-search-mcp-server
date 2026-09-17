@@ -6,7 +6,7 @@ export interface ImageSearchApiResponse {
   /** The list of image results for the given query. */
   results: ImageResult[];
   /** Additional information about the image search results. */
-  extra?: Extra;
+  extra: Extra;
 }
 
 interface Query {
@@ -76,5 +76,5 @@ interface MetaUrl {
 
 interface Extra {
   /** Indicates whether the image search results might contain offensive content. */
-  might_be_offensive: boolean;
+  might_be_offensive?: boolean;
 }

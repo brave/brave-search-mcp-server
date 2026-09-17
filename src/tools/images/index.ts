@@ -26,7 +26,7 @@ export const execute = async (params: QueryParams) => {
     type: 'object',
     items,
     count: items.length,
-    might_be_offensive: response.extra?.might_be_offensive,
+    might_be_offensive: response.extra.might_be_offensive,
   });
 
   const payload = structuredContent.success
