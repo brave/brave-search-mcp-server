@@ -6,15 +6,7 @@ import { parseDelimitedList, parsePort, readBraveApiKeyFromFile } from './utils.
 
 dotenv.config({ debug: false, quiet: true });
 
-function parseToolNameList(value: string | string[] | undefined | null): string[] {
-  if (value == null) return [];
-  if (Array.isArray(value))
-    return value.map((t: string) => t.trim()).filter((t: string) => t.length > 0);
-  return value
-    .trim()
-    .split(/\s+/)
-    .filter((t: string) => t.length > 0);
-}
+const DEFAULT_PORT = 8080;
 
 type Configuration = {
   transport: 'stdio' | 'http';
@@ -31,7 +23,7 @@ type Configuration = {
 
 const state: Configuration & { ready: boolean } = {
   transport: 'stdio',
-  port: 8080,
+  port: DEFAULT_PORT,
   host: '127.0.0.1',
   braveApiKey: process.env.BRAVE_API_KEY ?? '',
   loggingLevel: 'info',
@@ -66,17 +58,17 @@ export function getOptions(): Configuration | false {
     .option(
       '--enabled-tools <names...>',
       'tools to enable',
-      process.env.BRAVE_MCP_ENABLED_TOOLS?.trim().split(' ') ?? []
+      process.env.BRAVE_MCP_ENABLED_TOOLS ?? ''
     )
     .option(
       '--disabled-tools <names...>',
       'tools to disable',
-      process.env.BRAVE_MCP_DISABLED_TOOLS?.trim().split(' ') ?? []
+      process.env.BRAVE_MCP_DISABLED_TOOLS ?? ''
     )
     .option(
       '--port <number>',
       'desired port for HTTP transport',
-      process.env.BRAVE_MCP_PORT ?? '8080'
+      process.env.BRAVE_MCP_PORT ?? String(DEFAULT_PORT)
     )
     .option(
       '--host <string>',
@@ -96,7 +88,7 @@ export function getOptions(): Configuration | false {
     .option(
       '--stateless <boolean>',
       'whether the server should be stateless',
-      process.env.BRAVE_MCP_STATELESS === 'true' ? true : false
+      process.env.BRAVE_MCP_STATELESS === 'true'
     )
     .allowUnknownOption()
     .parse(process.argv);
@@ -105,8 +97,8 @@ export function getOptions(): Configuration | false {
   const toolNames = Object.values(tools).map((tool) => tool.name);
 
   // Validate tool inclusion configuration
-  const enabledTools = parseToolNameList(options.enabledTools);
-  const disabledTools = parseToolNameList(options.disabledTools);
+  const enabledTools = parseDelimitedList(options.enabledTools);
+  const disabledTools = parseDelimitedList(options.disabledTools);
 
   if (enabledTools.length > 0 && disabledTools.length > 0) {
     console.error('Error: --enabled-tools and --disabled-tools cannot be used together');
@@ -158,21 +150,25 @@ export function getOptions(): Configuration | false {
     return false;
   }
 
+  const port = parsePort(options.port);
+
   if (options.transport === 'http') {
-    const port = parsePort(options.port);
     if (port === null) {
       console.error(
         `Invalid --port value: '${options.port}'. Must be a valid port number between 1 and 65535.`
       );
       return false;
     }
-    options.port = port;
 
     if (!options.host) {
       console.error('Error: --host is required');
       return false;
     }
   }
+
+  // Commander yields the port as a string; keep `state.port` a number on every
+  // path, including stdio, where it is carried but never bound.
+  options.port = port ?? DEFAULT_PORT;
 
   // Normalize stateless to boolean (CLI passes it as string)
   options.stateless = options.stateless === true || options.stateless === 'true';
