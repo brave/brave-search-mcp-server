@@ -56,7 +56,7 @@ export const execute = async (params: SummarizerQueryParams) => {
         text: summaryText,
       });
     }
-  } catch (error) {
+  } catch {
     response.isError = true;
     response.content.push({
       type: 'text' as const,
@@ -93,7 +93,7 @@ const pollForSummary = async (
       if (response.status === 'complete') {
         result = response;
       }
-    } catch (error) {
+    } catch {
       await new Promise((resolve) => setTimeout(resolve, pollInterval));
     }
 

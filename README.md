@@ -394,29 +394,39 @@ Add a reference to your local build in `claude_desktop_config.json`:
 
 ### Testing via MCP Inspector
 
-1. Build and start the server:
+The Inspector requires Node 22.19 or newer.
+
+**STDIO** — the Inspector launches the server itself, so one terminal is enough:
+
 ```bash
 npm run build
-node dist/index.js
-```
-
-2. In another terminal, start the MCP Inspector:
-```bash
 npx @modelcontextprotocol/inspector node dist/index.js
 ```
 
-STDIO is the default mode. For HTTP mode testing, add `--transport http` to the arguments in the Inspector UI.
+**HTTP** — the Inspector connects to a URL, so the server must already be listening:
+
+```bash
+# terminal 1
+npm run serve:http
+
+# terminal 2
+npm run inspector:http
+```
+
+`serve:http` builds, binds `127.0.0.1:8080`, and reads `BRAVE_API_KEY` from `.env`.
 
 ### Available Scripts
 
 - `npm run build`: Build the TypeScript project
 - `npm run watch`: Watch for changes and rebuild
+- `npm test`: Run the test suite
 - `npm run format`: Format code with Prettier
 - `npm run format:check`: Check code formatting
 - `npm run prepare`: Format and build (runs automatically on npm install)
 
+- `npm run serve:http`: Build, then serve over HTTP at `http://127.0.0.1:8080/mcp`
 - `npm run inspector`: Launch an instance of MCP Inspector
-- `npm run inspector:stdio`: Launch a instance of MCP Inspector, configured for STDIO
+- `npm run inspector:http`: Launch MCP Inspector against `http://127.0.0.1:8080/mcp`
 
 ### Docker Compose
 

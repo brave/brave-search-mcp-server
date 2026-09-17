@@ -7,13 +7,12 @@ import tools from './tools/index.js';
 
 describe('MCP server <-> SDK Client wiring (in-memory)', () => {
   let client: Client;
-  let close: () => Promise<void>;
 
   before(async () => {
-    ({ client, close } = await connectTestClient());
+    client = await connectTestClient();
   });
 
-  after(() => close());
+  after(() => client.close());
 
   it('lists every registered tool with a valid input schema', async () => {
     const { tools: listedTools } = await client.listTools();
