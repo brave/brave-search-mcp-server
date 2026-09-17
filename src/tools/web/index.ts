@@ -62,8 +62,7 @@ export const execute = async (params: QueryParams) => {
     return response;
   }
 
-  // Each formatter already yields [] for an absent `results`, so an empty
-  // section contributes nothing and needs no separate length check.
+  // Each formatter yields [] for an absent `results`.
   const pushEntries = (entries: readonly unknown[]) => {
     for (const entry of entries) {
       response.content.push({ type: 'text' as const, text: stringify(entry) });

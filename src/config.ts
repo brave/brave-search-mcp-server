@@ -166,7 +166,7 @@ export function getOptions(): Configuration | false {
     }
   }
 
-  // Commander yields the port as a string; keep `state.port` a number on every
+  // Commander yields the port as a string; `state.port` is a number on every
   // path, including stdio, where it is carried but never bound.
   options.port = port ?? DEFAULT_PORT;
 

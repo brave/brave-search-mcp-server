@@ -16,18 +16,14 @@ const yieldGenericServerError = (res: Response) => {
 
 const transports = new Map<string, StreamableHTTPServerTransport>();
 
-// Test seam: the number of sessions currently retained. Sessions are the only
-// thing this module holds across requests, so it is what a leak shows up in.
+// Test seam: the number of sessions currently retained.
 export const activeSessionCount = (): number => transports.size;
 
 const isListToolsRequest = (value: unknown): value is ListToolsRequest =>
   ListToolsRequestSchema.safeParse(value).success;
 
-/**
- * A session-less transport serves exactly one request: nothing can route back
- * to it once the response ends. Tie its lifetime to the response, or every such
- * request strands a transport and an McpServer for the life of the process.
- */
+// A session-less transport serves exactly one request, so its lifetime is the
+// response's.
 const createEphemeralTransport = async (res: Response): Promise<StreamableHTTPServerTransport> => {
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
   const mcpServer = createMcpServer();
@@ -53,8 +49,8 @@ const createSessionTransport = async (): Promise<StreamableHTTPServerTransport> 
     },
   });
 
-  // A session can also end without a client DELETE (dropped connection,
-  // shutdown), which reaches us only as onclose.
+  // Covers the endings that arrive without a client DELETE: dropped
+  // connections and shutdown.
   transport.onclose = () => {
     if (transport.sessionId) transports.delete(transport.sessionId);
   };
