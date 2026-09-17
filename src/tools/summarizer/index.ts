@@ -80,31 +80,30 @@ export const register = (mcpServer: McpServer) => {
   );
 };
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const pollForSummary = async (
   params: SummarizerQueryParams,
   pollInterval: number = 50,
   attempts: number = 20
 ): Promise<SummarizerSearchApiResponse> => {
-  let result: SummarizerSearchApiResponse | null = null;
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    // The summary is still being generated until `status` is 'complete'; a
+    // pending status is as much a reason to back off as a failed request, so
+    // wait between every pair of attempts rather than only after a throw.
+    if (attempt > 0) await sleep(pollInterval);
 
-  while (!result && attempts > 0) {
     try {
       const response = await API.issueRequest<'summarizer'>('summarizer', params);
       if (response.status === 'complete') {
-        result = response;
+        return response;
       }
     } catch {
-      await new Promise((resolve) => setTimeout(resolve, pollInterval));
+      // Retry until the attempt budget is exhausted.
     }
-
-    attempts--;
   }
 
-  if (!result) {
-    throw new Error('Summarizer summary could not be retrieved after multiple attempts.');
-  }
-
-  return result;
+  throw new Error('Summarizer summary could not be retrieved after multiple attempts.');
 };
 
 export default {
