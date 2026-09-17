@@ -60,6 +60,49 @@ describe('http session lifecycle', () => {
     assert.equal(activeSessionCount(), before, 'the probe is served without a session');
   });
 
+  it('serves stateless mode without issuing or retaining a session', async () => {
+    const before = activeSessionCount();
+    const originalStateless = config.stateless;
+    config.stateless = true;
+
+    try {
+      const post = (body: unknown) =>
+        fetch(baseUrl, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            accept: 'application/json, text/event-stream',
+          },
+          body: JSON.stringify(body),
+        });
+
+      const init = await post({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: {
+          protocolVersion: '2025-06-18',
+          capabilities: {},
+          clientInfo: { name: 'stateless-test', version: '0.0.0' },
+        },
+      });
+      await init.text();
+
+      assert.equal(init.status, 200);
+      assert.equal(init.headers.get('mcp-session-id'), null, 'stateless mode issues no session id');
+
+      // A later request carries no session and is served by its own transport.
+      const list = await post({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} });
+      const listBody = await list.text();
+
+      assert.equal(list.status, 200);
+      assert.match(listBody, /brave_web_search/);
+      assert.equal(activeSessionCount(), before, 'stateless requests retain nothing');
+    } finally {
+      config.stateless = originalStateless;
+    }
+  });
+
   it('releases every session once its client terminates', async () => {
     const before = activeSessionCount();
     const connections = await Promise.all([connect(), connect(), connect()]);

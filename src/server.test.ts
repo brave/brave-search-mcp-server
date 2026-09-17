@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
-import { after, before, describe, it } from 'node:test';
+import { after, afterEach, before, describe, it } from 'node:test';
 import type { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { Ajv2020 } from 'ajv/dist/2020.js';
+import config from './config.js';
 import { connectTestClient } from './testUtils/mcpTestHarness.js';
 import tools from './tools/index.js';
 
@@ -50,5 +51,48 @@ describe('MCP server <-> SDK Client wiring (in-memory)', () => {
         );
       }
     }
+  });
+});
+
+describe('tool registration gating', () => {
+  const original = { enabled: config.enabledTools, disabled: config.disabledTools };
+
+  const listToolNames = async () => {
+    const client = await connectTestClient();
+    try {
+      const { tools: listed } = await client.listTools();
+      return listed.map((tool) => tool.name).sort();
+    } finally {
+      await client.close();
+    }
+  };
+
+  afterEach(() => {
+    config.enabledTools = original.enabled;
+    config.disabledTools = original.disabled;
+  });
+
+  it('registers only the enabled tools', async () => {
+    config.enabledTools = ['brave_web_search', 'brave_news_search'];
+    config.disabledTools = [];
+
+    assert.deepEqual(await listToolNames(), ['brave_news_search', 'brave_web_search']);
+  });
+
+  it('registers everything except the disabled tools', async () => {
+    config.enabledTools = [];
+    config.disabledTools = ['brave_summarizer'];
+
+    const names = await listToolNames();
+
+    assert.equal(names.includes('brave_summarizer'), false);
+    assert.equal(names.length, Object.values(tools).length - 1);
+  });
+
+  it('registers every tool when neither list is set', async () => {
+    config.enabledTools = [];
+    config.disabledTools = [];
+
+    assert.equal((await listToolNames()).length, Object.values(tools).length);
   });
 });
