@@ -71,7 +71,7 @@ export const register = (mcpServer: McpServer) => {
   mcpServer.registerTool(
     name,
     {
-      title: name,
+      title: annotations.title,
       description: description,
       inputSchema: summarizerQueryParams,
       annotations: annotations,
@@ -107,9 +107,6 @@ const pollForSummary = async (
 
 export default {
   name,
-  description,
-  annotations,
   inputSchema: summarizerQueryParams.shape,
-  execute,
   register,
 };

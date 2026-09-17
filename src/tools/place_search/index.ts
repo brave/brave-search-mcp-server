@@ -42,7 +42,6 @@ export const execute = async (params: QueryParams) => {
 
   return {
     content: [{ type: 'text', text: stringify(response) } as TextContent],
-    isError: false,
     structuredContent: response,
   };
 };
@@ -51,7 +50,7 @@ export const register = (mcpServer: McpServer) => {
   mcpServer.registerTool(
     name,
     {
-      title: name,
+      title: annotations.title,
       description: description,
       inputSchema: PlaceSearchInputSchema,
       outputSchema: PlaceSearchApiResponseSchema,
@@ -63,10 +62,7 @@ export const register = (mcpServer: McpServer) => {
 
 export default {
   name,
-  description,
-  annotations,
   inputSchema: PlaceSearchInputSchema.shape,
   outputSchema: PlaceSearchApiResponseSchema.shape,
-  execute,
   register,
 };

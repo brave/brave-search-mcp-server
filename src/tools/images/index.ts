@@ -44,7 +44,7 @@ export const register = (mcpServer: McpServer) => {
   mcpServer.registerTool(
     name,
     {
-      title: name,
+      title: annotations.title,
       description: description,
       inputSchema: params,
       outputSchema: OutputSchema,
@@ -74,10 +74,7 @@ function simplifySchemaForLLM(
 
 export default {
   name,
-  description,
-  annotations,
   inputSchema: params.shape,
   outputSchema: OutputSchema.shape,
-  execute,
   register,
 };

@@ -81,7 +81,7 @@ export const register = (mcpServer: McpServer) => {
   mcpServer.registerTool(
     name,
     {
-      title: name,
+      title: annotations.title,
       description: description,
       inputSchema: webParams,
       annotations: annotations,
@@ -186,9 +186,6 @@ export const formatOpeningHours = (
 
 export default {
   name,
-  description,
-  annotations,
   inputSchema: webParams.shape,
-  execute,
   register,
 };

@@ -50,7 +50,7 @@ export const register = (mcpServer: McpServer) => {
   mcpServer.registerTool(
     name,
     {
-      title: name,
+      title: annotations.title,
       description: description,
       inputSchema: LlmContextInputSchema,
       outputSchema: LlmContextSearchApiResponseSchema,
@@ -62,10 +62,7 @@ export const register = (mcpServer: McpServer) => {
 
 export default {
   name,
-  description,
-  annotations,
   inputSchema: LlmContextInputSchema.shape,
   outputSchema: LlmContextSearchApiResponseSchema.shape,
-  execute,
   register,
 };
