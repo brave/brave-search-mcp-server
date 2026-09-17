@@ -9,6 +9,7 @@ import {
   type LlmContextInput as QueryParams,
 } from './schemas/input.js';
 import { LlmContextSearchApiResponseSchema } from './schemas/output.js';
+import { stringify } from '../../utils.js';
 
 export const name = 'brave_llm_context';
 
@@ -39,7 +40,7 @@ export const execute = async (params: QueryParams) => {
   const payload = success ? data : z.treeifyError(error);
 
   return {
-    content: [{ type: 'text', text: JSON.stringify(payload) } as TextContent],
+    content: [{ type: 'text', text: stringify(payload) } as TextContent],
     isError: !success,
     structuredContent: payload,
   };

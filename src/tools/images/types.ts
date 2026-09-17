@@ -6,7 +6,7 @@ export interface ImageSearchApiResponse {
   /** The list of image results for the given query. */
   results: ImageResult[];
   /** Additional information about the image search results. */
-  extra: Extra;
+  extra?: Extra;
 }
 
 interface Query {

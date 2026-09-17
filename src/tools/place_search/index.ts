@@ -8,6 +8,7 @@ import {
   type PlaceSearchInput as QueryParams,
 } from './schemas/input.js';
 import { PlaceSearchApiResponseSchema } from './schemas/output.js';
+import { stringify } from '../../utils.js';
 
 export const name = 'brave_place_search';
 
@@ -44,7 +45,7 @@ export const execute = async (params: QueryParams) => {
   );
 
   return {
-    content: [{ type: 'text', text: JSON.stringify(response) } as TextContent],
+    content: [{ type: 'text', text: stringify(response) } as TextContent],
     isError: false,
     structuredContent: response,
   };

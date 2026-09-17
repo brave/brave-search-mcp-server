@@ -62,49 +62,19 @@ export const execute = async (params: QueryParams) => {
     return response;
   }
 
-  // TODO (Sampson): The following is unnecessarily repetitive.
-  for (const entry of formatWebResults(web)) {
-    response.content.push({
-      type: 'text' as const,
-      text: stringify(entry),
-    });
-  }
-
-  if (faq && faq.results?.length > 0) {
-    for (const entry of formatFAQResults(faq)) {
-      response.content.push({
-        type: 'text' as const,
-        text: stringify(entry),
-      });
+  // Each formatter already yields [] for an absent `results`, so an empty
+  // section contributes nothing and needs no separate length check.
+  const pushEntries = (entries: readonly unknown[]) => {
+    for (const entry of entries) {
+      response.content.push({ type: 'text' as const, text: stringify(entry) });
     }
-  }
+  };
 
-  if (discussions && discussions.results?.length > 0) {
-    for (const entry of formatDiscussionsResults(discussions)) {
-      response.content.push({
-        type: 'text' as const,
-        text: stringify(entry),
-      });
-    }
-  }
-
-  if (news && news.results?.length > 0) {
-    for (const entry of formatNewsResults(news)) {
-      response.content.push({
-        type: 'text' as const,
-        text: stringify(entry),
-      });
-    }
-  }
-
-  if (videos && videos.results?.length > 0) {
-    for (const entry of formatVideoResults(videos)) {
-      response.content.push({
-        type: 'text' as const,
-        text: stringify(entry),
-      });
-    }
-  }
+  pushEntries(formatWebResults(web));
+  if (faq) pushEntries(formatFAQResults(faq));
+  if (discussions) pushEntries(formatDiscussionsResults(discussions));
+  if (news) pushEntries(formatNewsResults(news));
+  if (videos) pushEntries(formatVideoResults(videos));
 
   return response;
 };

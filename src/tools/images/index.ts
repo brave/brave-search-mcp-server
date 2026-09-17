@@ -3,6 +3,7 @@ import params, { type QueryParams } from './schemas/input.js';
 import API from '../../BraveAPI/index.js';
 import type { ImageResult } from './types.js';
 import OutputSchema, { SimplifiedImageResultSchema } from './schemas/output.js';
+import { stringify } from '../../utils.js';
 import { z } from 'zod';
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
@@ -25,7 +26,7 @@ export const execute = async (params: QueryParams) => {
     type: 'object',
     items,
     count: items.length,
-    might_be_offensive: response.extra.might_be_offensive,
+    might_be_offensive: response.extra?.might_be_offensive,
   });
 
   const payload = structuredContent.success
@@ -33,7 +34,7 @@ export const execute = async (params: QueryParams) => {
     : structuredContent.error.flatten();
 
   return {
-    content: [{ type: 'text', text: JSON.stringify(payload) } as TextContent],
+    content: [{ type: 'text', text: stringify(payload) } as TextContent],
     isError: !structuredContent.success,
     structuredContent: payload,
   };
