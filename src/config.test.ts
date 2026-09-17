@@ -3,7 +3,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { getOptions } from './config.js';
+import config, { getOptions, isToolPermittedByUser } from './config.js';
 
 const CONFIG_ENV_VARS = [
   'BRAVE_API_KEY',
@@ -196,5 +196,143 @@ describe('getOptions', () => {
     if (options) {
       assert.deepEqual(options.allowedHosts, ['a.example', 'b.example']);
     }
+  });
+  it('parses space-separated --enabled-tools', () => {
+    process.argv = [
+      'node',
+      'index.js',
+      '--brave-api-key',
+      'key',
+      '--enabled-tools',
+      'brave_web_search',
+      'brave_news_search',
+    ];
+
+    const options = getOptions();
+
+    assert.notEqual(options, false);
+    if (options) {
+      assert.deepEqual(options.enabledTools, ['brave_web_search', 'brave_news_search']);
+    }
+  });
+
+  it('parses comma-separated tool lists', () => {
+    process.env.BRAVE_MCP_DISABLED_TOOLS = 'brave_summarizer,brave_llm_context';
+    process.argv = ['node', 'index.js', '--brave-api-key', 'key'];
+
+    const options = getOptions();
+
+    assert.notEqual(options, false);
+    if (options) {
+      assert.deepEqual(options.disabledTools, ['brave_summarizer', 'brave_llm_context']);
+    }
+  });
+
+  it('rejects --enabled-tools and --disabled-tools together', () => {
+    process.argv = [
+      'node',
+      'index.js',
+      '--brave-api-key',
+      'key',
+      '--enabled-tools',
+      'brave_web_search',
+      '--disabled-tools',
+      'brave_news_search',
+    ];
+
+    assert.equal(getOptions(), false);
+  });
+
+  it('rejects unknown tool names', () => {
+    process.argv = [
+      'node',
+      'index.js',
+      '--brave-api-key',
+      'key',
+      '--enabled-tools',
+      'brave_web_search',
+      'brave_nonexistent',
+    ];
+
+    assert.equal(getOptions(), false);
+  });
+
+  it('rejects an invalid --transport', () => {
+    process.argv = ['node', 'index.js', '--brave-api-key', 'key', '--transport', 'carrier-pigeon'];
+
+    assert.equal(getOptions(), false);
+  });
+
+  it('rejects an invalid --logging-level', () => {
+    process.argv = ['node', 'index.js', '--brave-api-key', 'key', '--logging-level', 'chatty'];
+
+    assert.equal(getOptions(), false);
+  });
+
+  it('rejects an out-of-range --port for the http transport', () => {
+    process.argv = [
+      'node',
+      'index.js',
+      '--brave-api-key',
+      'key',
+      '--transport',
+      'http',
+      '--port',
+      '99999',
+    ];
+
+    assert.equal(getOptions(), false);
+  });
+
+  it('yields a numeric port even under the stdio transport', () => {
+    process.argv = ['node', 'index.js', '--brave-api-key', 'key'];
+
+    const options = getOptions();
+
+    assert.notEqual(options, false);
+    if (options) {
+      assert.equal(typeof options.port, 'number');
+      assert.equal(typeof config.port, 'number');
+    }
+  });
+});
+
+describe('isToolPermittedByUser', () => {
+  const original = { enabled: config.enabledTools, disabled: config.disabledTools };
+
+  afterEach(() => {
+    config.enabledTools = original.enabled;
+    config.disabledTools = original.disabled;
+  });
+
+  it('permits every tool when neither list is set', () => {
+    config.enabledTools = [];
+    config.disabledTools = [];
+
+    assert.equal(isToolPermittedByUser('brave_web_search'), true);
+    assert.equal(isToolPermittedByUser('brave_summarizer'), true);
+  });
+
+  it('permits only the enabled list when one is set', () => {
+    config.enabledTools = ['brave_web_search'];
+    config.disabledTools = [];
+
+    assert.equal(isToolPermittedByUser('brave_web_search'), true);
+    assert.equal(isToolPermittedByUser('brave_news_search'), false);
+  });
+
+  it('permits everything but the disabled list', () => {
+    config.enabledTools = [];
+    config.disabledTools = ['brave_summarizer'];
+
+    assert.equal(isToolPermittedByUser('brave_summarizer'), false);
+    assert.equal(isToolPermittedByUser('brave_web_search'), true);
+  });
+
+  it('lets the enabled list win if both are somehow set', () => {
+    config.enabledTools = ['brave_web_search'];
+    config.disabledTools = ['brave_web_search'];
+
+    assert.equal(isToolPermittedByUser('brave_web_search'), true);
   });
 });
