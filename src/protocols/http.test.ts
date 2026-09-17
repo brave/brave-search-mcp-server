@@ -219,11 +219,26 @@ describe('http Host validation (opt-in)', () => {
 
 const entrypoint = fileURLToPath(new URL('../index.ts', import.meta.url));
 
+const STARTUP_HOST = '127.0.0.1';
+const EXIT_TIMEOUT_MS = 15_000;
+
 // `start()` exits the process on a bind failure, so drive it from a child.
+// The host is pinned to match the blocker, since BRAVE_MCP_HOST would otherwise
+// send the child to a different interface and let it bind.
 const startServer = (port: number): Promise<{ code: number | null; out: string; err: string }> => {
   const child = spawn(
     process.execPath,
-    ['--import', 'tsx', entrypoint, '--transport', 'http', '--port', String(port)],
+    [
+      '--import',
+      'tsx',
+      entrypoint,
+      '--transport',
+      'http',
+      '--host',
+      STARTUP_HOST,
+      '--port',
+      String(port),
+    ],
     { env: { ...process.env, BRAVE_API_KEY: 'test-key' } }
   );
 
@@ -232,8 +247,22 @@ const startServer = (port: number): Promise<{ code: number | null; out: string; 
   child.stdout.on('data', (chunk: Buffer) => (out += chunk.toString()));
   child.stderr.on('data', (chunk: Buffer) => (err += chunk.toString()));
 
-  return new Promise((resolve) => {
-    child.on('exit', (code) => resolve({ code, out, err }));
+  return new Promise((resolve, reject) => {
+    // A child that never exits is the regression under test; fail rather than hang.
+    const timer = setTimeout(() => {
+      child.kill();
+      reject(new Error(`Server did not exit within ${EXIT_TIMEOUT_MS}ms.\n${out}\n${err}`));
+    }, EXIT_TIMEOUT_MS);
+
+    child.on('error', (error) => {
+      clearTimeout(timer);
+      reject(error);
+    });
+
+    child.on('exit', (code) => {
+      clearTimeout(timer);
+      resolve({ code, out, err });
+    });
   });
 };
 
@@ -243,7 +272,7 @@ describe('HTTP transport startup', () => {
 
   before(async () => {
     blocker = net.createServer();
-    await new Promise<void>((resolve) => blocker.listen(0, '127.0.0.1', () => resolve()));
+    await new Promise<void>((resolve) => blocker.listen(0, STARTUP_HOST, () => resolve()));
     takenPort = (blocker.address() as AddressInfo).port;
   });
 

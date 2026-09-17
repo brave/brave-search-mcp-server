@@ -102,8 +102,6 @@ const start = () => {
   const server = app.listen(config.port, config.host);
 
   server.on('listening', () => {
-    // A failed bind still emits 'listening', with a null address.
-    if (server.address() === null) return;
     console.log(`Server is running on http://${config.host}:${config.port}/mcp`);
   });
 
