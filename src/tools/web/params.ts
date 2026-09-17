@@ -229,7 +229,7 @@ export const params = z.object({
     )
     .optional(),
   units: z
-    .union([z.literal('metric'), z.literal('imperial')])
+    .enum(['metric', 'imperial'])
     .describe('The measurement units. If not provided, units are derived from search country.')
     .optional(),
   extra_snippets: z

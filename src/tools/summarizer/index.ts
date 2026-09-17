@@ -71,7 +71,7 @@ export const register = (mcpServer: McpServer) => {
   mcpServer.registerTool(
     name,
     {
-      title: name,
+      title: annotations.title,
       description: description,
       inputSchema: summarizerQueryParams,
       annotations: annotations,
@@ -80,38 +80,32 @@ export const register = (mcpServer: McpServer) => {
   );
 };
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const pollForSummary = async (
   params: SummarizerQueryParams,
   pollInterval: number = 50,
   attempts: number = 20
 ): Promise<SummarizerSearchApiResponse> => {
-  let result: SummarizerSearchApiResponse | null = null;
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    // A pending status and a failed request alike mean "not ready yet".
+    if (attempt > 0) await sleep(pollInterval);
 
-  while (!result && attempts > 0) {
     try {
-      const response = await API.issueRequest<'summarizer'>('summarizer', params);
+      const response = await API.issueRequest('summarizer', params);
       if (response.status === 'complete') {
-        result = response;
+        return response;
       }
     } catch {
-      await new Promise((resolve) => setTimeout(resolve, pollInterval));
+      // Retry until the budget is spent.
     }
-
-    attempts--;
   }
 
-  if (!result) {
-    throw new Error('Summarizer summary could not be retrieved after multiple attempts.');
-  }
-
-  return result;
+  throw new Error('Summarizer summary could not be retrieved after multiple attempts.');
 };
 
 export default {
   name,
-  description,
-  annotations,
   inputSchema: summarizerQueryParams.shape,
-  execute,
   register,
 };

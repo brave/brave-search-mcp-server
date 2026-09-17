@@ -21,41 +21,45 @@ import type {
 } from '../tools/place_search/schemas/input.js';
 import type { PlaceSearchApiResponse } from '../tools/place_search/schemas/output.js';
 
+// `issueRequest` enumerates these with `Object.entries`, so a `Headers`
+// instance would contribute nothing - this must stay a plain object.
+export type RequestHeaders = Record<string, string | number | boolean | undefined>;
+
 export type Endpoints = {
   web: {
     params: WebQueryParams;
     response: WebSearchApiResponse;
-    requestHeaders: Headers;
+    requestHeaders: RequestHeaders;
   };
   images: {
     params: ImageQueryParams;
     response: ImageSearchApiResponse;
-    requestHeaders: Headers;
+    requestHeaders: RequestHeaders;
   };
   videos: {
     params: VideoQueryParams;
     response: VideoSearchApiResponse;
-    requestHeaders: Headers;
+    requestHeaders: RequestHeaders;
   };
   news: {
     params: NewsQueryParams;
     response: NewsSearchApiResponse;
-    requestHeaders: Headers;
+    requestHeaders: RequestHeaders;
   };
   localPois: {
     params: LocalPoisParams;
     response: LocalPoiSearchApiResponse;
-    requestHeaders: Headers;
+    requestHeaders: RequestHeaders;
   };
   localDescriptions: {
     params: LocalDescriptionsParams;
     response: LocalDescriptionsSearchApiResponse;
-    requestHeaders: Headers;
+    requestHeaders: RequestHeaders;
   };
   summarizer: {
     params: SummarizerQueryParams;
     response: SummarizerSearchApiResponse;
-    requestHeaders: Headers;
+    requestHeaders: RequestHeaders;
   };
   llmContext: {
     params: LlmQueryParams;

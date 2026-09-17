@@ -8,6 +8,7 @@ import {
   type PlaceSearchInput as QueryParams,
 } from './schemas/input.js';
 import { PlaceSearchApiResponseSchema } from './schemas/output.js';
+import { stringify } from '../../utils.js';
 
 export const name = 'brave_place_search';
 
@@ -37,15 +38,10 @@ export const execute = async (params: QueryParams) => {
   const parsedParams = RequestParamsSchema.parse(params);
   const parsedHeaders = RequestHeadersSchema.parse(params);
 
-  const response = await API.issueRequest<'placeSearch'>(
-    'placeSearch',
-    parsedParams,
-    parsedHeaders
-  );
+  const response = await API.issueRequest('placeSearch', parsedParams, parsedHeaders);
 
   return {
-    content: [{ type: 'text', text: JSON.stringify(response) } as TextContent],
-    isError: false,
+    content: [{ type: 'text', text: stringify(response) } as TextContent],
     structuredContent: response,
   };
 };
@@ -54,7 +50,7 @@ export const register = (mcpServer: McpServer) => {
   mcpServer.registerTool(
     name,
     {
-      title: name,
+      title: annotations.title,
       description: description,
       inputSchema: PlaceSearchInputSchema,
       outputSchema: PlaceSearchApiResponseSchema,
@@ -66,10 +62,7 @@ export const register = (mcpServer: McpServer) => {
 
 export default {
   name,
-  description,
-  annotations,
   inputSchema: PlaceSearchInputSchema.shape,
   outputSchema: PlaceSearchApiResponseSchema.shape,
-  execute,
   register,
 };

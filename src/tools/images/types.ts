@@ -76,5 +76,5 @@ interface MetaUrl {
 
 interface Extra {
   /** Indicates whether the image search results might contain offensive content. */
-  might_be_offensive: boolean;
+  might_be_offensive?: boolean;
 }
