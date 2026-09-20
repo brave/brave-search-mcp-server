@@ -35,7 +35,7 @@ Performs comprehensive web searches with rich result types and advanced filterin
 - `result_filter` (array, optional): Filter result types (default: ["web", "query"])
 - `goggles` (array, optional): Custom re-ranking definitions
 - `units` (string, optional): Measurement units ("metric" or "imperial")
-- `extra_snippets` (boolean, optional): Get additional excerpts (Pro plans only)
+- `extra_snippets` (boolean, optional): Get up to 5 additional excerpts (only available on Free AI, Base AI, Pro AI, Base Data, Pro Data and Custom plans)
 - `summary` (boolean, optional): Enable summary key generation for AI summarization
 
 ### Local Search (`brave_local_search`)
@@ -85,7 +85,7 @@ Searches for current news articles with freshness controls and breaking news ind
 - `spellcheck` (boolean, optional): Enable spell checking (default: true)
 - `safesearch` (string, optional): Content filtering ("off", "moderate", "strict", default: "moderate")
 - `freshness` (string, optional): Time filter (default: "pd" for last 24 hours)
-- `extra_snippets` (boolean, optional): Get additional excerpts (Pro plans only)
+- `extra_snippets` (boolean, optional): Get up to 5 additional excerpts (only available on Free AI, Base AI, Pro AI, Base Data, Pro Data and Custom plans)
 - `goggles` (array, optional): Custom re-ranking definitions
 
 ### Summarizer Search (`brave_summarizer`)
