@@ -32,9 +32,16 @@ export const description = `
 
 export const execute = async (params: QueryParams) => {
   const response = await API.issueRequest<'news'>('news', params);
+  const results = response.results ?? [];
+
+  if (results.length === 0) {
+    return {
+      content: [{ type: 'text' as const, text: 'No news results found for this query.' }],
+    };
+  }
 
   return {
-    content: response.results.map((newsResult) => {
+    content: results.map((newsResult) => {
       return {
         type: 'text' as const,
         text: stringify({
