@@ -60,13 +60,18 @@ export const execute = async (params: WebQueryParams) => {
     };
   }
 
-  // Fetch AI-generated descriptions
-  const descriptions = await API.issueRequest<'localDescriptions'>('localDescriptions', {
-    ids: locationIDs,
-  });
+  // Web only gives thin location stubs (mostly id + title). The Local POIs
+  // endpoint is what fills in phone / hours / rating / address; descriptions
+  // are a separate AI-generated blurb keyed by the same ids.
+  const [pois, descriptions] = await Promise.all([
+    API.issueRequest<'localPois'>('localPois', { ids: locationIDs }),
+    API.issueRequest<'localDescriptions'>('localDescriptions', { ids: locationIDs }),
+  ]);
+
+  const poiResults = pois.results?.length ? pois.results : locations.results;
 
   return {
-    content: formatLocalResults(locations.results, descriptions.results).map((formattedPOI) => ({
+    content: formatLocalResults(poiResults, descriptions.results ?? []).map((formattedPOI) => ({
       type: 'text' as const,
       text: formattedPOI,
     })),
