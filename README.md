@@ -238,6 +238,26 @@ Add this to your `claude_desktop_config.json`:
 }
 ```
 
+#### Bun
+
+If `npx` exits with `EOVERRIDE` because the current project's npm overrides
+conflict with a dependency, run the server with Bun instead. The `--bun` flag
+keeps the server on Bun's runtime:
+
+```json
+{
+  "mcpServers": {
+    "brave-search": {
+      "command": "bunx",
+      "args": ["--bun", "@brave/brave-search-mcp-server", "--transport", "stdio"],
+      "env": {
+        "BRAVE_API_KEY": "YOUR_API_KEY_HERE"
+      }
+    }
+  }
+}
+```
+
 ### Usage with VS Code
 
 For quick installation, use the one-click installation buttons below:
