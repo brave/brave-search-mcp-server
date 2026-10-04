@@ -27,6 +27,7 @@ type Configuration = {
   stateless: boolean;
   allowedOrigins: string[];
   allowedHosts: string[];
+  sessionTtlMs: number;
 };
 
 const state: Configuration & { ready: boolean } = {
@@ -41,6 +42,7 @@ const state: Configuration & { ready: boolean } = {
   stateless: false,
   allowedOrigins: [],
   allowedHosts: [],
+  sessionTtlMs: 30 * 60 * 1000,
 };
 
 export function isToolPermittedByUser(toolName: string): boolean {
@@ -97,6 +99,11 @@ export function getOptions(): Configuration | false {
       '--stateless <boolean>',
       'whether the server should be stateless',
       process.env.BRAVE_MCP_STATELESS === 'true' ? true : false
+    )
+    .option(
+      '--session-ttl-ms <number>',
+      'idle session TTL in milliseconds for HTTP transport; sessions idle longer are closed and evicted (0 disables)',
+      process.env.BRAVE_MCP_SESSION_TTL_MS ?? '1800000'
     )
     .allowUnknownOption()
     .parse(process.argv);
@@ -178,6 +185,15 @@ export function getOptions(): Configuration | false {
   options.stateless = options.stateless === true || options.stateless === 'true';
   options.braveApiKey = braveApiKey;
 
+  const sessionTtlMs = Number(options.sessionTtlMs);
+  if (!Number.isFinite(sessionTtlMs) || sessionTtlMs < 0) {
+    console.error(
+      `Invalid --session-ttl-ms value: '${options.sessionTtlMs}'. Must be a non-negative number of milliseconds (0 disables eviction).`
+    );
+    return false;
+  }
+  options.sessionTtlMs = sessionTtlMs;
+
   const allowedOrigins = parseDelimitedList(options.allowedOrigins);
   options.allowedOrigins = allowedOrigins;
 
@@ -195,6 +211,7 @@ export function getOptions(): Configuration | false {
   state.stateless = options.stateless;
   state.allowedOrigins = allowedOrigins;
   state.allowedHosts = allowedHosts;
+  state.sessionTtlMs = options.sessionTtlMs;
   state.ready = true;
 
   return options as Configuration;

@@ -14,7 +14,36 @@ const yieldGenericServerError = (res: Response) => {
   });
 };
 
-const transports = new Map<string, StreamableHTTPServerTransport>();
+type SessionEntry = {
+  transport: StreamableHTTPServerTransport;
+  lastSeen: number;
+};
+
+const transports = new Map<string, SessionEntry>();
+
+const SESSION_SWEEP_INTERVAL_MS = 60_000;
+let sessionSweeper: NodeJS.Timeout | undefined;
+
+// Evicts sessions idle longer than the configured TTL. Clients that
+// disappear without sending DELETE would otherwise leak transports (and
+// their McpServer instances) forever.
+const sweepIdleSessions = () => {
+  const cutoff = Date.now() - config.sessionTtlMs;
+  for (const [sessionId, entry] of transports) {
+    if (entry.lastSeen < cutoff) {
+      transports.delete(sessionId);
+      void entry.transport.close();
+    }
+  }
+};
+
+const startSessionSweeper = () => {
+  if (sessionSweeper || config.sessionTtlMs <= 0) {
+    return;
+  }
+  sessionSweeper = setInterval(sweepIdleSessions, SESSION_SWEEP_INTERVAL_MS);
+  sessionSweeper.unref();
+};
 
 const isListToolsRequest = (value: unknown): value is ListToolsRequest =>
   ListToolsRequestSchema.safeParse(value).success;
@@ -23,8 +52,12 @@ const getTransport = async (request: Request): Promise<StreamableHTTPServerTrans
   // Check for an existing session
   const sessionId = request.headers['mcp-session-id'] as string;
 
-  if (sessionId && transports.has(sessionId)) {
-    return transports.get(sessionId)!;
+  if (sessionId) {
+    const entry = transports.get(sessionId);
+    if (entry) {
+      entry.lastSeen = Date.now();
+      return entry.transport;
+    }
   }
 
   // We have a special case where we'll permit ListToolsRequest w/o a session ID
@@ -50,9 +83,20 @@ const getTransport = async (request: Request): Promise<StreamableHTTPServerTrans
     transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: () => randomUUID(),
       onsessioninitialized: (sessionId) => {
-        transports.set(sessionId, transport);
+        transports.set(sessionId, { transport, lastSeen: Date.now() });
+      },
+      onsessionclosed: (sessionId) => {
+        transports.delete(sessionId);
       },
     });
+    // onsessionclosed only fires on DELETE requests; this also covers the
+    // transport closing for any other reason. Protocol.connect() chains
+    // onclose handlers, so setting it before connect() is safe.
+    transport.onclose = () => {
+      if (transport.sessionId) {
+        transports.delete(transport.sessionId);
+      }
+    };
   }
 
   const mcpServer = createMcpServer();
@@ -72,6 +116,8 @@ const createApp = () => {
   );
 
   app.use('/mcp', express.json());
+
+  startSessionSweeper();
 
   app.all('/mcp', async (req: Request, res: Response) => {
     try {
@@ -113,4 +159,4 @@ const start = () => {
   });
 };
 
-export default { start, createApp };
+export default { start, createApp, sweepIdleSessions };
