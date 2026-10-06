@@ -180,6 +180,7 @@ The server supports the following environment variables:
 - `BRAVE_MCP_ENABLED_TOOLS`: When used, specifies a space-separated whitelist for supported tools
 - `BRAVE_MCP_DISABLED_TOOLS`: When used, specifies a space-separated blacklist for supported tools
 - `BRAVE_MCP_STATELESS`: HTTP stateless mode (default: "true").  When running on Amazon Bedrock Agentcore, set to "true".
+- `BRAVE_MCP_SESSION_TTL_MS`: Idle timeout in milliseconds for stateful HTTP sessions (default: 1800000, i.e. 30 minutes). Sessions with no request in flight for longer than this are closed and evicted. Set to `0` to disable eviction.
 
 ### Command Line Options
 
@@ -198,6 +199,7 @@ Options:
   --enabled-tools             Tools whitelist (only the specified tools will be enabled)
   --disabled-tools            Tools blacklist (included tools will be disabled)
   --stateless  <boolean>      HTTP Stateless flag
+  --session-ttl-ms <number>   Idle HTTP session TTL in milliseconds (default: 1800000, 0 disables)
 ```
 
 ## Installation
