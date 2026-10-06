@@ -373,9 +373,9 @@ describe('http session lifecycle', () => {
     assert.equal(del.status, 200);
 
     const res = await postWithSession(sessionId);
-    // The evicted session must not be found again; the SDK rejects
-    // non-initialize requests carrying an unknown session ID.
-    assert.notEqual(res.status, 200);
+    // An evicted session ID is routed to a fresh, uninitialized transport,
+    // which rejects it with 400 (a retained closed transport would yield 404).
+    assert.equal(res.status, 400);
   });
 
   it('evicts sessions idle longer than sessionTtlMs via the sweeper', async () => {
@@ -386,6 +386,31 @@ describe('http session lifecycle', () => {
     httpServer.sweepIdleSessions();
 
     const res = await postWithSession(sessionId);
-    assert.notEqual(res.status, 200);
+    assert.equal(res.status, 400);
+  });
+
+  it('does not evict a session with an open SSE stream', async () => {
+    config.sessionTtlMs = originalTtlMs;
+    const sessionId = await initializeSession();
+
+    const controller = new AbortController();
+    const stream = await fetch(`${baseUrl}/mcp`, {
+      method: 'GET',
+      headers: { accept: 'text/event-stream', 'mcp-session-id': sessionId },
+      signal: controller.signal,
+    });
+    assert.equal(stream.status, 200);
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      config.sessionTtlMs = 1;
+      httpServer.sweepIdleSessions();
+
+      const res = await postWithSession(sessionId);
+      assert.equal(res.status, 200);
+    } finally {
+      controller.abort();
+      await stream.body?.cancel().catch(() => {});
+    }
   });
 });

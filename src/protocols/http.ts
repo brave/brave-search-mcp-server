@@ -17,6 +17,7 @@ const yieldGenericServerError = (res: Response) => {
 type SessionEntry = {
   transport: StreamableHTTPServerTransport;
   lastSeen: number;
+  activeRequests: number;
 };
 
 const transports = new Map<string, SessionEntry>();
@@ -30,11 +31,26 @@ let sessionSweeper: NodeJS.Timeout | undefined;
 const sweepIdleSessions = () => {
   const cutoff = Date.now() - config.sessionTtlMs;
   for (const [sessionId, entry] of transports) {
-    if (entry.lastSeen < cutoff) {
+    if (entry.activeRequests === 0 && entry.lastSeen < cutoff) {
       transports.delete(sessionId);
       void entry.transport.close();
     }
   }
+};
+
+// Long-running tool calls and standalone GET SSE streams keep a session
+// busy; the idle period only starts once the response has closed.
+const trackActiveRequest = (sessionId: string | undefined, res: Response) => {
+  const entry = sessionId ? transports.get(sessionId) : undefined;
+  if (!entry) {
+    return;
+  }
+  entry.activeRequests++;
+  entry.lastSeen = Date.now();
+  res.once('close', () => {
+    entry.activeRequests--;
+    entry.lastSeen = Date.now();
+  });
 };
 
 const startSessionSweeper = () => {
@@ -83,7 +99,7 @@ const getTransport = async (request: Request): Promise<StreamableHTTPServerTrans
     transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: () => randomUUID(),
       onsessioninitialized: (sessionId) => {
-        transports.set(sessionId, { transport, lastSeen: Date.now() });
+        transports.set(sessionId, { transport, lastSeen: Date.now(), activeRequests: 0 });
       },
       onsessionclosed: (sessionId) => {
         transports.delete(sessionId);
@@ -122,6 +138,7 @@ const createApp = () => {
   app.all('/mcp', async (req: Request, res: Response) => {
     try {
       const transport = await getTransport(req);
+      trackActiveRequest(req.headers['mcp-session-id'] as string | undefined, res);
       await transport.handleRequest(req, res, req.body);
     } catch (error) {
       console.error(error);

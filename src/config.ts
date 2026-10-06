@@ -185,7 +185,8 @@ export function getOptions(): Configuration | false {
   options.stateless = options.stateless === true || options.stateless === 'true';
   options.braveApiKey = braveApiKey;
 
-  const sessionTtlMs = Number(options.sessionTtlMs);
+  const rawSessionTtlMs = String(options.sessionTtlMs).trim();
+  const sessionTtlMs = rawSessionTtlMs === '' ? NaN : Number(rawSessionTtlMs);
   if (!Number.isFinite(sessionTtlMs) || sessionTtlMs < 0) {
     console.error(
       `Invalid --session-ttl-ms value: '${options.sessionTtlMs}'. Must be a non-negative number of milliseconds (0 disables eviction).`
