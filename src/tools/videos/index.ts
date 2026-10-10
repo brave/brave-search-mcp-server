@@ -22,7 +22,7 @@ export const description = `
 `.trim();
 
 export const execute = async (params: QueryParams) => {
-  const response = await API.issueRequest<'videos'>('videos', params);
+  const response = await API.issueRequest('videos', params);
 
   return {
     content: response.results.map(({ url, title, description, video, thumbnail }) => {
@@ -41,7 +41,7 @@ export const register = (mcpServer: McpServer) => {
   mcpServer.registerTool(
     name,
     {
-      title: name,
+      title: annotations.title,
       description: description,
       inputSchema: params,
       annotations: annotations,
@@ -52,9 +52,6 @@ export const register = (mcpServer: McpServer) => {
 
 export default {
   name,
-  description,
-  annotations,
   inputSchema: params.shape,
-  execute,
   register,
 };

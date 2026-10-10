@@ -33,7 +33,7 @@ export const params = z.object({
     )
     .optional(),
   safesearch: z
-    .union([z.literal('off'), z.literal('strict')])
+    .enum(['off', 'strict'])
     .default('strict')
     .describe(
       "Filters search results for adult content. The following values are supported: 'off' - No filtering. 'strict' - Drops all adult content from search results."

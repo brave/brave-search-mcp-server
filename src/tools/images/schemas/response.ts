@@ -9,5 +9,5 @@ export const ConfidenceSchema = z
   .describe('The confidence level of the result.');
 
 export const ExtraSchema = z.object({
-  might_be_offensive: z.boolean().describe('Whether the image might be offensive.'),
+  might_be_offensive: z.boolean().describe('Whether the image might be offensive.').optional(),
 });

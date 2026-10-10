@@ -9,6 +9,7 @@ import {
   type LlmContextInput as QueryParams,
 } from './schemas/input.js';
 import { LlmContextSearchApiResponseSchema } from './schemas/output.js';
+import { stringify } from '../../utils.js';
 
 export const name = 'brave_llm_context';
 
@@ -34,12 +35,12 @@ export const execute = async (params: QueryParams) => {
   const parsedParams = RequestParamsSchema.parse(params);
   const parsedHeaders = RequestHeadersSchema.parse(params);
 
-  const response = await API.issueRequest<'llmContext'>('llmContext', parsedParams, parsedHeaders);
+  const response = await API.issueRequest('llmContext', parsedParams, parsedHeaders);
   const { success, data, error } = LlmContextSearchApiResponseSchema.safeParse(response);
   const payload = success ? data : z.treeifyError(error);
 
   return {
-    content: [{ type: 'text', text: JSON.stringify(payload) } as TextContent],
+    content: [{ type: 'text', text: stringify(payload) } as TextContent],
     isError: !success,
     structuredContent: payload,
   };
@@ -49,7 +50,7 @@ export const register = (mcpServer: McpServer) => {
   mcpServer.registerTool(
     name,
     {
-      title: name,
+      title: annotations.title,
       description: description,
       inputSchema: LlmContextInputSchema,
       outputSchema: LlmContextSearchApiResponseSchema,
@@ -61,10 +62,7 @@ export const register = (mcpServer: McpServer) => {
 
 export default {
   name,
-  description,
-  annotations,
   inputSchema: LlmContextInputSchema.shape,
   outputSchema: LlmContextSearchApiResponseSchema.shape,
-  execute,
   register,
 };
