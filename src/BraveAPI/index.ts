@@ -1,3 +1,4 @@
+import type { RequestInfo } from '@modelcontextprotocol/sdk/types.js';
 import type { Endpoints } from './types.js';
 import config from '../config.js';
 import { stringify } from '../utils.js';
@@ -14,11 +15,24 @@ const typeToPathMap: Record<keyof Endpoints, string> = {
   placeSearch: '/res/v1/local/place_search',
 };
 
-const getDefaultRequestHeaders = (): Record<string, string> => {
+// The part of the SDK's tool-handler `extra` we need to find the caller's key
+export type ToolExtra = { requestInfo?: RequestInfo };
+
+// Client's X-Subscription-Token or Authorization: Bearer key when --allow-client-keys is on;
+// otherwise (or if absent) the server key
+const getApiKey = (extra?: ToolExtra): string => {
+  const headers = config.allowClientKeys ? extra?.requestInfo?.headers : undefined;
+  const token = headers?.['x-subscription-token'];
+  const auth = headers?.authorization;
+  const bearer = typeof auth === 'string' ? /^Bearer\s+(.+)$/i.exec(auth)?.[1] : undefined;
+  return (typeof token === 'string' && token.trim()) || bearer?.trim() || config.braveApiKey;
+};
+
+const getDefaultRequestHeaders = (apiKey: string): Record<string, string> => {
   return {
     Accept: 'application/json',
     'Accept-Encoding': 'gzip',
-    'X-Subscription-Token': config.braveApiKey,
+    'X-Subscription-Token': apiKey,
   };
 };
 
@@ -44,8 +58,16 @@ const normalizeGoggle = (value: unknown): string | null => {
 async function issueRequest<T extends keyof Endpoints>(
   endpoint: T,
   parameters: Endpoints[T]['params'],
+  apiKey: string,
   requestHeaders: Endpoints[T]['requestHeaders'] = {} as Endpoints[T]['requestHeaders']
 ): Promise<Endpoints[T]['response']> {
+  // Only reachable with --allow-client-keys and no server key; fail before calling upstream
+  if (!apiKey) {
+    throw new Error(
+      'Missing Brave API key: send an X-Subscription-Token or Authorization: Bearer header, or start the server with BRAVE_API_KEY.'
+    );
+  }
+
   // TODO (Sampson): Add rate-limit logic supporting self-throttling and n-keys
 
   // Determine URL, and setup parameters
@@ -107,7 +129,7 @@ async function issueRequest<T extends keyof Endpoints>(
 
   // Issue Request
   const urlWithParams = url.toString() + '?' + queryParams.toString();
-  const headers = new Headers(getDefaultRequestHeaders());
+  const headers = new Headers(getDefaultRequestHeaders(apiKey));
   for (const [key, value] of Object.entries(requestHeaders)) {
     if (value === undefined || value === null) continue;
     headers.set(key, String(value));
@@ -138,4 +160,5 @@ async function issueRequest<T extends keyof Endpoints>(
 
 export default {
   issueRequest,
+  getApiKey,
 };

@@ -169,7 +169,7 @@ Retrieves pre-extracted web content optimized for AI agents, LLM grounding, and 
 
 The server supports the following environment variables:
 
-- `BRAVE_API_KEY`: Your Brave Search API key (required unless `BRAVE_API_KEY_FILE` is set)
+- `BRAVE_API_KEY`: Your Brave Search API key (required unless `BRAVE_API_KEY_FILE` is set, or `BRAVE_MCP_ALLOW_CLIENT_KEYS` is enabled)
 - `BRAVE_API_KEY_FILE`: Path to a file containing your Brave Search API key. When set, this takes precedence over `BRAVE_API_KEY`. Useful for Docker secrets and similar mounted-secret setups.
 - `BRAVE_MCP_TRANSPORT`: Transport mode ("http" or "stdio", default: "stdio")
 - `BRAVE_MCP_PORT`: HTTP server port (default: 8080)
@@ -179,7 +179,21 @@ The server supports the following environment variables:
 - `BRAVE_MCP_LOG_LEVEL`: Desired logging level("debug", "info", "notice", "warning", "error", "critical", "alert", or "emergency", default: "info")
 - `BRAVE_MCP_ENABLED_TOOLS`: When used, specifies a space-separated whitelist for supported tools
 - `BRAVE_MCP_DISABLED_TOOLS`: When used, specifies a space-separated blacklist for supported tools
+- `BRAVE_MCP_ALLOW_CLIENT_KEYS`: HTTP only. When "true", clients may send their own API key; see [Client API keys](#client-api-keys-http) (default: "false")
 - `BRAVE_MCP_STATELESS`: HTTP stateless mode (default: "true").  When running on Amazon Bedrock Agentcore, set to "true".
+
+### Client API keys (HTTP)
+
+Start the HTTP server with `--allow-client-keys` (or `BRAVE_MCP_ALLOW_CLIENT_KEYS=true`) to let each client send its own key on every request, either in an `X-Subscription-Token` header (the same header the Brave Search API uses) or as `Authorization: Bearer <key>`. A client key takes precedence over the server key. The server key becomes optional and, if set, is used for clients that send no key. Without a server key, calls without a key fail with a "Missing Brave API key" error. If both headers are sent, `X-Subscription-Token` wins. Without the flag, both headers are ignored.
+
+When exposing the server to untrusted clients, leave the server key unset: otherwise any client that sends no key searches on your key.
+
+```bash
+node dist/index.js --transport http --allow-client-keys
+claude mcp add --transport http brave http://127.0.0.1:8080/mcp --header "X-Subscription-Token: YOUR_API_KEY"
+# or
+claude mcp add --transport http brave http://127.0.0.1:8080/mcp --header "Authorization: Bearer YOUR_API_KEY"
+```
 
 ### Command Line Options
 
@@ -197,6 +211,7 @@ Options:
   --logging-level <string>    Desired logging level (one of _debug_, _info_, _notice_, _warning_, _error_, _critical_, _alert_, or _emergency_)
   --enabled-tools             Tools whitelist (only the specified tools will be enabled)
   --disabled-tools            Tools blacklist (included tools will be disabled)
+  --allow-client-keys         HTTP only: accept the client X-Subscription-Token or Authorization: Bearer header as the API key
   --stateless  <boolean>      HTTP Stateless flag
 ```
 

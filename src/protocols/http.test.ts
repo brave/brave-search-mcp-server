@@ -286,3 +286,161 @@ describe('HTTP transport startup', () => {
     assert.doesNotMatch(out, /Server is running/);
   });
 });
+
+describe('http client API keys (X-Subscription-Token / Authorization: Bearer)', () => {
+  const originalFetch = globalThis.fetch;
+  const originalApiKey = config.braveApiKey;
+  const originalAllowClientKeys = config.allowClientKeys;
+  // Keys the fake Brave API received, in order
+  let upstreamKeys: string[] = [];
+
+  const startServer = async (): Promise<{ server: Server; url: string }> => {
+    const server = httpServer.createApp().listen(0);
+    await new Promise<void>((resolve) => server.once('listening', resolve));
+    return { server, url: `http://127.0.0.1:${(server.address() as AddressInfo).port}/mcp` };
+  };
+
+  const stopServer = (server: Server) =>
+    new Promise<void>((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())));
+
+  const rpc = async (url: string, body: object, headers: Record<string, string> = {}) => {
+    const res = await originalFetch(url, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        accept: 'application/json, text/event-stream',
+        ...headers,
+      },
+      body: JSON.stringify(body),
+    });
+    const text = await res.text();
+    const data = text.match(/^data: (.*)$/m)?.[1] ?? (text.startsWith('{') ? text : undefined);
+    return { res, json: data ? JSON.parse(data) : null };
+  };
+
+  // Full MCP handshake; returns headers to send on follow-up requests
+  const openSession = async (url: string, extra: Record<string, string> = {}) => {
+    const { res } = await rpc(
+      url,
+      {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: {
+          protocolVersion: '2025-06-18',
+          capabilities: {},
+          clientInfo: { name: 'test', version: '0' },
+        },
+      },
+      extra
+    );
+    const headers = { ...extra, 'mcp-session-id': res.headers.get('mcp-session-id')! };
+    await rpc(url, { jsonrpc: '2.0', method: 'notifications/initialized' }, headers);
+    return headers;
+  };
+
+  // JSON-RPC ids must be unique per session; the transport routes responses by id
+  let nextId = 100;
+  const callWebSearch = async (url: string, headers: Record<string, string>) =>
+    (
+      await rpc(
+        url,
+        {
+          jsonrpc: '2.0',
+          id: nextId++,
+          method: 'tools/call',
+          params: { name: 'brave_web_search', arguments: { query: 'brave' } },
+        },
+        headers
+      )
+    ).json.result;
+
+  before(() => {
+    // Fake Brave API: random delay so concurrent calls interleave; echoes the key in the title
+    globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+      assert.ok(String(input).startsWith('https://api.search.brave.com/res/v1/web/search?'));
+      const key = new Headers(init?.headers).get('x-subscription-token') ?? '';
+      upstreamKeys.push(key);
+      await new Promise((resolve) => setTimeout(resolve, Math.random() * 20));
+      const body = {
+        type: 'search',
+        web: { results: [{ url: 'https://brave.com/', title: `KEY=${key}`, description: '' }] },
+      };
+      return new Response(JSON.stringify(body), { status: 200 });
+    }) as typeof fetch;
+  });
+
+  after(() => {
+    globalThis.fetch = originalFetch;
+    config.braveApiKey = originalApiKey;
+    config.allowClientKeys = originalAllowClientKeys;
+  });
+
+  describe('without --allow-client-keys', () => {
+    let server: Server;
+    let url: string;
+
+    before(async () => {
+      config.braveApiKey = 'server-key';
+      config.allowClientKeys = false;
+      ({ server, url } = await startServer());
+    });
+
+    after(() => stopServer(server));
+
+    it('ignores the client header and uses the server key', async () => {
+      upstreamKeys = [];
+      const headers = await openSession(url, { 'x-subscription-token': 'client-key' });
+      const result = await callWebSearch(url, headers);
+
+      assert.equal(result.isError, false);
+      assert.deepEqual(upstreamKeys, ['server-key']);
+    });
+  });
+
+  describe('with --allow-client-keys and no server key', () => {
+    let server: Server;
+    let url: string;
+
+    before(async () => {
+      config.braveApiKey = '';
+      config.allowClientKeys = true;
+      ({ server, url } = await startServer());
+    });
+
+    after(() => stopServer(server));
+
+    it('returns a tool error when neither client nor server has a key', async () => {
+      upstreamKeys = [];
+      const headers = await openSession(url);
+      const result = await callWebSearch(url, headers);
+
+      assert.equal(result.isError, true);
+      assert.match(result.content[0].text, /Missing Brave API key/);
+      assert.deepEqual(upstreamKeys, []);
+    });
+
+    it('forwards an Authorization: Bearer key to the Brave API', async () => {
+      upstreamKeys = [];
+      const headers = await openSession(url, { authorization: 'Bearer bearer-key' });
+      const result = await callWebSearch(url, headers);
+
+      assert.equal(result.isError, false);
+      assert.deepEqual(upstreamKeys, ['bearer-key']);
+    });
+
+    it('keeps concurrent users on their own keys', async () => {
+      const user = async (i: number) => {
+        const key = `user-${i}`;
+        const headers = await openSession(url, { 'x-subscription-token': key });
+        const results = await Promise.all([0, 1, 2].map(() => callWebSearch(url, headers)));
+        return results.map((result) => ({ key, title: JSON.parse(result.content[0].text).title }));
+      };
+
+      const calls = (await Promise.all(Array.from({ length: 10 }, (_, i) => user(i)))).flat();
+
+      assert.equal(calls.length, 30);
+      for (const { key, title } of calls) assert.equal(title, `KEY=${key}`);
+    });
+  });
+});

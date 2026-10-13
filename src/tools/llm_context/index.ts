@@ -1,6 +1,6 @@
 import type { TextContent, ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
-import API from '../../BraveAPI/index.js';
+import API, { type ToolExtra } from '../../BraveAPI/index.js';
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import {
   RequestParamsSchema,
@@ -30,11 +30,16 @@ export const description = `
     When relaying results in markdown-supporting environments, cite the source URLs from the "sources" map.
 `.trim();
 
-export const execute = async (params: QueryParams) => {
+export const execute = async (params: QueryParams, extra?: ToolExtra) => {
   const parsedParams = RequestParamsSchema.parse(params);
   const parsedHeaders = RequestHeadersSchema.parse(params);
 
-  const response = await API.issueRequest<'llmContext'>('llmContext', parsedParams, parsedHeaders);
+  const response = await API.issueRequest<'llmContext'>(
+    'llmContext',
+    parsedParams,
+    API.getApiKey(extra),
+    parsedHeaders
+  );
   const { success, data, error } = LlmContextSearchApiResponseSchema.safeParse(response);
   const payload = success ? data : z.treeifyError(error);
 
