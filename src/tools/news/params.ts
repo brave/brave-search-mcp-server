@@ -47,7 +47,7 @@ export const params = z.object({
     .describe('Whether to spellcheck provided query.')
     .optional(),
   safesearch: z
-    .union([z.literal('off'), z.literal('moderate'), z.literal('strict')])
+    .enum(['off', 'moderate', 'strict'])
     .default('moderate')
     .describe(
       "Filters search results for adult content. The following values are supported: 'off' - No filtering. 'moderate' - Filter out explicit content. 'strict' - Filter out explicit and suggestive content. The default value is 'moderate'."

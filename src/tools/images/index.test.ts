@@ -53,27 +53,28 @@ describe(name, () => {
   });
 });
 
-describe(`${name} (malformed upstream response)`, () => {
+describe(`${name} (upstream omits might_be_offensive)`, () => {
   const getClient = useTestClient((url) => {
     if (url.pathname === '/res/v1/images/search') {
       return {
         type: 'images',
         query: { original: 'brave browser' },
         results: [],
-        // `might_be_offensive` is required by the output schema; omitting it
-        // simulates an upstream response that fails validation.
+        // The API documents `extra` as required and `might_be_offensive` as
+        // optional within it.
         extra: {},
       };
     }
   });
 
-  it('surfaces the validation failure as an error result', async () => {
+  it('omits the flag rather than failing validation', async () => {
     const result = await getClient().callTool({ name, arguments: { query: 'brave browser' } });
 
-    assert.equal(result.isError, true);
-    assert.ok(
-      JSON.stringify(result.content).includes('might_be_offensive'),
-      JSON.stringify(result.content)
-    );
+    const structured = result.structuredContent as Record<string, unknown>;
+
+    assert.equal(result.isError ?? false, false, JSON.stringify(result.content));
+    assert.equal(structured.count, 0);
+    assert.deepEqual(structured.items, []);
+    assert.equal(structured.might_be_offensive, undefined);
   });
 });

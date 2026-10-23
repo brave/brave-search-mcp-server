@@ -32,11 +32,15 @@ export const description = `
 
 // Access to Local API is available through the Pro plans.
 export const execute = async (params: WebQueryParams) => {
-  // Make sure both 'web' and 'locations' are in the result_filter
-  params = { ...params, result_filter: [...(params.result_filter || []), 'web', 'locations'] };
+  // Both 'web' and 'locations' are required, each appearing once.
+  const result_filter = [
+    ...new Set([...(params.result_filter ?? []), 'web', 'locations'] as const),
+  ];
+
+  params = { ...params, result_filter };
 
   // Starts with a web search to retrieve potential location IDs
-  const { locations, web: web_fallback } = await API.issueRequest<'web'>('web', params);
+  const { locations, web: web_fallback } = await API.issueRequest('web', params);
 
   // We can send up to 20 location IDs at a time to the Local API
   // TODO (Sampson): Add support for multiple requests
@@ -61,7 +65,7 @@ export const execute = async (params: WebQueryParams) => {
   }
 
   // Fetch AI-generated descriptions
-  const descriptions = await API.issueRequest<'localDescriptions'>('localDescriptions', {
+  const descriptions = await API.issueRequest('localDescriptions', {
     ids: locationIDs,
   });
 
@@ -77,7 +81,7 @@ export const register = (mcpServer: McpServer) => {
   mcpServer.registerTool(
     name,
     {
-      title: name,
+      title: annotations.title,
       description: description,
       inputSchema: webParams,
       annotations: annotations,
@@ -182,9 +186,6 @@ export const formatOpeningHours = (
 
 export default {
   name,
-  description,
-  annotations,
   inputSchema: webParams.shape,
-  execute,
   register,
 };

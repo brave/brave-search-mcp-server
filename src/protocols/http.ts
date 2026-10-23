@@ -6,6 +6,15 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { ListToolsRequest, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { createDnsRebindingGuard } from './rebinding.js';
 
+// Matches the SDK's own shape for an unrecognized session.
+const yieldSessionNotFound = (res: Response) => {
+  res.status(404).json({
+    id: null,
+    jsonrpc: '2.0',
+    error: { code: -32001, message: 'Session not found' },
+  });
+};
+
 const yieldGenericServerError = (res: Response) => {
   res.status(500).json({
     id: null,
@@ -16,48 +25,74 @@ const yieldGenericServerError = (res: Response) => {
 
 const transports = new Map<string, StreamableHTTPServerTransport>();
 
+// Exported for tests.
+export const activeSessionCount = (): number => transports.size;
+
 const isListToolsRequest = (value: unknown): value is ListToolsRequest =>
   ListToolsRequestSchema.safeParse(value).success;
 
-const getTransport = async (request: Request): Promise<StreamableHTTPServerTransport> => {
-  // Check for an existing session
-  const sessionId = request.headers['mcp-session-id'] as string;
+// A session-less transport serves one request; its lifetime is the response's.
+const createEphemeralTransport = async (res: Response): Promise<StreamableHTTPServerTransport> => {
+  const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+  const mcpServer = createMcpServer();
 
-  if (sessionId && transports.has(sessionId)) {
-    return transports.get(sessionId)!;
-  }
+  await mcpServer.connect(transport);
 
-  // We have a special case where we'll permit ListToolsRequest w/o a session ID
-  if (!sessionId && isListToolsRequest(request.body)) {
-    const transport = new StreamableHTTPServerTransport({
-      sessionIdGenerator: undefined,
-    });
+  res.on('close', () => {
+    void transport.close();
+    void mcpServer.close();
+  });
 
-    const mcpServer = createMcpServer();
-    await mcpServer.connect(transport);
-    return transport;
-  }
+  return transport;
+};
 
-  let transport: StreamableHTTPServerTransport;
+const createSessionTransport = async (): Promise<StreamableHTTPServerTransport> => {
+  const transport: StreamableHTTPServerTransport = new StreamableHTTPServerTransport({
+    sessionIdGenerator: () => randomUUID(),
+    onsessioninitialized: (sessionId) => {
+      transports.set(sessionId, transport);
+    },
+    onsessionclosed: (sessionId) => {
+      transports.delete(sessionId);
+    },
+  });
 
-  if (config.stateless) {
-    // Some contexts (e.g. AgentCore) may prefer or require a stateless transport
-    transport = new StreamableHTTPServerTransport({
-      sessionIdGenerator: undefined,
-    });
-  } else {
-    // Otherwise, start a new transport/session
-    transport = new StreamableHTTPServerTransport({
-      sessionIdGenerator: () => randomUUID(),
-      onsessioninitialized: (sessionId) => {
-        transports.set(sessionId, transport);
-      },
-    });
-  }
+  // Endings that arrive without a client DELETE: dropped connections, shutdown.
+  transport.onclose = () => {
+    if (transport.sessionId) transports.delete(transport.sessionId);
+  };
 
   const mcpServer = createMcpServer();
   await mcpServer.connect(transport);
+
   return transport;
+};
+
+// Returns null once it has answered the request itself.
+const getTransport = async (
+  request: Request,
+  res: Response
+): Promise<StreamableHTTPServerTransport | null> => {
+  const sessionId = request.headers['mcp-session-id'] as string;
+  const existing = transports.get(sessionId);
+
+  if (existing) return existing;
+
+  // Stateless suits contexts that require it (e.g. AgentCore); the session-less
+  // tools/list probe is allowed for discovery without a handshake.
+  if (config.stateless || (!sessionId && isListToolsRequest(request.body))) {
+    return createEphemeralTransport(res);
+  }
+
+  // An unrecognized session id is expired or bogus. The spec requires 404 so the
+  // client knows to start a new session; falling through would answer an
+  // `initialize` by minting one under a different id, unnoticed.
+  if (sessionId) {
+    yieldSessionNotFound(res);
+    return null;
+  }
+
+  return createSessionTransport();
 };
 
 const createApp = () => {
@@ -75,8 +110,8 @@ const createApp = () => {
 
   app.all('/mcp', async (req: Request, res: Response) => {
     try {
-      const transport = await getTransport(req);
-      await transport.handleRequest(req, res, req.body);
+      const transport = await getTransport(req, res);
+      if (transport) await transport.handleRequest(req, res, req.body);
     } catch (error) {
       console.error(error);
       if (!res.headersSent) {
@@ -85,7 +120,7 @@ const createApp = () => {
     }
   });
 
-  app.all('/ping', (req: Request, res: Response) => {
+  app.all('/ping', (_req: Request, res: Response) => {
     res.status(200).json({ message: 'pong' });
   });
 

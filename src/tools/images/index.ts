@@ -3,6 +3,7 @@ import params, { type QueryParams } from './schemas/input.js';
 import API from '../../BraveAPI/index.js';
 import type { ImageResult } from './types.js';
 import OutputSchema, { SimplifiedImageResultSchema } from './schemas/output.js';
+import { stringify } from '../../utils.js';
 import { z } from 'zod';
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
@@ -18,7 +19,7 @@ export const description = `
 `;
 
 export const execute = async (params: QueryParams) => {
-  const response = await API.issueRequest<'images'>('images', params);
+  const response = await API.issueRequest('images', params);
   const items = response.results.map(simplifySchemaForLLM).filter((o) => o !== null);
 
   const structuredContent = OutputSchema.safeParse({
@@ -33,7 +34,7 @@ export const execute = async (params: QueryParams) => {
     : structuredContent.error.flatten();
 
   return {
-    content: [{ type: 'text', text: JSON.stringify(payload) } as TextContent],
+    content: [{ type: 'text', text: stringify(payload) } as TextContent],
     isError: !structuredContent.success,
     structuredContent: payload,
   };
@@ -43,7 +44,7 @@ export const register = (mcpServer: McpServer) => {
   mcpServer.registerTool(
     name,
     {
-      title: name,
+      title: annotations.title,
       description: description,
       inputSchema: params,
       outputSchema: OutputSchema,
@@ -73,10 +74,7 @@ function simplifySchemaForLLM(
 
 export default {
   name,
-  description,
-  annotations,
   inputSchema: params.shape,
   outputSchema: OutputSchema.shape,
-  execute,
   register,
 };
