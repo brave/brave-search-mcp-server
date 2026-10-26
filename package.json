@@ -37,11 +37,11 @@
     "inspector:http": "npx @modelcontextprotocol/inspector --transport http --server-url http://127.0.0.1:8080/mcp"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.30.0",
+    "@modelcontextprotocol/sdk": "1.32.2",
     "commander": "14.0.3",
     "dotenv": "17.3.1",
     "express": "5.2.1",
-    "zod": "4.3.6"
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@types/express": "5.0.6",
