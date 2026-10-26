@@ -27,6 +27,20 @@ describe('MCP server <-> SDK Client wiring (in-memory)', () => {
     }
   });
 
+  it('marks every tool as a read-only, non-destructive search', async () => {
+    const { tools: listedTools } = await client.listTools();
+
+    for (const tool of listedTools) {
+      assert.equal(tool.annotations?.readOnlyHint, true, `${tool.name} should be read-only`);
+      assert.equal(
+        tool.annotations?.destructiveHint,
+        false,
+        `${tool.name} should not be destructive`
+      );
+      assert.equal(tool.annotations?.idempotentHint, true, `${tool.name} should be idempotent`);
+    }
+  });
+
   it('advertises valid JSON Schema 2020-12 schemas', async () => {
     const { tools: listedTools } = await client.listTools();
 

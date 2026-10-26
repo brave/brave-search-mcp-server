@@ -13,6 +13,9 @@ export const name = 'brave_place_search';
 
 export const annotations: ToolAnnotations = {
   title: 'Brave Place Search',
+  readOnlyHint: true,
+  destructiveHint: false,
+  idempotentHint: true,
   openWorldHint: true,
 };
 
