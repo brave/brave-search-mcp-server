@@ -14,6 +14,9 @@ export const name = 'brave_llm_context';
 
 export const annotations: ToolAnnotations = {
   title: 'Brave LLM Context',
+  readOnlyHint: true,
+  destructiveHint: false,
+  idempotentHint: true,
   openWorldHint: true,
 };
 

@@ -20,6 +20,9 @@ export const name = 'brave_web_search';
 
 export const annotations: ToolAnnotations = {
   title: 'Brave Web Search',
+  readOnlyHint: true,
+  destructiveHint: false,
+  idempotentHint: true,
   openWorldHint: true,
 };
 
