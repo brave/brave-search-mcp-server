@@ -34,6 +34,7 @@
     "test": "node --import tsx --test \"src/**/*.test.ts\"",
     "serve:http": "npm run build && node dist/index.js --transport http",
     "inspector": "npx @modelcontextprotocol/inspector",
+    "inspector:stdio": "npx @modelcontextprotocol/inspector --transport stdio",
     "inspector:http": "npx @modelcontextprotocol/inspector --transport http --server-url http://127.0.0.1:8080/mcp"
   },
   "dependencies": {
