@@ -5,27 +5,25 @@ import createMcpServer from '../server.js';
 
 /**
  * Connects a real SDK Client to a fresh McpServer over an in-memory transport
- * pair, so tests exercise the actual registerTool/callTool wiring instead of
- * invoking a tool's `execute` function directly.
+ * pair, exercising the real registerTool/callTool wiring.
+ *
+ * Tear down with `client.close()`; it cascades to the server.
  */
-export async function connectTestClient(): Promise<{
-  client: Client;
-  close: () => Promise<void>;
-}> {
+export async function connectTestClient(): Promise<Client> {
   const mcpServer = createMcpServer();
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: 'test-client', version: '0.0.0' });
 
   await Promise.all([mcpServer.connect(serverTransport), client.connect(clientTransport)]);
 
-  return { client, close: () => client.close() };
+  return client;
 }
 
 /**
  * Replaces global.fetch with a stub that resolves requests via `handler`,
  * keyed on the request's pathname. Returns a restore function.
  */
-export function stubFetch(handler: (url: URL) => unknown): () => void {
+function stubFetch(handler: (url: URL) => unknown): () => void {
   const originalFetch = globalThis.fetch;
 
   globalThis.fetch = (async (input: RequestInfo | URL) => {
@@ -54,17 +52,16 @@ export function stubFetch(handler: (url: URL) => unknown): () => void {
  */
 export function useTestClient(responder: (url: URL) => unknown): () => Client {
   let client: Client;
-  let close: () => Promise<void>;
   let restoreFetch: () => void;
 
   before(async () => {
     restoreFetch = stubFetch(responder);
-    ({ client, close } = await connectTestClient());
+    client = await connectTestClient();
   });
 
   after(async () => {
     restoreFetch();
-    await close();
+    await client.close();
   });
 
   return () => client;
