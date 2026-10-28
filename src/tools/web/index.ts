@@ -63,13 +63,11 @@ export const execute = async (params: QueryParams) => {
   }
 
   // TODO (Sampson): The following is unnecessarily repetitive.
-  if (web && web.results?.length > 0) {
-    for (const entry of formatWebResults(web)) {
-      response.content.push({
-        type: 'text' as const,
-        text: stringify(entry),
-      });
-    }
+  for (const entry of formatWebResults(web)) {
+    response.content.push({
+      type: 'text' as const,
+      text: stringify(entry),
+    });
   }
 
   if (faq && faq.results?.length > 0) {
