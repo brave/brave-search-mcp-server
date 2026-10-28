@@ -1,7 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import express, { type Request, type Response } from 'express';
 import config from '../config.js';
-import { registerSigIntHandler } from '../helpers.js';
 import createMcpServer from '../server.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { ListToolsRequest, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
@@ -117,12 +116,31 @@ const start = () => {
     process.exit(1);
   }
 
-  registerSigIntHandler(transports);
+  const shutdown = async () => {
+    for (const sessionID of transports.keys()) {
+      await transports.get(sessionID)?.close();
+      transports.delete(sessionID);
+    }
+
+    console.error('Server shut down.');
+    process.exit(0);
+  };
+
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
 
   const app = createApp();
+  const server = app.listen(config.port, config.host);
 
-  app.listen(config.port, config.host, () => {
+  server.on('listening', () => {
     console.log(`Server is running on http://${config.host}:${config.port}/mcp`);
+  });
+
+  server.on('error', (error: NodeJS.ErrnoException) => {
+    const detail =
+      error.code === 'EADDRINUSE' ? `port ${config.port} is already in use` : error.message;
+    console.error(`Unable to start HTTP server: ${detail}`);
+    process.exit(1);
   });
 };
 
