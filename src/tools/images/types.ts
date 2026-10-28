@@ -50,7 +50,7 @@ interface Thumbnail {
   height?: number;
 }
 
-export interface Properties {
+interface Properties {
   /** The image URL. */
   url?: string;
   /** The lower resolution placeholder image URL. */

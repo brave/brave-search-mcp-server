@@ -100,16 +100,24 @@ const start = () => {
   }
 
   const app = createApp();
+  const server = app.listen(config.port, config.host);
 
-  app.listen(config.port, config.host, () => {
+  server.on('listening', () => {
     console.log(`Server is running on http://${config.host}:${config.port}/mcp`);
 
     // /mcp has no auth today. Binding past loopback is an easy way to leak quota.
     if (!isLoopbackHostname(config.host)) {
-      console.error(
+      console.warn(
         `Warning: HTTP transport is bound to ${config.host} and /mcp is unauthenticated. Prefer 127.0.0.1 for local use, or put a reverse proxy with auth in front of this process.`
       );
     }
+  });
+
+  server.on('error', (error: NodeJS.ErrnoException) => {
+    const detail =
+      error.code === 'EADDRINUSE' ? `port ${config.port} is already in use` : error.message;
+    console.error(`Unable to start HTTP server: ${detail}`);
+    process.exit(1);
   });
 };
 
