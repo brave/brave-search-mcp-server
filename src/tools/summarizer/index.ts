@@ -30,7 +30,17 @@ export const execute = async (params: SummarizerQueryParams, extra?: ToolExtra) 
   const response: CallToolResult = { content: [], isError: false };
 
   try {
-    const { summary } = await pollForSummary(params, API.getApiKey(extra));
+    const apiKey = API.getApiKey(extra);
+    if (!apiKey) {
+      response.isError = true;
+      response.content.push({
+        type: 'text' as const,
+        text: 'Missing Brave API key: send an X-Subscription-Token or Authorization: Bearer header, or start the server with BRAVE_API_KEY.',
+      });
+      return response;
+    }
+
+    const { summary } = await pollForSummary(params, apiKey);
 
     if (!summary || summary.length === 0) {
       response.isError = true;
