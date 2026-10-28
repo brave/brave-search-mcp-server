@@ -19,12 +19,18 @@ const transports = new Map<string, StreamableHTTPServerTransport>();
 const isListToolsRequest = (value: unknown): value is ListToolsRequest =>
   ListToolsRequestSchema.safeParse(value).success;
 
-const getTransport = async (request: Request): Promise<StreamableHTTPServerTransport> => {
+type ResolvedTransport = {
+  transport: StreamableHTTPServerTransport;
+  // One-shot transports (stateless / bare tools/list) are not kept in `transports`.
+  ephemeral: boolean;
+};
+
+const getTransport = async (request: Request): Promise<ResolvedTransport> => {
   // Check for an existing session
   const sessionId = request.headers['mcp-session-id'] as string;
 
   if (sessionId && transports.has(sessionId)) {
-    return transports.get(sessionId)!;
+    return { transport: transports.get(sessionId)!, ephemeral: false };
   }
 
   // We have a special case where we'll permit ListToolsRequest w/o a session ID
@@ -35,29 +41,34 @@ const getTransport = async (request: Request): Promise<StreamableHTTPServerTrans
 
     const mcpServer = createMcpServer();
     await mcpServer.connect(transport);
-    return transport;
+    return { transport, ephemeral: true };
   }
 
   let transport: StreamableHTTPServerTransport;
+  let ephemeral = false;
 
   if (config.stateless) {
     // Some contexts (e.g. AgentCore) may prefer or require a stateless transport
     transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
     });
+    ephemeral = true;
   } else {
     // Otherwise, start a new transport/session
     transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: () => randomUUID(),
-      onsessioninitialized: (sessionId) => {
-        transports.set(sessionId, transport);
+      onsessioninitialized: (id) => {
+        transports.set(id, transport);
+      },
+      onsessionclosed: (id) => {
+        transports.delete(id);
       },
     });
   }
 
   const mcpServer = createMcpServer();
   await mcpServer.connect(transport);
-  return transport;
+  return { transport, ephemeral };
 };
 
 const createApp = () => {
@@ -74,13 +85,20 @@ const createApp = () => {
   app.use('/mcp', express.json());
 
   app.all('/mcp', async (req: Request, res: Response) => {
+    let ephemeral = false;
+    let transport: StreamableHTTPServerTransport | undefined;
+
     try {
-      const transport = await getTransport(req);
+      ({ transport, ephemeral } = await getTransport(req));
       await transport.handleRequest(req, res, req.body);
     } catch (error) {
       console.error(error);
       if (!res.headersSent) {
         yieldGenericServerError(res);
+      }
+    } finally {
+      if (ephemeral && transport) {
+        await transport.close().catch(() => undefined);
       }
     }
   });
@@ -97,6 +115,19 @@ const start = () => {
     console.error('Invalid configuration');
     process.exit(1);
   }
+
+  const shutdown = async () => {
+    for (const sessionID of transports.keys()) {
+      await transports.get(sessionID)?.close();
+      transports.delete(sessionID);
+    }
+
+    console.error('Server shut down.');
+    process.exit(0);
+  };
+
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
 
   const app = createApp();
   const server = app.listen(config.port, config.host);
