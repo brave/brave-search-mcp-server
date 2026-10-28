@@ -1,5 +1,4 @@
 import { readFileSync } from 'node:fs';
-import { RATE_LIMIT } from './constants.js';
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -7,7 +6,7 @@ let rateLimitQueue: Promise<void> = Promise.resolve();
 let lastRequestStartedAt = 0;
 
 /** Default gap between Brave Search API calls (free tier is 1 req/sec). */
-export const DEFAULT_MIN_REQUEST_INTERVAL_MS = Math.ceil(1000 / RATE_LIMIT.perSecond);
+export const DEFAULT_MIN_REQUEST_INTERVAL_MS = 1000;
 
 export function resetRateLimitState() {
   rateLimitQueue = Promise.resolve();
@@ -58,9 +57,7 @@ export function stringify(data: any, pretty = false) {
   return pretty ? JSON.stringify(data, null, 2) : JSON.stringify(data);
 }
 
-export type ReadBraveApiKeyFromFileResult =
-  | { ok: true; key: string }
-  | { ok: false; error: string };
+type ReadBraveApiKeyFromFileResult = { ok: true; key: string } | { ok: false; error: string };
 
 export function readBraveApiKeyFromFile(filePath: string): ReadBraveApiKeyFromFileResult {
   try {

@@ -71,20 +71,6 @@ export interface WebSearchApiResponse {
   rich?: RichCallbackInfo;
 }
 
-export interface LocalPoiSearchApiResponse {
-  /** The type of local POI search API result. The value is always local_pois. */
-  type: 'local_pois';
-  /** Location results matching the ids in the request. */
-  results?: LocationResult[];
-}
-
-export interface LocalDescriptionsSearchApiResponse {
-  /** The type of local description search API result. The value is always local_descriptions. */
-  type: 'local_descriptions';
-  /** Location descriptions matching the ids in the request. */
-  results?: LocationDescription[];
-}
-
 interface Query {
   /** The original query that was requested. */
   original: string;
@@ -154,7 +140,7 @@ interface DiscussionResult extends Omit<SearchResult, 'type'> {
   data?: ForumData;
 }
 
-export interface ForumData {
+interface ForumData {
   /** The name of the forum. */
   forum_name: string;
   /** The number of answers to the post. */
@@ -211,7 +197,7 @@ export interface Search {
   family_friendly: boolean;
 }
 
-export interface SearchResult extends Result {
+interface SearchResult extends Result {
   /** A type identifying a web search result. The value is always search_result. */
   type: 'search_result';
   /** A sub type identifying the web search result type. */
@@ -447,15 +433,6 @@ interface LocationResult extends Result {
   timezone?: string;
   /** The UTC offset of the timezone, in minutes from UTC. */
   timezone_offset?: number;
-}
-
-interface LocationDescription {
-  /** The type of a location description. The value is always local_description. */
-  type: 'local_description';
-  /** A Temporary id of the location with this description. */
-  id: string;
-  /** AI generated description of the location with the given id. */
-  description?: string;
 }
 
 interface Locations {

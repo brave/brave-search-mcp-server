@@ -21,25 +21,6 @@ import type {
 } from '../tools/place_search/schemas/input.js';
 import type { PlaceSearchApiResponse } from '../tools/place_search/schemas/output.js';
 
-export interface RateLimitErrorResponse {
-  type: 'ErrorResponse';
-  error: {
-    id: string;
-    status: number;
-    code: 'RATE_LIMITED';
-    detail: string;
-    meta: {
-      plan: string;
-      rate_limit: number;
-      rate_current: number;
-      quota_limit: number;
-      quota_current: number;
-      component: 'rate_limiter';
-    };
-  };
-  time: number;
-}
-
 export type Endpoints = {
   web: {
     params: WebQueryParams;

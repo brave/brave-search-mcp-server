@@ -29,7 +29,7 @@ export const params = z.object({
     .max(200)
     .default(50)
     .describe(
-      'Number of results (1-200, default 50). Combine this parameter with `offset` to paginate search results.'
+      'Number of results (1-200, default 50). Image Search is not paginated — raise `count` if you need more results. There is no `offset` parameter.'
     )
     .optional(),
   safesearch: z
