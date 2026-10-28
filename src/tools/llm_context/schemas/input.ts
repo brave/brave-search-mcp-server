@@ -72,6 +72,7 @@ const SearchLangCodesSchema = z.enum([
   'hu',
   'is',
   'it',
+  'ja',
   'jp',
   'kn',
   'ko',
