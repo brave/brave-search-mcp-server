@@ -1,6 +1,6 @@
 import type { TextContent, ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 import params, { type QueryParams } from './schemas/input.js';
-import API from '../../BraveAPI/index.js';
+import API, { type ToolExtra } from '../../BraveAPI/index.js';
 import type { ImageResult } from './types.js';
 import OutputSchema, { SimplifiedImageResultSchema } from './schemas/output.js';
 import { z } from 'zod';
@@ -17,8 +17,8 @@ export const description = `
     Performs an image search using the Brave Search API. Helpful for when you need pictures of people, places, things, graphic design ideas, art inspiration, and more. When relaying results in a markdown environment, it may be helpful to include images in the results (e.g., ![image.title](image.properties.url)).
 `;
 
-export const execute = async (params: QueryParams) => {
-  const response = await API.issueRequest<'images'>('images', params);
+export const execute = async (params: QueryParams, extra?: ToolExtra) => {
+  const response = await API.issueRequest<'images'>('images', params, API.getApiKey(extra));
   const items = response.results.map(simplifySchemaForLLM).filter((o) => o !== null);
 
   const structuredContent = OutputSchema.safeParse({

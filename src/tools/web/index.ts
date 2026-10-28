@@ -1,6 +1,6 @@
 import type { TextContent, ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 import params, { type QueryParams } from './params.js';
-import API from '../../BraveAPI/index.js';
+import API, { type ToolExtra } from '../../BraveAPI/index.js';
 import type {
   Discussions,
   FAQ,
@@ -38,11 +38,12 @@ export const description = `
     When the "results_filter" parameter is empty, JSON results may also contain FAQ, Discussions, News, and Video results.
 `.trim();
 
-export const execute = async (params: QueryParams) => {
+export const execute = async (params: QueryParams, extra?: ToolExtra) => {
   const response = { content: [] as TextContent[], isError: false };
   const { web, faq, discussions, news, videos, summarizer } = await API.issueRequest<'web'>(
     'web',
-    params
+    params,
+    API.getApiKey(extra)
   );
 
   if (summarizer) {

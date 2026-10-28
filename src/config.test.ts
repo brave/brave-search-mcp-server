@@ -17,6 +17,7 @@ const CONFIG_ENV_VARS = [
   'BRAVE_MCP_ALLOWED_ORIGINS',
   'BRAVE_MCP_ALLOWED_HOSTS',
   'BRAVE_MCP_STATELESS',
+  'BRAVE_MCP_ALLOW_CLIENT_KEYS',
 ] as const;
 
 describe('getOptions', () => {
@@ -47,6 +48,24 @@ describe('getOptions', () => {
 
   it('rejects whitespace-only API keys', () => {
     process.argv = ['node', 'index.js', '--brave-api-key', '   '];
+
+    assert.equal(getOptions(), false);
+  });
+
+  it('allows http transport without an API key with --allow-client-keys', () => {
+    process.argv = ['node', 'index.js', '--transport', 'http', '--allow-client-keys'];
+
+    const options = getOptions();
+
+    assert.notEqual(options, false);
+    if (options) {
+      assert.equal(options.braveApiKey, '');
+      assert.equal(options.allowClientKeys, true);
+    }
+  });
+
+  it('rejects --allow-client-keys with stdio transport', () => {
+    process.argv = ['node', 'index.js', '--brave-api-key', 'key', '--allow-client-keys'];
 
     assert.equal(getOptions(), false);
   });

@@ -1,5 +1,5 @@
 import type { TextContent, ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
-import API from '../../BraveAPI/index.js';
+import API, { type ToolExtra } from '../../BraveAPI/index.js';
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import {
   RequestParamsSchema,
@@ -33,13 +33,14 @@ export const description = `
         - 'count' caps results (max 50, default 20). 'radius' (meters) biases toward closer results; it does NOT hard-limit the search area.
 `.trim();
 
-export const execute = async (params: QueryParams) => {
+export const execute = async (params: QueryParams, extra?: ToolExtra) => {
   const parsedParams = RequestParamsSchema.parse(params);
   const parsedHeaders = RequestHeadersSchema.parse(params);
 
   const response = await API.issueRequest<'placeSearch'>(
     'placeSearch',
     parsedParams,
+    API.getApiKey(extra),
     parsedHeaders
   );
 

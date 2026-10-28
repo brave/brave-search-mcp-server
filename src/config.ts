@@ -27,6 +27,7 @@ type Configuration = {
   stateless: boolean;
   allowedOrigins: string[];
   allowedHosts: string[];
+  allowClientKeys: boolean;
 };
 
 const state: Configuration & { ready: boolean } = {
@@ -41,6 +42,7 @@ const state: Configuration & { ready: boolean } = {
   stateless: false,
   allowedOrigins: [],
   allowedHosts: [],
+  allowClientKeys: false,
 };
 
 export function isToolPermittedByUser(toolName: string): boolean {
@@ -92,6 +94,11 @@ export function getOptions(): Configuration | false {
       '--allowed-hosts <hosts...>',
       'allowed Host header values for HTTP transport (opt-in DNS rebinding protection)',
       process.env.BRAVE_MCP_ALLOWED_HOSTS ?? ''
+    )
+    .option(
+      '--allow-client-keys',
+      'HTTP only: use the client X-Subscription-Token or Authorization: Bearer header as the API key; server key becomes optional',
+      process.env.BRAVE_MCP_ALLOW_CLIENT_KEYS === 'true'
     )
     .option(
       '--stateless <boolean>',
@@ -151,7 +158,15 @@ export function getOptions(): Configuration | false {
     braveApiKey = apiKeyFromFile.key;
   }
 
-  if (!braveApiKey) {
+  const allowClientKeys = options.allowClientKeys === true;
+
+  // stdio has no request headers to carry a client key
+  if (allowClientKeys && options.transport !== 'http') {
+    console.error('Error: --allow-client-keys requires --transport http');
+    return false;
+  }
+
+  if (!braveApiKey && !allowClientKeys) {
     console.error(
       'Error: A Brave API key is required via --brave-api-key, BRAVE_API_KEY, --brave-api-key-file, or BRAVE_API_KEY_FILE. You can get one at https://brave.com/search/api/.'
     );
@@ -195,6 +210,7 @@ export function getOptions(): Configuration | false {
   state.stateless = options.stateless;
   state.allowedOrigins = allowedOrigins;
   state.allowedHosts = allowedHosts;
+  state.allowClientKeys = allowClientKeys;
   state.ready = true;
 
   return options as Configuration;

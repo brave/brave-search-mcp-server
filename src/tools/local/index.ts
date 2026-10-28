@@ -6,7 +6,7 @@ import type {
 } from './types.js';
 import webParams, { type QueryParams as WebQueryParams } from '../web/params.js';
 import type { CallToolResult, ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
-import API from '../../BraveAPI/index.js';
+import API, { type ToolExtra } from '../../BraveAPI/index.js';
 import { formatWebResults } from '../web/index.js';
 import { stringify } from '../../utils.js';
 import { type WebSearchApiResponse } from '../web/types.js';
@@ -31,12 +31,14 @@ export const description = `
 `.trim();
 
 // Access to Local API is available through the Pro plans.
-export const execute = async (params: WebQueryParams) => {
+export const execute = async (params: WebQueryParams, extra?: ToolExtra) => {
   // Make sure both 'web' and 'locations' are in the result_filter
   params = { ...params, result_filter: [...(params.result_filter || []), 'web', 'locations'] };
 
+  const apiKey = API.getApiKey(extra);
+
   // Starts with a web search to retrieve potential location IDs
-  const { locations, web: web_fallback } = await API.issueRequest<'web'>('web', params);
+  const { locations, web: web_fallback } = await API.issueRequest<'web'>('web', params, apiKey);
 
   // We can send up to 20 location IDs at a time to the Local API
   // TODO (Sampson): Add support for multiple requests
@@ -61,9 +63,11 @@ export const execute = async (params: WebQueryParams) => {
   }
 
   // Fetch AI-generated descriptions
-  const descriptions = await API.issueRequest<'localDescriptions'>('localDescriptions', {
-    ids: locationIDs,
-  });
+  const descriptions = await API.issueRequest<'localDescriptions'>(
+    'localDescriptions',
+    { ids: locationIDs },
+    apiKey
+  );
 
   return {
     content: formatLocalResults(locations.results, descriptions.results).map((formattedPOI) => ({

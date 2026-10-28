@@ -1,6 +1,6 @@
 import type { ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 import params, { type QueryParams } from './params.js';
-import API from '../../BraveAPI/index.js';
+import API, { type ToolExtra } from '../../BraveAPI/index.js';
 import { stringify } from '../../utils.js';
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
@@ -30,8 +30,8 @@ export const description = `
         - "According to [BBC News](https://www.bbc.com/news/world-europe-65910000), the UK government has announced a new policy to support renewable energy".
 `.trim();
 
-export const execute = async (params: QueryParams) => {
-  const response = await API.issueRequest<'news'>('news', params);
+export const execute = async (params: QueryParams, extra?: ToolExtra) => {
+  const response = await API.issueRequest<'news'>('news', params, API.getApiKey(extra));
 
   return {
     content: response.results.map((newsResult) => {

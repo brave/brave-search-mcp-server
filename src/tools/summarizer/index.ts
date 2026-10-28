@@ -1,6 +1,6 @@
 import type { CallToolResult, ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 import { summarizerQueryParams, type SummarizerQueryParams } from './params.js';
-import API from '../../BraveAPI/index.js';
+import API, { type ToolExtra } from '../../BraveAPI/index.js';
 import { type SummarizerSearchApiResponse } from './types.js';
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
@@ -26,11 +26,21 @@ export const description = `
     Requirements: Must first perform a web search using brave_web_search with summary=true parameter. Requires a Pro AI subscription to access the summarizer functionality.
 `.trim();
 
-export const execute = async (params: SummarizerQueryParams) => {
+export const execute = async (params: SummarizerQueryParams, extra?: ToolExtra) => {
   const response: CallToolResult = { content: [], isError: false };
 
   try {
-    const { summary } = await pollForSummary(params);
+    const apiKey = API.getApiKey(extra);
+    if (!apiKey) {
+      response.isError = true;
+      response.content.push({
+        type: 'text' as const,
+        text: 'Missing Brave API key: send an X-Subscription-Token or Authorization: Bearer header, or start the server with BRAVE_API_KEY.',
+      });
+      return response;
+    }
+
+    const { summary } = await pollForSummary(params, apiKey);
 
     if (!summary || summary.length === 0) {
       response.isError = true;
@@ -82,6 +92,7 @@ export const register = (mcpServer: McpServer) => {
 
 const pollForSummary = async (
   params: SummarizerQueryParams,
+  apiKey: string,
   pollInterval: number = 50,
   attempts: number = 20
 ): Promise<SummarizerSearchApiResponse> => {
@@ -89,7 +100,7 @@ const pollForSummary = async (
 
   while (!result && attempts > 0) {
     try {
-      const response = await API.issueRequest<'summarizer'>('summarizer', params);
+      const response = await API.issueRequest<'summarizer'>('summarizer', params, apiKey);
       if (response.status === 'complete') {
         result = response;
       }

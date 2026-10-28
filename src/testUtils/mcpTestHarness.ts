@@ -1,6 +1,7 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { after, before } from 'node:test';
+import config from '../config.js';
 import createMcpServer from '../server.js';
 
 /**
@@ -53,13 +54,17 @@ function stubFetch(handler: (url: URL) => unknown): () => void {
 export function useTestClient(responder: (url: URL) => unknown): () => Client {
   let client: Client;
   let restoreFetch: () => void;
+  const originalApiKey = config.braveApiKey;
 
   before(async () => {
+    // Requests fail fast without a key; fetch is stubbed, so any value works
+    config.braveApiKey = 'test-key';
     restoreFetch = stubFetch(responder);
     client = await connectTestClient();
   });
 
   after(async () => {
+    config.braveApiKey = originalApiKey;
     restoreFetch();
     await client.close();
   });
