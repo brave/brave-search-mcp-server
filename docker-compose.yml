@@ -17,6 +17,7 @@ services:
       - BRAVE_MCP_LOG_LEVEL=info
       - BRAVE_MCP_ENABLED_TOOLS
       - BRAVE_MCP_DISABLED_TOOLS
+      - BRAVE_MCP_AUTH_TOKEN
     init: true
     ports:
       - 8080:8080

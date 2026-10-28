@@ -27,6 +27,7 @@ type Configuration = {
   stateless: boolean;
   allowedOrigins: string[];
   allowedHosts: string[];
+  httpAuthToken: string;
 };
 
 const state: Configuration & { ready: boolean } = {
@@ -41,6 +42,7 @@ const state: Configuration & { ready: boolean } = {
   stateless: false,
   allowedOrigins: [],
   allowedHosts: [],
+  httpAuthToken: '',
 };
 
 export function isToolPermittedByUser(toolName: string): boolean {
@@ -97,6 +99,11 @@ export function getOptions(): Configuration | false {
       '--stateless <boolean>',
       'whether the server should be stateless',
       process.env.BRAVE_MCP_STATELESS === 'true' ? true : false
+    )
+    .option(
+      '--auth-token <string>',
+      'optional bearer token for HTTP /mcp (Authorization: Bearer ...)',
+      process.env.BRAVE_MCP_AUTH_TOKEN ?? ''
     )
     .allowUnknownOption()
     .parse(process.argv);
@@ -184,6 +191,10 @@ export function getOptions(): Configuration | false {
   const allowedHosts = parseDelimitedList(options.allowedHosts);
   options.allowedHosts = allowedHosts;
 
+  const httpAuthToken = typeof options.authToken === 'string' ? options.authToken.trim() : '';
+  options.authToken = httpAuthToken;
+  (options as Configuration).httpAuthToken = httpAuthToken;
+
   // Update state
   state.braveApiKey = braveApiKey;
   state.transport = options.transport;
@@ -195,6 +206,7 @@ export function getOptions(): Configuration | false {
   state.stateless = options.stateless;
   state.allowedOrigins = allowedOrigins;
   state.allowedHosts = allowedHosts;
+  state.httpAuthToken = httpAuthToken;
   state.ready = true;
 
   return options as Configuration;
