@@ -2,7 +2,13 @@ import { LoggingLevel, LoggingLevelSchema } from '@modelcontextprotocol/sdk/type
 import { Command } from 'commander';
 import dotenv from 'dotenv';
 import tools from './tools/index.js';
-import { parseDelimitedList, parsePort, readBraveApiKeyFromFile } from './utils.js';
+import {
+  DEFAULT_MIN_REQUEST_INTERVAL_MS,
+  parseDelimitedList,
+  parseIntervalMs,
+  parsePort,
+  readBraveApiKeyFromFile,
+} from './utils.js';
 
 dotenv.config({ debug: false, quiet: true });
 
@@ -27,6 +33,7 @@ type Configuration = {
   stateless: boolean;
   allowedOrigins: string[];
   allowedHosts: string[];
+  minRequestIntervalMs: number;
 };
 
 const state: Configuration & { ready: boolean } = {
@@ -41,6 +48,7 @@ const state: Configuration & { ready: boolean } = {
   stateless: false,
   allowedOrigins: [],
   allowedHosts: [],
+  minRequestIntervalMs: DEFAULT_MIN_REQUEST_INTERVAL_MS,
 };
 
 export function isToolPermittedByUser(toolName: string): boolean {
@@ -97,6 +105,11 @@ export function getOptions(): Configuration | false {
       '--stateless <boolean>',
       'whether the server should be stateless',
       process.env.BRAVE_MCP_STATELESS === 'true' ? true : false
+    )
+    .option(
+      '--min-request-interval-ms <number>',
+      'minimum gap between Brave Search API calls in ms (default: 1000, 0 disables)',
+      process.env.BRAVE_MCP_MIN_REQUEST_INTERVAL_MS ?? String(DEFAULT_MIN_REQUEST_INTERVAL_MS)
     )
     .allowUnknownOption()
     .parse(process.argv);
@@ -158,6 +171,14 @@ export function getOptions(): Configuration | false {
     return false;
   }
 
+  const minRequestIntervalMs = parseIntervalMs(options.minRequestIntervalMs);
+  if (minRequestIntervalMs === null) {
+    console.error(
+      `Invalid --min-request-interval-ms value: '${options.minRequestIntervalMs}'. Must be an integer between 0 and 60000.`
+    );
+    return false;
+  }
+
   if (options.transport === 'http') {
     const port = parsePort(options.port);
     if (port === null) {
@@ -183,6 +204,7 @@ export function getOptions(): Configuration | false {
 
   const allowedHosts = parseDelimitedList(options.allowedHosts);
   options.allowedHosts = allowedHosts;
+  options.minRequestIntervalMs = minRequestIntervalMs;
 
   // Update state
   state.braveApiKey = braveApiKey;
@@ -195,6 +217,7 @@ export function getOptions(): Configuration | false {
   state.stateless = options.stateless;
   state.allowedOrigins = allowedOrigins;
   state.allowedHosts = allowedHosts;
+  state.minRequestIntervalMs = minRequestIntervalMs;
   state.ready = true;
 
   return options as Configuration;
