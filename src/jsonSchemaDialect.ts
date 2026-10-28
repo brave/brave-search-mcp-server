@@ -11,7 +11,7 @@ import tools from './tools/index.js';
  * The dialect servers MUST emit by default, per SEP-1613 §5.
  * https://modelcontextprotocol.io/seps/1613-establish-json-schema-2020-12-as-default-dialect-f
  */
-export const JSON_SCHEMA_2020_12 = 'https://json-schema.org/draft/2020-12/schema';
+const JSON_SCHEMA_2020_12 = 'https://json-schema.org/draft/2020-12/schema';
 
 type ToolSchemaShapes = {
   inputSchema?: ZodRawShape;
