@@ -1,0 +1,50 @@
+name: Docker
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  # The image can break with no change here: Alpine drops superseded package
+  # versions, so the exact-version apk pins stop resolving. Catch that before a release.
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+  # Build Release gates publishing on this workflow.
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          # Amazon Bedrock AgentCore only runs ARM64 images.
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: '24.x'
+
+      # The image builds itself and the tests run from source, so skip `prepare`.
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Check Dockerfile
+        run: docker buildx build --check .
+
+      - name: Build image and run container tests
+        run: npm run test:docker

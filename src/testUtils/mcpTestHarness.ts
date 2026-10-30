@@ -2,6 +2,18 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { after, before } from 'node:test';
 import createMcpServer from '../server.js';
+import tools from '../tools/index.js';
+
+/**
+ * Sorts the names of `listed` tools (e.g. a `tools/list` result) for an
+ * order-independent comparison against `expectedToolNames`.
+ */
+export function toolNames(listed: { name: string }[]): string[] {
+  return listed.map((tool) => tool.name).sort();
+}
+
+/** The sorted names of every registered tool. */
+export const expectedToolNames = toolNames(Object.values(tools));
 
 /**
  * Connects a real SDK Client to a fresh McpServer over an in-memory transport
@@ -20,14 +32,21 @@ export async function connectTestClient(): Promise<Client> {
 }
 
 /**
- * Replaces global.fetch with a stub that resolves requests via `handler`,
- * keyed on the request's pathname. Returns a restore function.
+ * Replaces global.fetch with a stub that resolves Brave API requests via
+ * `handler`, keyed on the request's pathname. Requests to any other origin
+ * (e.g. a local HTTP server under test) pass through to the real fetch.
+ * Returns a restore function.
  */
-function stubFetch(handler: (url: URL) => unknown): () => void {
+export function stubFetch(handler: (url: URL) => unknown): () => void {
   const originalFetch = globalThis.fetch;
 
-  globalThis.fetch = (async (input: RequestInfo | URL) => {
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = new URL(input instanceof Request ? input.url : input.toString());
+
+    if (url.origin !== 'https://api.search.brave.com') {
+      return originalFetch(input, init);
+    }
+
     const body = handler(url);
 
     if (body === undefined) {

@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { getOptions } from './config.js';
+import { AGENTCORE_PORT, agentCoreEnvironment } from './testUtils/agentCore.js';
 
 const CONFIG_ENV_VARS = [
   'BRAVE_API_KEY',
@@ -195,6 +196,30 @@ describe('getOptions', () => {
     assert.notEqual(options, false);
     if (options) {
       assert.deepEqual(options.allowedHosts, ['a.example', 'b.example']);
+    }
+  });
+
+  // AgentCore buyers deploy with whatever the AWS Marketplace listing pre-fills,
+  // so renaming a variable here (or editing the listing) must not drift from
+  // what AgentCore requires.
+  it('yields an AgentCore-compliant config from the AWS Marketplace defaults', () => {
+    for (const [name, value] of Object.entries(agentCoreEnvironment())) {
+      assert.ok(
+        (CONFIG_ENV_VARS as readonly string[]).includes(name),
+        `The listing sets ${name}, which the server does not read`
+      );
+      process.env[name] = value;
+    }
+    process.argv = ['node', 'index.js', '--brave-api-key', 'key'];
+
+    const options = getOptions();
+
+    assert.notEqual(options, false);
+    if (options) {
+      assert.equal(options.transport, 'http');
+      assert.equal(options.host, '0.0.0.0');
+      assert.equal(options.port, AGENTCORE_PORT);
+      assert.equal(options.stateless, true);
     }
   });
 });

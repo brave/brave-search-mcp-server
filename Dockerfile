@@ -1,6 +1,6 @@
 FROM node:alpine@sha256:5209bcaca9836eb3448b650396213dbe9d9a34d31840c2ae1f206cb2986a8543 AS builder
 
-RUN apk add --no-cache openssl=3.5.8-r0
+RUN apk add --no-cache openssl=3.5.9-r0
 
 WORKDIR /app
 
@@ -16,7 +16,7 @@ RUN npm run build
 
 FROM node:alpine@sha256:5209bcaca9836eb3448b650396213dbe9d9a34d31840c2ae1f206cb2986a8543 AS release
 
-RUN apk add --no-cache openssl=3.5.8-r0
+RUN apk add --no-cache openssl=3.5.9-r0
 
 WORKDIR /app
 
@@ -31,7 +31,7 @@ ENV NODE_ENV=production
 # all interfaces here. Deployments can still override BRAVE_MCP_HOST.
 ENV BRAVE_MCP_HOST=0.0.0.0
 
-RUN npm ci --ignore-scripts --omit-dev
+RUN npm ci --ignore-scripts --omit=dev
 
 USER node
 
