@@ -31,7 +31,7 @@ ENV NODE_ENV=production
 # all interfaces here. Deployments can still override BRAVE_MCP_HOST.
 ENV BRAVE_MCP_HOST=0.0.0.0
 
-RUN npm ci --ignore-scripts --omit-dev
+RUN npm ci --ignore-scripts --omit=dev
 
 USER node
 
