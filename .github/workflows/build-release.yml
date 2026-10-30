@@ -12,7 +12,16 @@ on:
         type: string
 
 jobs:
+  # Publish nowhere (npm, Docker Hub, ECR, MCP Registry, Marketplace) unless
+  # the tests pass and the image serves MCP on every architecture we ship.
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  docker:
+    uses: ./.github/workflows/docker.yml
+
   publish:
+    needs: [ci, docker]
     runs-on: ubuntu-latest
 
     permissions:
@@ -149,11 +158,6 @@ jobs:
       - name: Set GitHub short SHA Tag
         id: vars
         run: echo "short_sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
-
-      - name: Validate Docker Build Configuration
-        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
-        with:
-          call: check
 
       # Push to DockerHub (per production best practice, remove 'latest' tag)
       # Push to AWS Marketplace-owned ECR Repository (https://docs.aws.amazon.com/marketplace/latest/userguide/container-product-policies.html)

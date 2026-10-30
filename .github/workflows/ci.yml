@@ -5,6 +5,8 @@ on:
     branches:
       - main
   pull_request:
+  # Build Release gates publishing on this workflow.
+  workflow_call:
 
 permissions:
   contents: read
