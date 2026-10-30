@@ -2,6 +2,18 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { after, before } from 'node:test';
 import createMcpServer from '../server.js';
+import tools from '../tools/index.js';
+
+/**
+ * Sorts the names of `listed` tools (e.g. a `tools/list` result) for an
+ * order-independent comparison against `expectedToolNames`.
+ */
+export function toolNames(listed: { name: string }[]): string[] {
+  return listed.map((tool) => tool.name).sort();
+}
+
+/** The sorted names of every registered tool. */
+export const expectedToolNames = toolNames(Object.values(tools));
 
 /**
  * Connects a real SDK Client to a fresh McpServer over an in-memory transport

@@ -6,7 +6,7 @@ import {
   StdioClientTransport,
   getDefaultEnvironment,
 } from '@modelcontextprotocol/sdk/client/stdio.js';
-import tools from '../tools/index.js';
+import { expectedToolNames, toolNames } from '../testUtils/mcpTestHarness.js';
 
 const entrypoint = fileURLToPath(new URL('../index.ts', import.meta.url));
 
@@ -48,12 +48,6 @@ describe('stdio transport (real child process)', () => {
 
     // Both sides read the same registry; guard against an empty one.
     assert.ok(listedTools.length > 0, stderr);
-    assert.deepEqual(
-      listedTools.map((tool) => tool.name).sort(),
-      Object.values(tools)
-        .map((tool) => tool.name)
-        .sort(),
-      stderr
-    );
+    assert.deepEqual(toolNames(listedTools), expectedToolNames, stderr);
   });
 });
