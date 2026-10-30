@@ -32,14 +32,21 @@ export async function connectTestClient(): Promise<Client> {
 }
 
 /**
- * Replaces global.fetch with a stub that resolves requests via `handler`,
- * keyed on the request's pathname. Returns a restore function.
+ * Replaces global.fetch with a stub that resolves Brave API requests via
+ * `handler`, keyed on the request's pathname. Requests to any other origin
+ * (e.g. a local HTTP server under test) pass through to the real fetch.
+ * Returns a restore function.
  */
-function stubFetch(handler: (url: URL) => unknown): () => void {
+export function stubFetch(handler: (url: URL) => unknown): () => void {
   const originalFetch = globalThis.fetch;
 
-  globalThis.fetch = (async (input: RequestInfo | URL) => {
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = new URL(input instanceof Request ? input.url : input.toString());
+
+    if (url.origin !== 'https://api.search.brave.com') {
+      return originalFetch(input, init);
+    }
+
     const body = handler(url);
 
     if (body === undefined) {

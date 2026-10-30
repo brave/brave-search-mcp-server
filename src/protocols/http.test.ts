@@ -4,7 +4,12 @@ import http, { type Server } from 'node:http';
 import net, { type AddressInfo } from 'node:net';
 import { after, before, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import config from '../config.js';
+import { agentCoreRpc, initializeParams, readJsonRpc } from '../testUtils/agentCore.js';
+import { expectedToolNames, stubFetch, toolNames } from '../testUtils/mcpTestHarness.js';
+import { name as webSearchToolName } from '../tools/web/index.js';
 import httpServer from './http.js';
 
 // Raw HTTP client so we can set the Host header (fetch/undici forbids overriding it).
@@ -38,6 +43,21 @@ const rawRequest = (
     req.end();
   });
 
+const listen = async (): Promise<{ server: Server; port: number; baseUrl: string }> => {
+  const server = httpServer.createApp().listen(0);
+  await new Promise<void>((resolve) => server.once('listening', resolve));
+  const { port } = server.address() as AddressInfo;
+  return { server, port, baseUrl: `http://127.0.0.1:${port}` };
+};
+
+// An SDK client holds a standalone SSE stream open, which `close()` alone
+// would wait on forever.
+const shutdown = (server: Server) =>
+  new Promise<void>((resolve, reject) => {
+    server.closeAllConnections();
+    server.close((err) => (err ? reject(err) : resolve()));
+  });
+
 describe('http Origin validation', () => {
   let server: Server;
   let baseUrl: string;
@@ -57,18 +77,12 @@ describe('http Origin validation', () => {
 
   before(async () => {
     config.allowedOrigins = ['https://allowed.example'];
-    const app = httpServer.createApp();
-    server = app.listen(0);
-    await new Promise<void>((resolve) => server.once('listening', resolve));
-    port = (server.address() as AddressInfo).port;
-    baseUrl = `http://127.0.0.1:${port}`;
+    ({ server, port, baseUrl } = await listen());
   });
 
   after(async () => {
     config.allowedOrigins = originalAllowedOrigins;
-    await new Promise<void>((resolve, reject) =>
-      server.close((err) => (err ? reject(err) : resolve()))
-    );
+    await shutdown(server);
   });
 
   it('rejects a disallowed browser Origin with 403 and a JSON-RPC error', async () => {
@@ -130,17 +144,10 @@ describe('http Host validation (disabled by default)', () => {
   let port: number;
 
   before(async () => {
-    const app = httpServer.createApp();
-    server = app.listen(0);
-    await new Promise<void>((resolve) => server.once('listening', resolve));
-    port = (server.address() as AddressInfo).port;
+    ({ server, port } = await listen());
   });
 
-  after(async () => {
-    await new Promise<void>((resolve, reject) =>
-      server.close((err) => (err ? reject(err) : resolve()))
-    );
-  });
+  after(() => shutdown(server));
 
   it('allows an arbitrary Host when allowedHosts is empty', async () => {
     const res = await rawRequest(port, { host: 'anything.example.com' });
@@ -156,17 +163,12 @@ describe('http Host validation (opt-in)', () => {
 
   before(async () => {
     config.allowedHosts = ['allowed.example.com'];
-    const app = httpServer.createApp();
-    server = app.listen(0);
-    await new Promise<void>((resolve) => server.once('listening', resolve));
-    port = (server.address() as AddressInfo).port;
+    ({ server, port } = await listen());
   });
 
   after(async () => {
     config.allowedHosts = originalAllowedHosts;
-    await new Promise<void>((resolve, reject) =>
-      server.close((err) => (err ? reject(err) : resolve()))
-    );
+    await shutdown(server);
   });
 
   it('rejects a disallowed Host with 403 and a JSON-RPC error', async () => {
@@ -214,6 +216,140 @@ describe('http Host validation (opt-in)', () => {
     const res = await rawRequest(port, { host: 'allowed.example.com:80evil' });
 
     assert.equal(res.status, 403);
+  });
+});
+
+const stubBraveApi = () =>
+  stubFetch((url) => {
+    if (url.pathname === '/res/v1/web/search') {
+      return {
+        type: 'search',
+        web: {
+          results: [
+            {
+              url: 'https://search.brave.com/',
+              title: 'Brave Search',
+              description: 'A privacy-focused search engine.',
+              extra_snippets: [],
+            },
+          ],
+        },
+      };
+    }
+  });
+
+describe('http stateless mode (Amazon Bedrock AgentCore contract)', () => {
+  let server: Server;
+  let baseUrl: string;
+  let restoreFetch: () => void;
+  const originalStateless = config.stateless;
+
+  before(async () => {
+    config.stateless = true;
+    restoreFetch = stubBraveApi();
+    ({ server, baseUrl } = await listen());
+  });
+
+  after(async () => {
+    config.stateless = originalStateless;
+    restoreFetch();
+    await shutdown(server);
+  });
+
+  it('accepts initialize carrying a platform-generated session id', async () => {
+    const { status, sessionId, body } = await agentCoreRpc(
+      baseUrl,
+      1,
+      'initialize',
+      initializeParams
+    );
+
+    assert.equal(status, 200, JSON.stringify(body));
+    assert.equal(body.result.serverInfo.name, 'brave-search-mcp-server');
+    // The platform owns the session id; a stateless server must not mint one.
+    assert.equal(sessionId, null);
+  });
+
+  it('serves tools/list with no prior initialize', async () => {
+    const { status, body } = await agentCoreRpc(baseUrl, 2, 'tools/list');
+
+    assert.equal(status, 200, JSON.stringify(body));
+    assert.deepEqual(toolNames(body.result.tools), expectedToolNames);
+  });
+
+  it('serves tools/call with no prior initialize', async () => {
+    const { status, body } = await agentCoreRpc(baseUrl, 3, 'tools/call', {
+      name: webSearchToolName,
+      arguments: { query: 'brave browser' },
+    });
+
+    assert.equal(status, 200, JSON.stringify(body));
+    assert.equal(body.result.isError ?? false, false, JSON.stringify(body.result));
+    assert.ok(body.result.content.length > 0);
+  });
+
+  it('answers GET /ping', async () => {
+    const res = await fetch(`${baseUrl}/ping`);
+
+    assert.equal(res.status, 200);
+    assert.deepEqual(await res.json(), { message: 'pong' });
+  });
+});
+
+describe('http stateful sessions (default)', () => {
+  let server: Server;
+  let baseUrl: string;
+  let restoreFetch: () => void;
+  let client: Client;
+  let transport: StreamableHTTPClientTransport;
+
+  before(async () => {
+    restoreFetch = stubBraveApi();
+    ({ server, baseUrl } = await listen());
+    transport = new StreamableHTTPClientTransport(new URL(`${baseUrl}/mcp`));
+    client = new Client({ name: 'http-test-client', version: '0.0.0' });
+    await client.connect(transport);
+  });
+
+  after(async () => {
+    await client.close();
+    restoreFetch();
+    await shutdown(server);
+  });
+
+  it('issues a session id on initialize', () => {
+    assert.ok(transport.sessionId);
+  });
+
+  it('serves tools/list within the session', async () => {
+    const { tools: listedTools } = await client.listTools();
+
+    assert.deepEqual(toolNames(listedTools), expectedToolNames);
+  });
+
+  it('serves tools/call within the session', async () => {
+    const result = await client.callTool({
+      name: webSearchToolName,
+      arguments: { query: 'brave browser' },
+    });
+
+    assert.equal(result.isError ?? false, false, JSON.stringify(result.content));
+    assert.ok(Array.isArray(result.content) && result.content.length > 0);
+  });
+
+  it('serves tools/list without a session id', async () => {
+    const res = await fetch(`${baseUrl}/mcp`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        accept: 'application/json, text/event-stream',
+      },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} }),
+    });
+    const body = await readJsonRpc(res);
+
+    assert.equal(res.status, 200, JSON.stringify(body));
+    assert.deepEqual(toolNames(body.result.tools), expectedToolNames);
   });
 });
 
