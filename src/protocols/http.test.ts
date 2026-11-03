@@ -286,3 +286,131 @@ describe('HTTP transport startup', () => {
     assert.doesNotMatch(out, /Server is running/);
   });
 });
+
+describe('http session lifecycle', () => {
+  let server: Server;
+  let baseUrl: string;
+  const originalTtlMs = config.sessionTtlMs;
+
+  const initializeSession = async (): Promise<string> => {
+    const res = await fetch(`${baseUrl}/mcp`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        accept: 'application/json, text/event-stream',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: {
+          protocolVersion: '2024-11-05',
+          capabilities: {},
+          clientInfo: { name: 'test-client', version: '0.0.1' },
+        },
+      }),
+    });
+    assert.equal(res.status, 200);
+    const sessionId = res.headers.get('mcp-session-id');
+    assert.ok(sessionId);
+
+    const notify = await fetch(`${baseUrl}/mcp`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        accept: 'application/json, text/event-stream',
+        'mcp-session-id': sessionId,
+      },
+      body: JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }),
+    });
+    assert.equal(notify.status, 202);
+    return sessionId;
+  };
+
+  const postWithSession = (sessionId: string) =>
+    fetch(`${baseUrl}/mcp`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        accept: 'application/json, text/event-stream',
+        'mcp-session-id': sessionId,
+      },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} }),
+    });
+
+  before(async () => {
+    const app = httpServer.createApp();
+    server = app.listen(0);
+    await new Promise<void>((resolve) => server.once('listening', resolve));
+    baseUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  });
+
+  after(async () => {
+    config.sessionTtlMs = originalTtlMs;
+    await new Promise<void>((resolve, reject) =>
+      server.close((err) => (err ? reject(err) : resolve()))
+    );
+  });
+
+  it('serves an existing session', async () => {
+    const sessionId = await initializeSession();
+
+    const res = await postWithSession(sessionId);
+
+    assert.equal(res.status, 200);
+  });
+
+  it('evicts a session when the client sends DELETE', async () => {
+    const sessionId = await initializeSession();
+
+    const del = await fetch(`${baseUrl}/mcp`, {
+      method: 'DELETE',
+      headers: {
+        accept: 'application/json, text/event-stream',
+        'mcp-session-id': sessionId,
+      },
+    });
+    assert.equal(del.status, 200);
+
+    const res = await postWithSession(sessionId);
+    // An evicted session ID is routed to a fresh, uninitialized transport,
+    // which rejects it with 400 (a retained closed transport would yield 404).
+    assert.equal(res.status, 400);
+  });
+
+  it('evicts sessions idle longer than sessionTtlMs via the sweeper', async () => {
+    const sessionId = await initializeSession();
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    config.sessionTtlMs = 1;
+    httpServer.sweepIdleSessions();
+
+    const res = await postWithSession(sessionId);
+    assert.equal(res.status, 400);
+  });
+
+  it('does not evict a session with an open SSE stream', async () => {
+    config.sessionTtlMs = originalTtlMs;
+    const sessionId = await initializeSession();
+
+    const controller = new AbortController();
+    const stream = await fetch(`${baseUrl}/mcp`, {
+      method: 'GET',
+      headers: { accept: 'text/event-stream', 'mcp-session-id': sessionId },
+      signal: controller.signal,
+    });
+    assert.equal(stream.status, 200);
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      config.sessionTtlMs = 1;
+      httpServer.sweepIdleSessions();
+
+      const res = await postWithSession(sessionId);
+      assert.equal(res.status, 200);
+    } finally {
+      controller.abort();
+      await stream.body?.cancel().catch(() => {});
+    }
+  });
+});
