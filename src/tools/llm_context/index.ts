@@ -69,7 +69,7 @@ export default {
   description,
   annotations,
   inputSchema: LlmContextInputSchema.shape,
-  outputSchema: LlmContextSearchApiResponseSchema.shape,
+  outputSchema: LlmContextSearchApiResponseSchema,
   execute,
   register,
 };

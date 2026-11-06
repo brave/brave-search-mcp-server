@@ -253,6 +253,27 @@ const CitySchema = z.looseObject({
   thumbnail: ThumbnailSchema.describe('Primary image for the city'),
 });
 
+const geographicResultSchema = <T extends string>(type: T) =>
+  z.looseObject({
+    type: z.literal(type),
+    name: z.string().describe(`Name of the ${type}.`),
+    country: z.string().describe(`Country code for the ${type}.`),
+    coordinates: CoordinatesSchema.describe(`Latitude/longitude of the ${type}.`),
+    thumbnail: ThumbnailSchema.describe(`Primary image for the ${type}.`),
+  });
+
+const MixedResultSchema = z.looseObject({
+  type: z.string().describe('The type of result referenced by this ordering entry.'),
+  index: z
+    .int()
+    .describe('Zero-based index indicating where the result should be placed.')
+    .nullish(),
+  all: z
+    .boolean()
+    .describe('Whether to include all results of this type at this position.')
+    .optional(),
+});
+
 const LocationSchema = z.looseObject({
   coordinates: CoordinatesSchema.describe('Latitude/longitude of the resolved search area.'),
   name: z.string().describe('Human-readable name of the resolved search area.').optional(),
@@ -273,6 +294,22 @@ export const PlaceSearchApiResponseSchema = z.looseObject({
     .describe(
       'City matches for the query. Typically populated when the query is a bare or ambiguous city name (e.g. "springfield", "san francisco").'
     )
+    .optional(),
+  countries: z
+    .array(geographicResultSchema('country'))
+    .describe('Country matches for the query.')
+    .nullish(),
+  regions: z
+    .array(geographicResultSchema('region'))
+    .describe('Region matches for the query.')
+    .nullish(),
+  neighborhoods: z
+    .array(geographicResultSchema('neighborhood'))
+    .describe('Neighborhood matches for the query.')
+    .nullish(),
+  mixed: z
+    .array(MixedResultSchema)
+    .describe('Ordering entries for combining results of different types.')
     .optional(),
   addresses: z
     .array(AddressSchema)
