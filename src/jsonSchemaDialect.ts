@@ -13,17 +13,17 @@ import tools from './tools/index.js';
  */
 const JSON_SCHEMA_2020_12 = 'https://json-schema.org/draft/2020-12/schema';
 
-type ToolSchemaShapes = {
+type ToolSchemas = {
   inputSchema?: ZodRawShape;
-  outputSchema?: ZodRawShape;
+  outputSchema?: z.ZodObject;
 };
 
-const schemaShapesByTool = new Map<string, ToolSchemaShapes>(
-  Object.values(tools).map((tool) => [tool.name, tool as ToolSchemaShapes])
+const schemasByTool = new Map<string, ToolSchemas>(
+  Object.values(tools).map((tool) => [tool.name, tool as ToolSchemas])
 );
 
-const toJsonSchema2020 = (shape: ZodRawShape, io: 'input' | 'output'): Tool['inputSchema'] =>
-  z.toJSONSchema(z.object(shape), {
+const toJsonSchema2020 = (schema: z.ZodObject, io: 'input' | 'output'): Tool['inputSchema'] =>
+  z.toJSONSchema(schema, {
     target: 'draft-2020-12',
     io,
   }) as unknown as Tool['inputSchema'];
@@ -64,16 +64,18 @@ export default function enforce2020Dialect(mcpServer: McpServer): void {
     const result = await listTools(request, extra);
 
     for (const tool of result.tools) {
-      const shapes = schemaShapesByTool.get(tool.name);
+      const schemas = schemasByTool.get(tool.name);
 
-      if (!shapes) continue;
+      if (!schemas) continue;
 
-      if (shapes.inputSchema && needsRetargeting(tool.inputSchema)) {
-        tool.inputSchema = toJsonSchema2020(shapes.inputSchema, 'input');
+      if (schemas.inputSchema && needsRetargeting(tool.inputSchema)) {
+        tool.inputSchema = toJsonSchema2020(z.object(schemas.inputSchema), 'input');
       }
 
-      if (shapes.outputSchema && tool.outputSchema && needsRetargeting(tool.outputSchema)) {
-        tool.outputSchema = toJsonSchema2020(shapes.outputSchema, 'output');
+      if (schemas.outputSchema && tool.outputSchema && needsRetargeting(tool.outputSchema)) {
+        // Keep the original object's unknown-key policy; rebuilding from .shape
+        // would turn loose response schemas into closed output schemas.
+        tool.outputSchema = toJsonSchema2020(schemas.outputSchema, 'output');
       }
     }
 

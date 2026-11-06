@@ -76,7 +76,7 @@ export default {
   description,
   annotations,
   inputSchema: params.shape,
-  outputSchema: OutputSchema.shape,
+  outputSchema: OutputSchema,
   execute,
   register,
 };
