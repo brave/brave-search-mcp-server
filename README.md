@@ -179,7 +179,7 @@ The server supports the following environment variables:
 - `BRAVE_MCP_LOG_LEVEL`: Desired logging level("debug", "info", "notice", "warning", "error", "critical", "alert", or "emergency", default: "info")
 - `BRAVE_MCP_ENABLED_TOOLS`: When used, specifies a space-separated whitelist for supported tools
 - `BRAVE_MCP_DISABLED_TOOLS`: When used, specifies a space-separated blacklist for supported tools
-- `BRAVE_MCP_STATELESS`: HTTP stateless mode (default: "true").  When running on Amazon Bedrock Agentcore, set to "true".
+- `BRAVE_MCP_STATELESS`: HTTP stateless mode (default: "false"). Must be "true" on Amazon Bedrock AgentCore, which sends its own `Mcp-Session-Id` with every request.
 
 ### Command Line Options
 
@@ -420,6 +420,7 @@ npm run inspector:http
 - `npm run build`: Build the TypeScript project
 - `npm run watch`: Watch for changes and rebuild
 - `npm test`: Run the test suite
+- `npm run test:docker`: Build the Docker image and test it the way it is deployed: stdio (Docker MCP Catalog, Claude Desktop), HTTP (Docker Hub, compose, ECS), and Amazon Bedrock AgentCore. Requires Docker. To test an existing image instead, run `node --import tsx --test src/docker.e2e.ts` with `BRAVE_MCP_TEST_IMAGE` set.
 - `npm run format`: Format code with Prettier
 - `npm run format:check`: Check code formatting
 - `npm run prepare`: Format and build (runs automatically on npm install)
