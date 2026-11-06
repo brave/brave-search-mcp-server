@@ -200,13 +200,14 @@ describe('getOptions', () => {
   });
 
   // AgentCore buyers deploy with whatever the AWS Marketplace listing pre-fills,
-  // so renaming a variable here (or editing the listing) must not drift from
-  // what AgentCore requires.
+  // and the release job sets those defaults from marketplace-revision-release.json.
+  // Renaming a variable here (or editing that file) must not drift from what
+  // AgentCore requires.
   it('yields an AgentCore-compliant config from the AWS Marketplace defaults', () => {
     for (const [name, value] of Object.entries(agentCoreEnvironment())) {
       assert.ok(
         (CONFIG_ENV_VARS as readonly string[]).includes(name),
-        `The listing sets ${name}, which the server does not read`
+        `marketplace-revision-release.json sets ${name}, which the server does not read`
       );
       process.env[name] = value;
     }

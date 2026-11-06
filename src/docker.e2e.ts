@@ -184,7 +184,7 @@ describe('HTTP (Docker Hub, docker compose, ECS/EKS)', () => {
   });
 });
 
-describe('Amazon Bedrock AgentCore (AWS Marketplace listing defaults)', () => {
+describe('Amazon Bedrock AgentCore (defaults from marketplace-revision-release.json)', () => {
   let baseUrl: string;
 
   before(async () => {

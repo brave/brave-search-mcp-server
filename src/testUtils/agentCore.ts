@@ -29,8 +29,10 @@ type MarketplaceChangeSet = {
 };
 
 /**
- * The environment variable defaults the AWS Marketplace listing pre-fills for
- * AgentCore deployments, read from marketplace-revision-release.json.
+ * The environment variable defaults for the AgentCore delivery option, read from
+ * marketplace-revision-release.json in this repo. That file is the change-set
+ * template Build Release submits to AWS Marketplace after the tests pass, so these
+ * are the defaults the listing will pre-fill. Nothing is fetched from Marketplace or ECR.
  */
 export function agentCoreEnvironment(): Record<string, string> {
   const changeSet: MarketplaceChangeSet = JSON.parse(
