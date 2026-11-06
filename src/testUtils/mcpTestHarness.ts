@@ -1,5 +1,7 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
+import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv-provider.js';
+import { Ajv2020 } from 'ajv/dist/2020.js';
 import { after, before } from 'node:test';
 import createMcpServer from '../server.js';
 import tools from '../tools/index.js';
@@ -24,7 +26,15 @@ export const expectedToolNames = toolNames(Object.values(tools));
 export async function connectTestClient(): Promise<Client> {
   const mcpServer = createMcpServer();
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
-  const client = new Client({ name: 'test-client', version: '0.0.0' });
+  const client = new Client(
+    { name: 'test-client', version: '0.0.0' },
+    {
+      // Match the server's advertised dialect, including coordinate prefixItems.
+      jsonSchemaValidator: new AjvJsonSchemaValidator(
+        new Ajv2020({ strict: false, validateFormats: false })
+      ),
+    }
+  );
 
   await Promise.all([mcpServer.connect(serverTransport), client.connect(clientTransport)]);
 

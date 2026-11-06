@@ -47,4 +47,13 @@ describe('MCP server <-> SDK Client wiring (in-memory)', () => {
       }
     }
   });
+
+  it("preserves each output schema's unknown-property policy", async () => {
+    const { tools: listedTools } = await client.listTools();
+    const additionalProperties = (name: string) =>
+      listedTools.find((tool) => tool.name === name)?.outputSchema?.additionalProperties;
+
+    assert.deepEqual(additionalProperties('brave_place_search'), {});
+    assert.equal(additionalProperties('brave_image_search'), false);
+  });
 });
