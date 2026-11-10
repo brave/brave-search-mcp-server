@@ -10,6 +10,9 @@ export const name = 'brave_image_search';
 
 export const annotations: ToolAnnotations = {
   title: 'Brave Image Search',
+  readOnlyHint: true,
+  destructiveHint: false,
+  idempotentHint: true,
   openWorldHint: true,
 };
 
