@@ -13,15 +13,21 @@ on:
 
 jobs:
   # Publish nowhere (npm, Docker Hub, ECR, MCP Registry, Marketplace) unless
-  # the tests pass and the image serves MCP on every architecture we ship.
+  # the tests pass, the image serves MCP on every architecture we ship, and
+  # every tool's output still validates against the live Brave Search API.
   ci:
     uses: ./.github/workflows/ci.yml
 
   docker:
     uses: ./.github/workflows/docker.yml
 
+  live:
+    uses: ./.github/workflows/live.yml
+    secrets:
+      BRAVE_API_KEY: ${{ secrets.BRAVE_API_KEY }}
+
   publish:
-    needs: [ci, docker]
+    needs: [ci, docker, live]
     runs-on: ubuntu-latest
 
     permissions:

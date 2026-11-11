@@ -421,6 +421,7 @@ npm run inspector:http
 - `npm run watch`: Watch for changes and rebuild
 - `npm test`: Run the test suite
 - `npm run test:docker`: Build the Docker image and test it the way it is deployed: stdio (Docker MCP Catalog, Claude Desktop), HTTP (Docker Hub, compose, ECS), and Amazon Bedrock AgentCore. Requires Docker. To test an existing image instead, run `node --import tsx --test src/docker.e2e.ts` with `BRAVE_MCP_TEST_IMAGE` set.
+- `npm run test:live`: Call every tool against the real Brave Search API and check responses against the output schemas, reporting fields the schemas do not declare. Requires `BRAVE_API_KEY`; skipped without it. Endpoints the key's plan does not include are skipped. Runs weekly in CI and gates releases (`.github/workflows/live.yml`).
 - `npm run format`: Format code with Prettier
 - `npm run format:check`: Check code formatting
 - `npm run prepare`: Format and build (runs automatically on npm install)
