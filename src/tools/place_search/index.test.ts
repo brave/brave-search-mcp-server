@@ -18,10 +18,28 @@ const responses = {
     type: 'locations',
     countries: [geographicResult('country')],
     regions: [geographicResult('region')],
-    neighborhoods: [geographicResult('neighborhood')],
+    neighborhoods: [
+      geographicResult('neighborhood'),
+      {
+        ...geographicResult('neighborhood'),
+        type: null,
+        thumbnail: {
+          src: 'https://example.com/thumbnail.jpg',
+          alt: null,
+          height: null,
+          width: null,
+          bg_color: null,
+          original: null,
+          logo: null,
+          duplicated: null,
+          theme: null,
+        },
+      },
+    ],
     mixed: [
       { type: 'countries', index: 0, all: false },
       { type: 'regions', index: null, all: true },
+      { type: 'neighborhoods', index: 1, all: null },
       { type: 'neighborhoods' },
     ],
   },
@@ -30,7 +48,7 @@ const responses = {
     countries: null,
     regions: null,
     neighborhoods: null,
-    mixed: [],
+    mixed: null,
   },
   future: { type: 'locations', future_results: [{ name: 'Example' }] },
 };
