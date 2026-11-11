@@ -33,6 +33,7 @@
     "format:check": "prettier --check \"src/**/*.ts\"",
     "test": "node --import tsx --test \"src/**/*.test.ts\"",
     "test:docker": "docker build -t brave-search-mcp-server:test . && node --import tsx --test src/docker.e2e.ts",
+    "test:live": "node --import tsx --test src/live.e2e.ts",
     "serve:http": "npm run build && node dist/index.js --transport http",
     "inspector": "npx @modelcontextprotocol/inspector",
     "inspector:http": "npx @modelcontextprotocol/inspector --transport http --server-url http://127.0.0.1:8080/mcp"
