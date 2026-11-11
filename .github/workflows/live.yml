@@ -1,0 +1,55 @@
+name: Live API
+
+# Calls every tool against the real Brave Search API, so output schemas that no
+# longer match what the API returns fail here instead of in users' clients.
+# Not run on pull requests: fork PRs get no secrets, and a live service would
+# make unrelated PRs flaky.
+on:
+  # The API can change with no change here. Catch that before a release.
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+  # Build Release gates publishing on this workflow.
+  workflow_call:
+    secrets:
+      BRAVE_API_KEY:
+        required: false
+
+permissions:
+  contents: read
+
+# One run at a time, so concurrent runs don't share the key's rate limit.
+concurrency:
+  group: live-api
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: '24.x'
+
+      # The tests run from source, so skip `prepare`.
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      # Without a key the tests skip, which would pass silently here.
+      - name: Require API key
+        env:
+          BRAVE_API_KEY: ${{ secrets.BRAVE_API_KEY }}
+        run: |
+          if [ -z "$BRAVE_API_KEY" ]; then
+            echo "::error::The BRAVE_API_KEY secret is not set; the live API tests cannot run."
+            exit 1
+          fi
+
+      - name: Run live API tests
+        env:
+          BRAVE_API_KEY: ${{ secrets.BRAVE_API_KEY }}
+        run: npm run test:live
