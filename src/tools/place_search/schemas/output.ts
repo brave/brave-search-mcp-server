@@ -11,14 +11,14 @@ const CoordinatesSchema = z
 
 const ThumbnailSchema = z.looseObject({
   src: z.string().describe('The served URL of the picture thumbnail.'),
-  alt: z.string().describe('The alt text for the thumbnail.').optional(),
-  height: z.number().describe('The height of the thumbnail.').optional(),
-  width: z.number().describe('The width of the thumbnail.').optional(),
-  bg_color: z.string().describe('The background color of the thumbnail.').optional(),
-  original: z.url().describe('The original URL of the image.').optional(),
-  logo: z.boolean().describe('Whether the thumbnail is a logo.').optional(),
-  duplicated: z.boolean().describe('Whether the thumbnail is duplicated.').optional(),
-  theme: z.string().describe('The theme of the thumbnail (e.g. "light", "dark").').optional(),
+  alt: z.string().describe('The alt text for the thumbnail.').nullish(),
+  height: z.number().describe('The height of the thumbnail.').nullish(),
+  width: z.number().describe('The width of the thumbnail.').nullish(),
+  bg_color: z.string().describe('The background color of the thumbnail.').nullish(),
+  original: z.url().describe('The original URL of the image.').nullish(),
+  logo: z.boolean().describe('Whether the thumbnail is a logo.').nullish(),
+  duplicated: z.boolean().describe('Whether the thumbnail is duplicated.').nullish(),
+  theme: z.string().describe('The theme of the thumbnail (e.g. "light", "dark").').nullish(),
 });
 
 const PostalAddressSchema = z.looseObject({
@@ -255,7 +255,7 @@ const CitySchema = z.looseObject({
 
 const geographicResultSchema = <T extends string>(type: T) =>
   z.looseObject({
-    type: z.literal(type),
+    type: z.literal(type).describe(`Always "${type}".`).nullish(),
     name: z.string().describe(`Name of the ${type}.`),
     country: z.string().describe(`Country code for the ${type}.`),
     coordinates: CoordinatesSchema.describe(`Latitude/longitude of the ${type}.`),
@@ -271,7 +271,7 @@ const MixedResultSchema = z.looseObject({
   all: z
     .boolean()
     .describe('Whether to include all results of this type at this position.')
-    .optional(),
+    .nullish(),
 });
 
 const LocationSchema = z.looseObject({
@@ -310,7 +310,7 @@ export const PlaceSearchApiResponseSchema = z.looseObject({
   mixed: z
     .array(MixedResultSchema)
     .describe('Ordering entries for combining results of different types.')
-    .optional(),
+    .nullish(),
   addresses: z
     .array(AddressSchema)
     .describe(
