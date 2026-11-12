@@ -23,9 +23,16 @@ export const description = `
 
 export const execute = async (params: QueryParams) => {
   const response = await API.issueRequest<'videos'>('videos', params);
+  const results = response.results ?? [];
+
+  if (results.length === 0) {
+    return {
+      content: [{ type: 'text' as const, text: 'No video results found for this query.' }],
+    };
+  }
 
   return {
-    content: response.results.map(({ url, title, description, video, thumbnail }) => {
+    content: results.map(({ url, title, description, video, thumbnail }) => {
       const duration = video?.duration;
       const thumbnail_url = thumbnail?.src;
 

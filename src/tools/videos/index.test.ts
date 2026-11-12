@@ -34,3 +34,20 @@ describe(name, () => {
     assert.ok(Array.isArray(result.content) && result.content.length > 0);
   });
 });
+
+describe(`${name} (empty upstream payload)`, () => {
+  const getClient = useTestClient((url) => {
+    if (url.pathname === '/res/v1/videos/search') {
+      return {};
+    }
+  });
+
+  it('returns a clear empty-result message instead of throwing', async () => {
+    const result = await getClient().callTool({ name, arguments: { query: 'brave browser' } });
+
+    assert.equal(result.isError ?? false, false, JSON.stringify(result.content));
+    assert.deepEqual(result.content, [
+      { type: 'text', text: 'No video results found for this query.' },
+    ]);
+  });
+});
