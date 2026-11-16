@@ -204,8 +204,6 @@ Options:
 
 ### Usage with Claude Desktop
 
-Claude Desktop talks over stdio. The npx example below used to pass `--transport http`, which starts a web server the Desktop client never connects to (usually lands as connection closed / -32000).
-
 Add this to your `claude_desktop_config.json`:
 
 #### Docker
