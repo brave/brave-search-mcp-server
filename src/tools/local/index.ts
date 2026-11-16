@@ -17,6 +17,8 @@ export const name = 'brave_local_search';
 export const annotations: ToolAnnotations = {
   title: 'Brave Local Search',
   readOnlyHint: true,
+  // destructiveHint and idempotentHint are meaningful only when readOnlyHint is false.
+  // https://modelcontextprotocol.io/specification/2026-07-28/schema#toolannotations
   destructiveHint: false,
   idempotentHint: true,
   openWorldHint: true,

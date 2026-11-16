@@ -23,6 +23,8 @@ describe('MCP server <-> SDK Client wiring (in-memory)', () => {
     }
   });
 
+  // Asserts ToolAnnotations behavior hints advertised across registered tools.
+  // https://modelcontextprotocol.io/specification/2026-07-28/schema#toolannotations
   it('marks every tool as a read-only, non-destructive search', async () => {
     const { tools: listedTools } = await client.listTools();
 
@@ -34,6 +36,7 @@ describe('MCP server <-> SDK Client wiring (in-memory)', () => {
         `${tool.name} should not be destructive`
       );
       assert.equal(tool.annotations?.idempotentHint, true, `${tool.name} should be idempotent`);
+      assert.equal(tool.annotations?.openWorldHint, true, `${tool.name} should be open-world`);
     }
   });
 
