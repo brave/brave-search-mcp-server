@@ -14,6 +14,7 @@ const geographicResult = (type: string) => ({
 
 const responses = {
   minimal: { type: 'locations' },
+  // Covers populated results, null thumbnail fields, and mixed ordering nullability.
   geographic: {
     type: 'locations',
     countries: [geographicResult('country')],
@@ -50,10 +51,13 @@ const responses = {
     neighborhoods: null,
     mixed: null,
   },
+  // "future" is an arbitrary name for a payload with a field the schema doesn't declare (future_results).
+  // Regression guard: if the schema is tightened to reject unknown properties, validation fails.
   future: { type: 'locations', future_results: [{ name: 'Example' }] },
 };
 
 describe(name, () => {
+  // 'q' selects a fixture by name; requests without a matching query return responses.minimal.
   const getClient = useTestClient((url) => {
     if (url.pathname === '/res/v1/local/place_search') {
       return responses[url.searchParams.get('q') as keyof typeof responses] ?? responses.minimal;
@@ -61,13 +65,15 @@ describe(name, () => {
   });
 
   it('returns a locations response for a simple location query', async () => {
+    // Listing tools loads the advertised output schema into the SDK client.
+    await getClient().listTools();
     const result = await getClient().callTool({
       name,
       arguments: { location: 'san francisco ca united states' },
     });
 
     assert.equal(result.isError ?? false, false, JSON.stringify(result.content));
-    assert.deepEqual(result.structuredContent, { type: 'locations' });
+    assert.deepEqual(result.structuredContent, responses.minimal);
   });
 
   for (const query of ['geographic', 'nullable', 'future'] as const) {
@@ -91,6 +97,8 @@ describe(name, () => {
     }
 
     const validate = new Ajv2020({ strict: false, validateFormats: false }).compile(schema);
+    // The output schema stays open to unknown fields: the Brave API may add fields before this
+    // server's schema is updated, and rejecting them would fail client validation.
     for (const response of Object.values(responses)) {
       assert.equal(validate(response), true, JSON.stringify(validate.errors));
     }
