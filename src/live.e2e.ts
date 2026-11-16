@@ -28,6 +28,8 @@ import { name as webSearch } from './tools/web/index.js';
  * reports those as diagnostics so schema drift is visible.
  *
  * Endpoints the key's plan does not include (402/403) are skipped, not failed.
+ * Rate limiting (429) skips locally but fails in GitHub Actions, so an
+ * exhausted CI key cannot skip every test and pass the release gate.
  * Set BRAVE_LIVE_INTERVAL_MS to space out requests (default 1100ms, for the
  * free plan's 1 request/second limit).
  *
@@ -36,6 +38,7 @@ import { name as webSearch } from './tools/web/index.js';
  */
 const API_KEY = process.env.BRAVE_API_KEY;
 const INTERVAL_MS = Number(process.env.BRAVE_LIVE_INTERVAL_MS ?? 1100);
+const IN_GITHUB_ACTIONS = process.env.GITHUB_ACTIONS === 'true';
 
 /**
  * Connects an SDK client to a fresh server in memory. The client validates
@@ -120,7 +123,7 @@ const texts = (result: CallToolResult): string[] =>
 
 /**
  * Calls a tool and asserts it succeeded. Skips the test when the key's plan
- * does not include the endpoint, or when rate limited.
+ * does not include the endpoint, or when rate limited outside GitHub Actions.
  */
 async function callOk(
   t: TestContext,
@@ -136,7 +139,9 @@ async function callOk(
       return undefined;
     }
     if (/^429 /m.test(message)) {
-      skip(t, `rate limited; raise BRAVE_LIVE_INTERVAL_MS: ${message.split('\n')[0]}`);
+      const reason = `rate limited; raise BRAVE_LIVE_INTERVAL_MS: ${message.split('\n')[0]}`;
+      assert.ok(!IN_GITHUB_ACTIONS, `${name} was ${reason}`);
+      skip(t, reason);
       return undefined;
     }
   }
