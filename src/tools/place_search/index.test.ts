@@ -14,6 +14,7 @@ const geographicResult = (type: string) => ({
 
 const responses = {
   minimal: { type: 'locations' },
+
   // Covers populated results, null thumbnail fields, and mixed ordering nullability.
   geographic: {
     type: 'locations',
@@ -44,6 +45,7 @@ const responses = {
       { type: 'neighborhoods' },
     ],
   },
+
   nullable: {
     type: 'locations',
     countries: null,
@@ -51,6 +53,7 @@ const responses = {
     neighborhoods: null,
     mixed: null,
   },
+
   // "future" is an arbitrary name for a payload with a field the schema doesn't declare (future_results).
   // Regression guard: if the schema is tightened to reject unknown properties, validation fails.
   future: { type: 'locations', future_results: [{ name: 'Example' }] },
@@ -91,25 +94,31 @@ describe(name, () => {
   it('advertises and validates the new fields while allowing unknown fields', async () => {
     const { tools } = await getClient().listTools();
     const schema = tools.find((tool) => tool.name === name)?.outputSchema;
+
     assert.ok(schema);
+
     for (const field of ['countries', 'regions', 'neighborhoods', 'mixed']) {
       assert.ok(schema.properties?.[field], `${field} is missing from the output schema`);
     }
 
     const validate = new Ajv2020({ strict: false, validateFormats: false }).compile(schema);
+
     // The output schema stays open to unknown fields: the Brave API may add fields before this
     // server's schema is updated, and rejecting them would fail client validation.
     for (const response of Object.values(responses)) {
       assert.equal(validate(response), true, JSON.stringify(validate.errors));
     }
-    for (const invalid of [
+
+    const invalidFields = [
       { type: 'wrong' },
       { countries: [geographicResult('city')] },
       { regions: 'invalid' },
       { neighborhoods: [{ type: 'neighborhood' }] },
       { mixed: [{ type: 'countries', index: 0.5 }] },
       { mixed: [{ type: 'countries', all: 'yes' }] },
-    ]) {
+    ];
+
+    for (const invalid of invalidFields) {
       assert.equal(validate({ type: 'locations', ...invalid }), false, JSON.stringify(invalid));
     }
   });
