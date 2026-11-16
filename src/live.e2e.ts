@@ -220,15 +220,19 @@ function reportDrift(t: TestContext, name: string, result: CallToolResult) {
   }
 }
 
-/** Asserts each text item is a JSON object with the given string fields. */
-function assertJsonResults(result: CallToolResult, fields: string[]) {
-  for (const text of texts(result)) {
+/** Asserts each text is a JSON object with the given string fields. */
+function assertJsonTexts(items: string[], fields: string[]) {
+  for (const text of items) {
     const parsed = JSON.parse(text) as Record<string, unknown>;
     for (const field of fields) {
       assert.equal(typeof parsed[field], 'string', `missing ${field} in ${text}`);
     }
   }
 }
+
+/** Asserts each text item is a JSON object with the given string fields. */
+const assertJsonResults = (result: CallToolResult, fields: string[]) =>
+  assertJsonTexts(texts(result), fields);
 
 describe('live Brave Search API', { skip: !API_KEY && 'BRAVE_API_KEY is not set' }, () => {
   before(async () => {
@@ -269,10 +273,19 @@ describe('live Brave Search API', { skip: !API_KEY && 'BRAVE_API_KEY is not set'
   it(localSearch, async (t) => {
     const result = await callOk(t, localSearch, { query: 'coffee shops in San Francisco' });
     if (!result) return;
-    const [first] = texts(result);
+    // With no local results, the tool returns a notice followed by any web fallback results.
+    const [first, ...rest] = texts(result);
     if (first?.startsWith('No location data was returned')) {
-      note(t, 'no local results; the tool fell back to web search (plan may lack Local API)');
+      note(
+        t,
+        rest.length > 0
+          ? 'no local results; the tool fell back to web search (plan may lack Local API)'
+          : 'no local or web results returned'
+      );
+      assertJsonTexts(rest, ['url', 'title']);
+      return;
     }
+    assertJsonResults(result, ['name']);
   });
 
   it(summarizer, async (t) => {
