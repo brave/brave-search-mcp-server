@@ -11,14 +11,14 @@ const CoordinatesSchema = z
 
 const ThumbnailSchema = z.looseObject({
   src: z.string().describe('The served URL of the picture thumbnail.'),
-  alt: z.string().describe('The alt text for the thumbnail.').optional(),
-  height: z.number().describe('The height of the thumbnail.').optional(),
-  width: z.number().describe('The width of the thumbnail.').optional(),
-  bg_color: z.string().describe('The background color of the thumbnail.').optional(),
-  original: z.url().describe('The original URL of the image.').optional(),
-  logo: z.boolean().describe('Whether the thumbnail is a logo.').optional(),
-  duplicated: z.boolean().describe('Whether the thumbnail is duplicated.').optional(),
-  theme: z.string().describe('The theme of the thumbnail (e.g. "light", "dark").').optional(),
+  alt: z.string().describe('The alt text for the thumbnail.').nullish(),
+  height: z.number().describe('The height of the thumbnail.').nullish(),
+  width: z.number().describe('The width of the thumbnail.').nullish(),
+  bg_color: z.string().describe('The background color of the thumbnail.').nullish(),
+  original: z.url().describe('The original URL of the image.').nullish(),
+  logo: z.boolean().describe('Whether the thumbnail is a logo.').nullish(),
+  duplicated: z.boolean().describe('Whether the thumbnail is duplicated.').nullish(),
+  theme: z.string().describe('The theme of the thumbnail (e.g. "light", "dark").').nullish(),
 });
 
 const PostalAddressSchema = z.looseObject({
@@ -253,6 +253,27 @@ const CitySchema = z.looseObject({
   thumbnail: ThumbnailSchema.describe('Primary image for the city'),
 });
 
+const geographicResultSchema = <T extends string>(type: T) =>
+  z.looseObject({
+    type: z.literal(type).describe(`Always "${type}".`).nullish(),
+    name: z.string().describe(`Name of the ${type}.`),
+    country: z.string().describe(`Country code for the ${type}.`),
+    coordinates: CoordinatesSchema.describe(`Latitude/longitude of the ${type}.`),
+    thumbnail: ThumbnailSchema.describe(`Primary image for the ${type}.`),
+  });
+
+const MixedResultSchema = z.looseObject({
+  type: z.string().describe('The type of result referenced by this ordering entry.'),
+  index: z
+    .int()
+    .describe('Zero-based index indicating where the result should be placed.')
+    .nullish(),
+  all: z
+    .boolean()
+    .describe('Whether to include all results of this type at this position.')
+    .nullish(),
+});
+
 const LocationSchema = z.looseObject({
   coordinates: CoordinatesSchema.describe('Latitude/longitude of the resolved search area.'),
   name: z.string().describe('Human-readable name of the resolved search area.').optional(),
@@ -274,6 +295,22 @@ export const PlaceSearchApiResponseSchema = z.looseObject({
       'City matches for the query. Typically populated when the query is a bare or ambiguous city name (e.g. "springfield", "san francisco").'
     )
     .optional(),
+  countries: z
+    .array(geographicResultSchema('country'))
+    .describe('Country matches for the query.')
+    .nullish(),
+  regions: z
+    .array(geographicResultSchema('region'))
+    .describe('Region matches for the query.')
+    .nullish(),
+  neighborhoods: z
+    .array(geographicResultSchema('neighborhood'))
+    .describe('Neighborhood matches for the query.')
+    .nullish(),
+  mixed: z
+    .array(MixedResultSchema)
+    .describe('Ordering entries for combining results of different types.')
+    .nullish(),
   addresses: z
     .array(AddressSchema)
     .describe(

@@ -10,6 +10,11 @@ export const name = 'brave_image_search';
 
 export const annotations: ToolAnnotations = {
   title: 'Brave Image Search',
+  readOnlyHint: true,
+  // destructiveHint and idempotentHint are meaningful only when readOnlyHint is false.
+  // https://modelcontextprotocol.io/specification/2026-07-28/schema#toolannotations
+  destructiveHint: false,
+  idempotentHint: true,
   openWorldHint: true,
 };
 
@@ -76,7 +81,7 @@ export default {
   description,
   annotations,
   inputSchema: params.shape,
-  outputSchema: OutputSchema.shape,
+  outputSchema: OutputSchema,
   execute,
   register,
 };

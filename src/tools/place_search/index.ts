@@ -13,11 +13,16 @@ export const name = 'brave_place_search';
 
 export const annotations: ToolAnnotations = {
   title: 'Brave Place Search',
+  readOnlyHint: true,
+  // destructiveHint and idempotentHint are meaningful only when readOnlyHint is false.
+  // https://modelcontextprotocol.io/specification/2026-07-28/schema#toolannotations
+  destructiveHint: false,
+  idempotentHint: true,
   openWorldHint: true,
 };
 
 export const description = `
-    Searches Brave's Place Search API. A single call may populate any combination of 'results' (POIs), 'cities', 'addresses', 'streets', and 'location' (the resolved search area), depending on the query's shape.
+    Searches Brave's Place Search API. A single call may populate any combination of 'results' (POIs), 'cities', 'countries', 'regions', 'neighborhoods', 'addresses', 'streets', 'mixed' (result ordering), and 'location' (the resolved search area), depending on the query's shape.
 
     When to use:
         - POIs near coordinates or a named area (e.g. "coffee shops in Paris") -> 'results', each with structured business data (postal address, hours, contact, ratings, photos, categories, timezone).
@@ -69,7 +74,7 @@ export default {
   description,
   annotations,
   inputSchema: PlaceSearchInputSchema.shape,
-  outputSchema: PlaceSearchApiResponseSchema.shape,
+  outputSchema: PlaceSearchApiResponseSchema,
   execute,
   register,
 };

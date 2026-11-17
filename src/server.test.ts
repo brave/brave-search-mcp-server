@@ -23,6 +23,23 @@ describe('MCP server <-> SDK Client wiring (in-memory)', () => {
     }
   });
 
+  // Asserts ToolAnnotations behavior hints advertised across registered tools.
+  // https://modelcontextprotocol.io/specification/2026-07-28/schema#toolannotations
+  it('marks every tool as a read-only, non-destructive search', async () => {
+    const { tools: listedTools } = await client.listTools();
+
+    for (const tool of listedTools) {
+      assert.equal(tool.annotations?.readOnlyHint, true, `${tool.name} should be read-only`);
+      assert.equal(
+        tool.annotations?.destructiveHint,
+        false,
+        `${tool.name} should not be destructive`
+      );
+      assert.equal(tool.annotations?.idempotentHint, true, `${tool.name} should be idempotent`);
+      assert.equal(tool.annotations?.openWorldHint, true, `${tool.name} should be open-world`);
+    }
+  });
+
   it('advertises valid JSON Schema 2020-12 schemas', async () => {
     const { tools: listedTools } = await client.listTools();
 
@@ -46,5 +63,14 @@ describe('MCP server <-> SDK Client wiring (in-memory)', () => {
         );
       }
     }
+  });
+
+  it("preserves each output schema's unknown-property policy", async () => {
+    const { tools: listedTools } = await client.listTools();
+    const additionalProperties = (name: string) =>
+      listedTools.find((tool) => tool.name === name)?.outputSchema?.additionalProperties;
+
+    assert.deepEqual(additionalProperties('brave_place_search'), {});
+    assert.equal(additionalProperties('brave_image_search'), false);
   });
 });

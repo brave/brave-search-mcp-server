@@ -8,6 +8,11 @@ export const name = 'brave_summarizer';
 
 export const annotations: ToolAnnotations = {
   title: 'Brave Summarizer',
+  readOnlyHint: true,
+  // destructiveHint and idempotentHint are meaningful only when readOnlyHint is false.
+  // https://modelcontextprotocol.io/specification/2026-07-28/schema#toolannotations
+  destructiveHint: false,
+  idempotentHint: true,
   openWorldHint: true,
 };
 
