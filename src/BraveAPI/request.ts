@@ -15,10 +15,18 @@ export async function buildErrorMessage(response: Response): Promise<string> {
   let errorMessage = `${response.status} ${response.statusText}`;
 
   try {
-    const responseBody = await response.json();
-    errorMessage += `\n${stringify(responseBody, true)}`;
+    const bodyText = await response.text();
+    if (bodyText.length === 0) {
+      return errorMessage;
+    }
+
+    try {
+      errorMessage += `\n${stringify(JSON.parse(bodyText), true)}`;
+    } catch {
+      errorMessage += `\n${bodyText}`;
+    }
   } catch {
-    errorMessage += `\n${await response.text()}`;
+    // Body unavailable; status line only.
   }
 
   return errorMessage;
