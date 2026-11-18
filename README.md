@@ -1,6 +1,6 @@
 # Brave Search MCP Server
 
-An MCP server implementation that integrates the Brave Search API, providing comprehensive search capabilities including web search, local business search, place search, image search, video search, news search, LLM context, and AI-powered summarization. This project supports both STDIO and HTTP transports, with STDIO as the default mode.
+An MCP server implementation that integrates the Brave Search API, providing comprehensive search capabilities including web search, local business search, place search, image search, video search, news search, LLM context, grounded Answers, and AI-powered summarization. This project supports both STDIO and HTTP transports, with STDIO as the default mode.
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/brave/brave-search-mcp-server)
 
@@ -87,6 +87,33 @@ Searches for current news articles with freshness controls and breaking news ind
 - `freshness` (string, optional): Time filter (default: "pd" for last 24 hours)
 - `extra_snippets` (boolean, optional): Get additional excerpts (Pro plans only)
 - `goggles` (array, optional): Custom re-ranking definitions
+
+### Answers (`brave_answers`)
+Generates AI-grounded answers backed by real-time Brave Search using the [Answers API](https://api-dashboard.search.brave.com/api-reference/ai/answers) (`POST /res/v1/chat/completions`). Returns a finished answer as markdown rather than raw search results.
+
+**Parameters:** See the [Answers API reference](https://api-dashboard.search.brave.com/api-reference/ai/answers). Key fields include:
+- `query` (string, required): The question to answer. Sent to the API as the single user message
+- `model` (string, optional): Answers model (`brave` or `brave-pro`; omit to use the API default)
+- `country` (string, optional): Search country (2-letter code or `ALL`)
+- `language` (string, optional): Response language code (e.g. `en`)
+- `safesearch` (string, optional): `off`, `moderate`, or `strict`
+- `max_completion_tokens` (integer, optional): Upper bound on completion tokens. An answer cut off at this limit ends with a note saying so
+- `enable_citations` (boolean, optional): Inline citations, returned as markdown footnotes (not supported in research mode)
+- `enable_entities` (boolean, optional): Entity markup, returned as markdown lists (not supported in research mode; best-effort, the API may emit none)
+- `enable_research` (boolean, optional): Multi-search research mode
+- `web_search_options` (object, optional): OpenAI-compatible options such as `search_context_size` (`low`, `medium`, `high`) and `user_location`
+
+**Research tuning** (when `enable_research=true`):
+- `research_maximum_number_of_tokens_per_query` (integer, optional, range: 1024-16384)
+- `research_maximum_number_of_queries` (integer, optional, range: 1-50)
+- `research_maximum_number_of_iterations` (integer, optional, range: 1-5)
+- `research_maximum_number_of_seconds` (integer, optional, range: 1-300)
+- `research_maximum_number_of_results_per_query` (integer, optional, range: 1-60)
+
+**Notes:**
+- Requires an Answers plan subscription.
+- The tool always requests a streamed (Server-Sent Events) response and returns the completed answer once the stream signals it is done. A stream that ends early or sends an error event is reported as an error. Unsupported option combinations are reported by the API as errors.
+- Research can take minutes. The tool sends MCP progress notifications while it waits, but clients that cap total request time (for example around 60 seconds) may need a lower `research_maximum_number_of_seconds`.
 
 ### Summarizer Search (`brave_summarizer`)
 Generates AI-powered summaries from web search results using Brave's summarization API.

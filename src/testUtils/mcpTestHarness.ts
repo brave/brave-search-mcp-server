@@ -17,6 +17,8 @@ export function toolNames(listed: { name: string }[]): string[] {
 /** The sorted names of every registered tool. */
 export const expectedToolNames = toolNames(Object.values(tools));
 
+type FetchHandler = (url: URL, init?: RequestInit) => unknown;
+
 /**
  * Connects a real SDK Client to a fresh McpServer over an in-memory transport
  * pair, exercising the real registerTool/callTool wiring.
@@ -43,11 +45,12 @@ export async function connectTestClient(): Promise<Client> {
 
 /**
  * Replaces global.fetch with a stub that resolves Brave API requests via
- * `handler`, keyed on the request's pathname. Requests to any other origin
- * (e.g. a local HTTP server under test) pass through to the real fetch.
+ * `handler`, keyed on the request's pathname. A returned `Response` is used
+ * as-is; anything else is served as a 200 JSON body. Requests to any other
+ * origin (e.g. a local HTTP server under test) pass through to the real fetch.
  * Returns a restore function.
  */
-export function stubFetch(handler: (url: URL) => unknown): () => void {
+export function stubFetch(handler: FetchHandler): () => void {
   const originalFetch = globalThis.fetch;
 
   globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -57,10 +60,14 @@ export function stubFetch(handler: (url: URL) => unknown): () => void {
       return originalFetch(input, init);
     }
 
-    const body = handler(url);
+    const body = handler(url, init);
 
     if (body === undefined) {
       throw new Error(`Unmocked Brave API request: ${url.pathname}`);
+    }
+
+    if (body instanceof Response) {
+      return body;
     }
 
     return new Response(JSON.stringify(body), {
@@ -79,7 +86,7 @@ export function stubFetch(handler: (url: URL) => unknown): () => void {
  * the Brave API via `responder` and connect a fresh test client, tearing
  * both down afterward. Returns a getter for the connected client.
  */
-export function useTestClient(responder: (url: URL) => unknown): () => Client {
+export function useTestClient(responder: FetchHandler): () => Client {
   let client: Client;
   let restoreFetch: () => void;
 

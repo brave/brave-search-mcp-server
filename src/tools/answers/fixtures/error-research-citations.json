@@ -1,0 +1,32 @@
+{
+  "type": "ErrorResponse",
+  "error": {
+    "id": "6b585720-eada-4917-afac-c56a15671b2b",
+    "status": 422,
+    "detail": "Unable to validate request parameter(s)",
+    "meta": {
+      "errors": [
+        {
+          "type": "value_error",
+          "loc": [
+            "body"
+          ],
+          "msg": "Research mode doesn't support 'enable_citations' option",
+          "input": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "test"
+              }
+            ],
+            "stream": true,
+            "enable_research": true,
+            "enable_citations": true
+          }
+        }
+      ]
+    },
+    "code": "VALIDATION"
+  },
+  "time": 1795012479
+}
