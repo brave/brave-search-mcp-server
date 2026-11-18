@@ -118,12 +118,13 @@ async function issueRequest<T extends keyof Endpoints>(
   // Handle Error
   if (!response.ok) {
     let errorMessage = `${response.status} ${response.statusText}`;
+    const rawBody = await response.text();
 
     try {
-      const responseBody = await response.json();
+      const responseBody = JSON.parse(rawBody);
       errorMessage += `\n${stringify(responseBody, true)}`;
     } catch {
-      errorMessage += `\n${await response.text()}`;
+      errorMessage += `\n${rawBody}`;
     }
 
     // TODO (Sampson): Setup proper error handling, updating state, etc.
