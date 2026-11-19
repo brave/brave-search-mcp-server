@@ -1,4 +1,4 @@
-import { getDisplayHostname } from '../urls.js';
+import { encodeUnmatchedParentheses, getDisplayHostname } from '../urls.js';
 
 /**
  * Answers streams interleave answer text with tagged payloads such as
@@ -61,11 +61,9 @@ function citationMarker(payload: string, footnotes: Map<number, string>): string
   const href = webUrl(url);
   if (typeof number !== 'number' || href === undefined) return '';
 
+  const link = `[${getDisplayHostname(href)}](${encodeUnmatchedParentheses(href)})`;
   const excerpt = inlineText(snippet);
-  footnotes.set(
-    number,
-    `[^${number}]: [${getDisplayHostname(href)}](${href})${excerpt ? ` — ${excerpt}` : ''}`
-  );
+  footnotes.set(number, `[^${number}]: ${link}${excerpt ? ` — ${excerpt}` : ''}`);
   return `[^${number}]`;
 }
 

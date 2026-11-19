@@ -99,6 +99,15 @@ describe('formatAnswer', () => {
     assert.equal(formatAnswer(deltas, singleSearch), 'Claim.');
   });
 
+  it('percent-encodes unmatched parentheses in citation links', () => {
+    const deltas = ['Claim.', '<citation>{"number":1,"url":"https://a.com/x)y"}</citation>'];
+
+    assert.equal(
+      formatAnswer(deltas, singleSearch),
+      'Claim.[^1]\n\n[^1]: [a.com](https://a.com/x%29y)'
+    );
+  });
+
   it('gives every citation marker in a real response a footnote', async () => {
     const text = formatAnswer(await fixtureDeltas('citations.sse'), singleSearch) ?? '';
 
