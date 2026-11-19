@@ -45,7 +45,6 @@ Version 1.x of the MCP server would return base64-encoded image data along with 
 | Summarizer | Answers |
 |---|---|
 | `inline_references: true` | `enable_citations: true` |
-| `entity_info: true` | `enable_entities: true` |
 
 **Subscription note:** Summarizer requires a **Pro AI** plan. Answers requires an [**Answers plan**](https://api-dashboard.search.brave.com/app/subscriptions/subscribe).
 
@@ -132,7 +131,7 @@ Generates AI-grounded answers backed by real-time Brave Search using the [Answer
 - `safesearch` (string, optional): `off`, `moderate`, or `strict`
 - `max_completion_tokens` (integer, optional): Upper bound on completion tokens. An answer cut off at this limit ends with a note saying so
 - `enable_citations` (boolean, optional): Inline citations, returned as markdown footnotes (not supported in research mode)
-- `enable_entities` (boolean, optional): Entity markup, returned as markdown lists (not supported in research mode; best-effort, the API may emit none)
+- `enable_entities` (boolean, optional): Requests inline entity tags (not supported in research mode). The API has not been observed to return any, so this may have no effect
 - `enable_research` (boolean, optional): Multi-search research mode
 - `web_search_options` (object, optional): OpenAI-compatible options such as `search_context_size` (`low`, `medium`, `high`) and `user_location`
 

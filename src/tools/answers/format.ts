@@ -4,15 +4,14 @@
  * split across deltas at arbitrary points, so only a delta that is exactly one
  * known tag is read as markup; tags written in the answer text are kept.
  * Research mode wraps its final answer in <answer>; single-search mode streams
- * the answer directly, with <citation> and entity tags inline.
+ * the answer directly, with <citation> tags inline.
  */
 
 const TAG_PATTERN =
-  /^<(answer|citation|enum_start|enum_item|enum_end|usage|queries|analyzing|thinking|progress|blindspots)>([\s\S]*)<\/\1>$/;
+  /^<(answer|citation|usage|queries|analyzing|thinking|progress|blindspots)>([\s\S]*)<\/\1>$/;
 
 type Tag = { name: string; payload: string };
 type CitationPayload = { number?: unknown; url?: unknown; snippet?: unknown };
-type EntityPayload = { original_tokens?: unknown; name?: unknown; href?: unknown };
 
 function parseJson<T>(text: string): T | undefined {
   try {
@@ -76,21 +75,10 @@ function citationMarker(payload: string, footnotes: Map<number, string>): string
   return `[^${number}]`;
 }
 
-/** An entity's label, linked when it has a web URL, or '' when it has no label. */
-function entityText(payload: string): string {
-  const { original_tokens, name, href }: EntityPayload = parseJson<EntityPayload>(payload) ?? {};
-  const label = inlineText(original_tokens) || inlineText(name);
-  const link = webUrl(href);
-  return label && link ? `[${label}](${link})` : label;
-}
-
-/** Joins the streamed text as markdown, rendering citations as footnotes and entities as lists. */
+/** Joins the streamed text as markdown, rendering citations as footnotes. */
 function formatStreamedText(deltas: string[]): string {
   const footnotes = new Map<number, string>();
   let body = '';
-  // <enum_start> picks `ol` or `ul` for the entity items after it.
-  let ordered = false;
-  let itemNumber = 0;
 
   for (const delta of deltas) {
     const tag = parseTag(delta);
@@ -103,22 +91,6 @@ function formatStreamedText(deltas: string[]): string {
         break;
       case 'citation':
         body += citationMarker(tag.payload, footnotes);
-        break;
-      case 'enum_start':
-        ordered = tag.payload.toLowerCase() === 'ol';
-        itemNumber = 0;
-        break;
-      case 'enum_item': {
-        const text = entityText(tag.payload);
-        if (text) {
-          itemNumber += 1;
-          body += `\n${ordered ? `${itemNumber}.` : '*'} ${text}`;
-        }
-        break;
-      }
-      case 'enum_end':
-        ordered = false;
-        itemNumber = 0;
         break;
       // The remaining tags are metadata such as <usage>.
     }

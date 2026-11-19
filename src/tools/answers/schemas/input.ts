@@ -70,11 +70,16 @@ export const AnswersInputSchema = z.object({
   country: z.string().optional().describe('Search country (2-letter country code or "ALL").'),
   language: z.string().optional().describe('Response language code, e.g. "en".'),
   safesearch: z.enum(['off', 'moderate', 'strict']).optional().describe('Search safety level.'),
+  // Accepted because the API documents it, but no response to a request with
+  // enable_entities, across varied list-style queries, has contained entity
+  // markup, so the response is not parsed for it. The Summarizer's entities
+  // (enum_start/enum_item/enum_end) suggest a shape, but nothing confirms that
+  // Answers would use it; build any handling from a real response.
   enable_entities: z
     .boolean()
     .optional()
     .describe(
-      'Request inline entity markup, rendered as markdown lists. Not supported in research mode. Best-effort: the API may emit no entity markup.'
+      'Request inline entity tags in the answer. Not supported in research mode. The API has not been observed to return entity tags, so this may have no effect.'
     ),
   enable_citations: z
     .boolean()
