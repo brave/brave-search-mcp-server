@@ -24,13 +24,13 @@ function parseJson<T>(text: string): T | undefined {
 }
 
 /** The trimmed value if it is an http(s) URL, so links never carry other schemes. */
-function webUrl(value: unknown): string | undefined {
+function parseWebUrl(value: unknown): string | undefined {
   const url = typeof value === 'string' ? value.trim() : '';
   return /^https?:\/\//i.test(url) ? url : undefined;
 }
 
 /** Collapses whitespace so payload text stays on one markdown line. */
-function inlineText(value: unknown): string {
+function collapseWhitespace(value: unknown): string {
   return typeof value === 'string' ? value.replace(/\s+/g, ' ').trim() : '';
 }
 
@@ -41,7 +41,7 @@ function parseTag(delta: string): Tag | undefined {
 }
 
 /** The last <answer> payload, unwrapped from its `{"answer": ...}` JSON. */
-function lastResearchAnswer(deltas: string[]): string | undefined {
+function findLastResearchAnswer(deltas: string[]): string | undefined {
   let answer: string | undefined;
 
   for (const delta of deltas) {
@@ -56,13 +56,13 @@ function lastResearchAnswer(deltas: string[]): string | undefined {
 }
 
 /** Records a citation's footnote and returns its marker; drops citations lacking a number or web URL. */
-function citationMarker(payload: string, footnotes: Map<number, string>): string {
+function addCitationFootnote(payload: string, footnotes: Map<number, string>): string {
   const { number, url, snippet }: CitationPayload = parseJson<CitationPayload>(payload) ?? {};
-  const href = webUrl(url);
+  const href = parseWebUrl(url);
   if (typeof number !== 'number' || href === undefined) return '';
 
   const link = `[${getDisplayHostname(href)}](${encodeUnmatchedParentheses(href)})`;
-  const excerpt = inlineText(snippet);
+  const excerpt = collapseWhitespace(snippet);
   footnotes.set(number, `[^${number}]: ${link}${excerpt ? ` — ${excerpt}` : ''}`);
   return `[^${number}]`;
 }
@@ -82,7 +82,7 @@ function formatStreamedText(deltas: string[]): string {
         body += delta;
         break;
       case 'citation':
-        body += citationMarker(tag.payload, footnotes);
+        body += addCitationFootnote(tag.payload, footnotes);
         break;
       // The remaining tags are metadata such as <usage>.
     }
@@ -102,7 +102,8 @@ function formatStreamedText(deltas: string[]): string {
  * In research mode the last <answer> is returned as written.
  */
 export function formatAnswer(deltas: string[], { research }: { research: boolean }): string | null {
-  const answer = (research ? lastResearchAnswer(deltas) : undefined) ?? formatStreamedText(deltas);
+  const answer =
+    (research ? findLastResearchAnswer(deltas) : undefined) ?? formatStreamedText(deltas);
   const formatted = answer.trim();
   return formatted.length > 0 ? formatted : null;
 }

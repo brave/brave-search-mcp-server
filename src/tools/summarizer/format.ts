@@ -7,7 +7,7 @@ import type { SummaryEntity, SummaryMessage } from './types.js';
  * ("– 828 m"), which is dropped so every item uses the same one. A separator
  * is followed by a space, which tells it apart from a minus sign ("-10 °C").
  */
-function entityItem({ name, url, text }: SummaryEntity): string {
+function formatEntityItem({ name, url, text }: SummaryEntity): string {
   const label = url ? `[${name}](${encodeUnmatchedParentheses(url)})` : name;
   const description = text?.trim().replace(/^[:–—-]\s+/, '');
   return description ? `${label} – ${description}` : label;
@@ -48,7 +48,7 @@ export function formatSummary(summary: SummaryMessage[]): string {
         break;
       case 'enum_item':
         itemNumber += 1;
-        text += `${ordered ? `${itemNumber}.` : '-'} ${entityItem(part.data)}\n`;
+        text += `${ordered ? `${itemNumber}.` : '-'} ${formatEntityItem(part.data)}\n`;
         break;
       case 'enum_end':
         text += '\n';
