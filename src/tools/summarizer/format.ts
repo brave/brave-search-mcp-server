@@ -1,18 +1,5 @@
+import { encodeUnmatchedParentheses, getDisplayHostname } from '../urls.js';
 import type { SummaryEntity, SummaryMessage } from './types.js';
-
-/**
- * A URL for a markdown link. Matched parentheses are valid there, as in
- * Wikipedia's ".../Revolver_(Beatles_album)", but an unmatched one would end
- * the link early or stop it from forming, so those are percent-encoded.
- */
-function linkUrl(url: string): string {
-  let depth = 0;
-  for (const char of url) {
-    if (char === '(') depth++;
-    else if (char === ')' && --depth < 0) break;
-  }
-  return depth === 0 ? url : url.replace(/\(/g, '%28').replace(/\)/g, '%29');
-}
 
 /**
  * An entity as a list item: its name, linked when it has a URL, then its
@@ -21,17 +8,9 @@ function linkUrl(url: string): string {
  * is followed by a space, which tells it apart from a minus sign ("-10 °C").
  */
 function entityItem({ name, url, text }: SummaryEntity): string {
-  const label = url ? `[${name}](${linkUrl(url)})` : name;
+  const label = url ? `[${name}](${encodeUnmatchedParentheses(url)})` : name;
   const description = text?.trim().replace(/^[:–—-]\s+/, '');
   return description ? `${label} – ${description}` : label;
-}
-
-function hostnameOf(url: string): string {
-  try {
-    return new URL(url).hostname.replace(/^www\./i, '');
-  } catch {
-    return url;
-  }
 }
 
 /**
@@ -81,7 +60,8 @@ export function formatSummary(summary: SummaryMessage[]): string {
   if (footnotes.size === 0) return body;
 
   const definitions = [...footnotes].map(
-    ([url, number]) => `[^${number}]: [${hostnameOf(url)}](${linkUrl(url)})`
+    ([url, number]) =>
+      `[^${number}]: [${getDisplayHostname(url)}](${encodeUnmatchedParentheses(url)})`
   );
   return `${body}\n\n${definitions.join('\n')}`;
 }

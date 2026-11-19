@@ -1,3 +1,5 @@
+import { getDisplayHostname } from '../urls.js';
+
 /**
  * Answers streams interleave answer text with tagged payloads such as
  * <usage>{...}</usage>. Each tag arrives as its own delta, while answer text is
@@ -32,14 +34,6 @@ function inlineText(value: unknown): string {
   return typeof value === 'string' ? value.replace(/\s+/g, ' ').trim() : '';
 }
 
-function hostnameOf(url: string): string {
-  try {
-    return new URL(url).hostname.replace(/^www\./i, '');
-  } catch {
-    return url;
-  }
-}
-
 /** The tag a delta consists of, or undefined when the delta is answer text. */
 function parseTag(delta: string): Tag | undefined {
   const match = TAG_PATTERN.exec(delta);
@@ -70,7 +64,7 @@ function citationMarker(payload: string, footnotes: Map<number, string>): string
   const excerpt = inlineText(snippet);
   footnotes.set(
     number,
-    `[^${number}]: [${hostnameOf(href)}](${href})${excerpt ? ` — ${excerpt}` : ''}`
+    `[^${number}]: [${getDisplayHostname(href)}](${href})${excerpt ? ` — ${excerpt}` : ''}`
   );
   return `[^${number}]`;
 }
