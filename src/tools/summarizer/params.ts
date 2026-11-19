@@ -12,7 +12,7 @@ export const summarizerQueryParams = z.object({
   inline_references: z
     .boolean()
     .default(false)
-    .describe('Adds inline references to the summary response.')
+    .describe('Adds inline source references to the summary, rendered as markdown footnotes.')
     .optional(),
 });
 

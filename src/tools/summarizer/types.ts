@@ -15,12 +15,18 @@ export interface SummarizerSearchApiResponse {
   entities_infos?: Record<string, SummaryEntityInfo>;
 }
 
-interface SummaryMessage {
-  /** The type of subset of a summary message. The value can be token (a text excerpt from the summary), enum_item (a summary entity), enum_start (describes the beginning of summary entities, which means the following item(s) in the summary list will be entities), enum_end (the end of summary entities) or inline_reference (an inline reference to the summary, requires inline_references query param to be set). */
-  type: string;
-  /** The summary entity or the explanation for the type field. For type enum_start the value can be ol or ul, which means an ordered list or an unordered list of entities follows respectively. For type enum_end there is no value. For type token the value is a text excerpt. For type enum_item the value is the SummaryEntity response model. For type inline_reference the value is the SummaryInlineReference response model. */
-  data?: SummaryEntity | SummaryInlineReference;
-}
+/** One part of a summary message, identified by its type. */
+export type SummaryMessage =
+  /** A text excerpt from the summary. */
+  | { type: 'token'; data: string }
+  /** The beginning of a list of entities: `ol` for an ordered list, `ul` for an unordered one. */
+  | { type: 'enum_start'; data: 'ol' | 'ul' }
+  /** An entity in the list. */
+  | { type: 'enum_item'; data: SummaryEntity }
+  /** The end of the list of entities. */
+  | { type: 'enum_end'; data?: undefined }
+  /** An inline reference, sent when the inline_references query param is set. */
+  | { type: 'inline_reference'; data: SummaryInlineReference };
 
 interface TextLocation {
   /** The 0-based index, where the important part of the text starts. */
@@ -29,7 +35,7 @@ interface TextLocation {
   end: number;
 }
 
-interface SummaryEntity {
+export interface SummaryEntity {
   /** A unique identifier for the entity. */
   uuid: string;
   /** The name of the entity. */

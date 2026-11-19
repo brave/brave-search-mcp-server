@@ -94,7 +94,7 @@ Generates AI-powered summaries from web search results using Brave's summarizati
 **Parameters:**
 - `key` (string, required): Summary key from web search results (use `summary: true` in web search)
 - `entity_info` (boolean, optional): Include entity information (default: false)
-- `inline_references` (boolean, optional): Add source URL references (default: false)
+- `inline_references` (boolean, optional): Add source references, rendered as markdown footnotes (default: false)
 
 **Usage:** First perform a web search with `summary: true`, then use the returned summary key with this tool.
 

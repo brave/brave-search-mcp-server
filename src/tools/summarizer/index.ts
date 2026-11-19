@@ -2,6 +2,7 @@ import type { CallToolResult, ToolAnnotations } from '@modelcontextprotocol/sdk/
 import { summarizerQueryParams, type SummarizerQueryParams } from './params.js';
 import API from '../../BraveAPI/index.js';
 import { type SummarizerSearchApiResponse } from './types.js';
+import { formatSummary } from './format.js';
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 export const name = 'brave_summarizer';
@@ -44,21 +45,9 @@ export const execute = async (params: SummarizerQueryParams) => {
         text: 'Unable to retrieve a Summarizer summary.',
       });
     } else {
-      const summaryText = summary
-        .map((summary_part) => {
-          if (summary_part.type === 'token') {
-            return summary_part.data;
-          } else if (summary_part.type === 'inline_reference') {
-            return ` (${summary_part.data?.url})`;
-          } else {
-            return '';
-          }
-        })
-        .join('');
-
       response.content.push({
         type: 'text' as const,
-        text: summaryText,
+        text: formatSummary(summary),
       });
     }
   } catch {
