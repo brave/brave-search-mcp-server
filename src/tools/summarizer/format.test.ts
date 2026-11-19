@@ -3,8 +3,9 @@ import { describe, it } from 'node:test';
 import { formatSummary } from './format.js';
 import type { SummaryMessage } from './types.js';
 
-// Test data is shortened from real Summarizer responses. The ordered-list test
-// also removes the line breaks before its list, to check that they are added.
+// Test data is shortened from real Summarizer responses, except in the minus
+// sign test. The ordered-list test also removes the line breaks before its
+// list, to check that they are added.
 
 /** An inline reference; the formatter does not use its text positions. */
 const reference = (url: string, number: number): SummaryMessage => ({
@@ -124,5 +125,16 @@ describe('formatSummary', () => {
         'These rankings are based on official architectural height.',
       ].join('\n')
     );
+  });
+
+  it('keeps a minus sign that begins a description', () => {
+    const summary: SummaryMessage[] = [
+      { type: 'enum_start', data: 'ul' },
+      { type: 'enum_item', data: { uuid: 'a', name: 'Vostok Station', text: '-89.2 °C' } },
+      { type: 'enum_item', data: { uuid: 'b', name: 'Oymyakon', text: '– -67.7 °C' } },
+      { type: 'enum_end' },
+    ];
+
+    assert.equal(formatSummary(summary), '- Vostok Station – -89.2 °C\n- Oymyakon – -67.7 °C');
   });
 });

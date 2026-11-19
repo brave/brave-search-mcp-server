@@ -3,11 +3,12 @@ import type { SummaryEntity, SummaryMessage } from './types.js';
 /**
  * An entity as a list item: its name, linked when it has a URL, then its
  * description. A description sometimes begins with its own separator
- * ("– 828 m"), which is dropped so every item uses the same one.
+ * ("– 828 m"), which is dropped so every item uses the same one. A separator
+ * is followed by a space, which tells it apart from a minus sign ("-10 °C").
  */
 function entityItem({ name, url, text }: SummaryEntity): string {
   const label = url ? `[${name}](${url})` : name;
-  const description = text?.replace(/^[\s:–—-]+/, '');
+  const description = text?.trim().replace(/^[:–—-]\s+/, '');
   return description ? `${label} – ${description}` : label;
 }
 
