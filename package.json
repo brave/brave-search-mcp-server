@@ -26,7 +26,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "shx rm -rf dist && tsc && shx chmod +x dist/*.js",
+    "build": "node scripts/build.js",
     "prepare": "npm run format && npm run build",
     "watch": "tsc --watch",
     "format": "prettier --write \"src/**/*.ts\"",
@@ -50,7 +50,6 @@
     "ajv": "8.20.0",
     "prettier": "3.8.1",
     "semver": "7.7.3",
-    "shx": "0.4.0",
     "tsx": "4.22.4",
     "typescript": "5.9.3"
   }

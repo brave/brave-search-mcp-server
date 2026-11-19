@@ -9,6 +9,7 @@ COPY ./package-lock.json ./package-lock.json
 
 RUN npm ci --ignore-scripts
 
+COPY ./scripts ./scripts
 COPY ./src ./src
 COPY ./tsconfig.json ./tsconfig.json
 
