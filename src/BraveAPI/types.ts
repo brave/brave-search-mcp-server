@@ -21,41 +21,44 @@ import type {
 } from '../tools/place_search/schemas/input.js';
 import type { PlaceSearchApiResponse } from '../tools/place_search/schemas/output.js';
 
+/** Request headers for endpoints that take none. */
+type NoRequestHeaders = Record<string, never>;
+
 export type Endpoints = {
   web: {
     params: WebQueryParams;
     response: WebSearchApiResponse;
-    requestHeaders: Headers;
+    requestHeaders: NoRequestHeaders;
   };
   images: {
     params: ImageQueryParams;
     response: ImageSearchApiResponse;
-    requestHeaders: Headers;
+    requestHeaders: NoRequestHeaders;
   };
   videos: {
     params: VideoQueryParams;
     response: VideoSearchApiResponse;
-    requestHeaders: Headers;
+    requestHeaders: NoRequestHeaders;
   };
   news: {
     params: NewsQueryParams;
     response: NewsSearchApiResponse;
-    requestHeaders: Headers;
+    requestHeaders: NoRequestHeaders;
   };
   localPois: {
     params: LocalPoisParams;
     response: LocalPoiSearchApiResponse;
-    requestHeaders: Headers;
+    requestHeaders: NoRequestHeaders;
   };
   localDescriptions: {
     params: LocalDescriptionsParams;
     response: LocalDescriptionsSearchApiResponse;
-    requestHeaders: Headers;
+    requestHeaders: NoRequestHeaders;
   };
   summarizer: {
     params: SummarizerQueryParams;
     response: SummarizerSearchApiResponse;
-    requestHeaders: Headers;
+    requestHeaders: NoRequestHeaders;
   };
   llmContext: {
     params: LlmQueryParams;
