@@ -4,8 +4,8 @@ import { formatSummary } from './format.js';
 import type { SummaryMessage } from './types.js';
 
 // Test data is shortened from real Summarizer responses, except in the minus
-// sign test. The ordered-list test also removes the line breaks before its
-// list, to check that they are added.
+// sign and parentheses tests. The ordered-list test also removes the line
+// breaks before its list, to check that they are added.
 
 /** An inline reference; the formatter does not use its text positions. */
 const reference = (url: string, number: number): SummaryMessage => ({
@@ -136,5 +136,34 @@ describe('formatSummary', () => {
     ];
 
     assert.equal(formatSummary(summary), '- Vostok Station – -89.2 °C\n- Oymyakon – -67.7 °C');
+  });
+
+  it('percent-encodes unmatched parentheses in link URLs', () => {
+    const summary: SummaryMessage[] = [
+      { type: 'token', data: 'Sources' },
+      reference('https://example.com/a(b', 1),
+      { type: 'enum_start', data: 'ul' },
+      {
+        type: 'enum_item',
+        data: { uuid: 'a', name: 'Unmatched', url: 'https://example.com/a)b' },
+      },
+      {
+        type: 'enum_item',
+        data: { uuid: 'b', name: 'Matched', url: 'https://example.com/(a)b' },
+      },
+      { type: 'enum_end' },
+    ];
+
+    assert.equal(
+      formatSummary(summary),
+      [
+        'Sources[^1]',
+        '',
+        '- [Unmatched](https://example.com/a%29b)',
+        '- [Matched](https://example.com/(a)b)',
+        '',
+        '[^1]: [example.com](https://example.com/a%28b)',
+      ].join('\n')
+    );
   });
 });
