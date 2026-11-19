@@ -18,6 +18,8 @@ export const annotations: ToolAnnotations = {
 };
 
 export const description = `
+    DEPRECATED: This tool is deprecated. Prefer brave_answers for new work — it returns a finished, web-grounded answer in a single call (no web-search + key + poll workflow). This tool remains available for existing Pro AI subscribers.
+
     Retrieves AI-generated summaries of web search results using Brave's Summarizer API. This tool processes search results to create concise, coherent summaries of information gathered from multiple sources.
 
     When to use:

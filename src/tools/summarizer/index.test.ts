@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { useTestClient } from '../../testUtils/mcpTestHarness.js';
-import { name } from './index.js';
+import { description, name } from './index.js';
 
 describe(name, () => {
   const getClient = useTestClient((url) => {
@@ -43,5 +43,10 @@ describe(name, () => {
         'Both are free.',
       ].join('\n')
     );
+  });
+
+  it('describes itself as deprecated in favor of brave_answers', () => {
+    assert.match(description, /^DEPRECATED:/);
+    assert.match(description, /brave_answers/);
   });
 });
