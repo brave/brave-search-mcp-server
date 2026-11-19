@@ -3,27 +3,45 @@ import { describe, it } from 'node:test';
 import { formatSummary } from './format.js';
 import type { SummaryMessage } from './types.js';
 
-// Parts below are trimmed from real Summarizer responses requested with entity_info=1.
+// Test data is shortened from real Summarizer responses. The ordered-list test
+// also removes the line breaks before its list, to check that they are added.
+
+/** An inline reference; the formatter does not use its text positions. */
+const reference = (url: string, number: number): SummaryMessage => ({
+  type: 'inline_reference',
+  data: { type: 'inline_reference', url, number, start_index: 0, end_index: 0 },
+});
+
 describe('formatSummary', () => {
-  it('keeps tokens and renders inline references as URLs', () => {
+  it('renders inline references as footnotes, one per source', () => {
+    const civitatis = 'https://www.civitatis.com/blog/en/tallest-buildings-in-the-world/';
+    const britannica =
+      'https://www.britannica.com/technology/tallest-buildings-in-the-world-2226971';
+    const visualCapitalist =
+      'https://www.visualcapitalist.com/ranked-the-worlds-tallest-buildings/';
+    const cntraveler = 'https://www.cntraveler.com/story/the-tallest-buildings-in-the-world';
+
     const summary: SummaryMessage[] = [
-      { type: 'token', data: 'Brave is a privacy-focused browser' },
-      {
-        type: 'inline_reference',
-        data: {
-          type: 'inline_reference',
-          url: 'https://brave.com/',
-          start_index: 0,
-          end_index: 34,
-          number: 1,
-        },
-      },
+      { type: 'token', data: "The Burj Khalifa remains the world's tallest building" },
+      reference(civitatis, 1),
+      reference(britannica, 2),
+      reference(visualCapitalist, 3),
+      { type: 'token', data: '. It is followed closely by Merdeka 118' },
+      reference(visualCapitalist, 3),
+      reference(cntraveler, 4),
       { type: 'token', data: '.' },
     ];
 
     assert.equal(
       formatSummary(summary),
-      'Brave is a privacy-focused browser (https://brave.com/).'
+      [
+        "The Burj Khalifa remains the world's tallest building[^1][^2][^3]. It is followed closely by Merdeka 118[^3][^4].",
+        '',
+        `[^1]: [civitatis.com](${civitatis})`,
+        `[^2]: [britannica.com](${britannica})`,
+        `[^3]: [visualcapitalist.com](${visualCapitalist})`,
+        `[^4]: [cntraveler.com](${cntraveler})`,
+      ].join('\n')
     );
   });
 
