@@ -63,8 +63,9 @@ export const params = z.object({
           "Use 'pd', 'pw', 'pm', or 'py' for a relative discovery window, or a custom range as YYYY-MM-DDtoYYYY-MM-DD (e.g. 2022-04-01to2022-07-30)."
         ),
     ])
+    .default('pd')
     .describe(
-      "Filters search results by when they were discovered. The following values are supported: 'pd' - Discovered within the last 24 hours. 'pw' - Discovered within the last 7 Days. 'pm' - Discovered within the last 31 Days. 'py' - Discovered within the last 365 Days. 'YYYY-MM-DDtoYYYY-MM-DD' - Timeframe is also supported by specifying the date range e.g. 2022-04-01to2022-07-30."
+      "Filters search results by when they were discovered. The following values are supported: 'pd' - Discovered within the last 24 hours. 'pw' - Discovered within the last 7 Days. 'pm' - Discovered within the last 31 Days. 'py' - Discovered within the last 365 Days. 'YYYY-MM-DDtoYYYY-MM-DD' - Timeframe is also supported by specifying the date range e.g. 2022-04-01to2022-07-30. Defaults to 'pd'."
     )
     .optional(),
   extra_snippets: z
