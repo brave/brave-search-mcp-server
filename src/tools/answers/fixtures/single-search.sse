@@ -1,0 +1,28 @@
+data: {"model":"brave-pro","system_fingerprint":"","choices":[{"delta":{"role":"assistant","content":"**K2** i"},"finish_reason":null}],"created":1795012417,"id":"870ea831-d662-4b09-a90e-d8c16a6f8d5d","object":"chat.completion.chunk","usage":null}
+
+data: {"model":"brave-pro","system_fingerprint":"","choices":[{"delta":{"role":"assistant","content":"s the second highest m"},"finish_reason":null}],"created":1795012417,"id":"870ea831-d662-4b09-a90e-d8c16a6f8d5d","object":"chat.completion.chunk","usage":null}
+
+data: {"model":"brave-pro","system_fingerprint":"","choices":[{"delta":{"role":"assistant","content":"ountain in the w"},"finish_reason":null}],"created":1795012417,"id":"870ea831-d662-4b09-a90e-d8c16a6f8d5d","object":"chat.completion.chunk","usage":null}
+
+data: {"model":"brave-pro","system_fingerprint":"","choices":[{"delta":{"role":"assistant","content":"orld"},"finish_reason":null}],"created":1795012417,"id":"870ea831-d662-4b09-a90e-d8c16a6f8d5d","object":"chat.completion.chunk","usage":null}
+
+data: {"model":"brave-pro","system_fingerprint":"","choices":[{"delta":{"role":"assistant","content":", standing "},"finish_reason":null}],"created":1795012417,"id":"870ea831-d662-4b09-a90e-d8c16a6f8d5d","object":"chat.completion.chunk","usage":null}
+
+data: {"model":"brave-pro","system_fingerprint":"","choices":[{"delta":{"role":"assistant","content":"at *"},"finish_reason":null}],"created":1795012417,"id":"870ea831-d662-4b09-a90e-d8c16a6f8d5d","object":"chat.completion.chunk","usage":null}
+
+data: {"model":"brave-pro","system_fingerprint":"","choices":[{"delta":{"role":"assistant","content":"*8,611 me"},"finish_reason":null}],"created":1795012417,"id":"870ea831-d662-4b09-a90e-d8c16a6f8d5d","object":"chat.completion.chunk","usage":null}
+
+data: {"model":"brave-pro","system_fingerprint":"","choices":[{"delta":{"role":"assistant","content":"ters (28,251 feet"},"finish_reason":null}],"created":1795012417,"id":"870ea831-d662-4b09-a90e-d8c16a6f8d5d","object":"chat.completion.chunk","usage":null}
+
+data: {"model":"brave-pro","system_fingerprint":"","choices":[{"delta":{"role":"assistant","content":")** abov"},"finish_reason":null}],"created":1795012417,"id":"870ea831-d662-4b09-a90e-d8c16a6f8d5d","object":"chat.completion.chunk","usage":null}
+
+data: {"model":"brave-pro","system_fingerprint":"","choices":[{"delta":{"role":"assistant","content":"e sea level"},"finish_reason":null}],"created":1795012417,"id":"870ea831-d662-4b09-a90e-d8c16a6f8d5d","object":"chat.completion.chunk","usage":null}
+
+data: {"model":"brave-pro","system_fingerprint":"","choices":[{"delta":{"role":"assistant","content":". "},"finish_reason":null}],"created":1795012417,"id":"870ea831-d662-4b09-a90e-d8c16a6f8d5d","object":"chat.completion.chunk","usage":null}
+
+data: {"model":"brave-pro","system_fingerprint":"","choices":[{"delta":{"role":"assistant","content":"<usage>{\"X-Request-Requests\": 1, \"X-Request-Queries\": 1, \"X-Request-Tokens-In\": 12019, \"X-Request-Tokens-Out\": 212, \"X-Request-Requests-Cost\": 0.0, \"X-Request-Queries-Cost\": 0.004, \"X-Request-Tokens-In-Cost\": 0.060095, \"X-Request-Tokens-Out-Cost\": 0.0010600000000000002, \"X-Request-Total-Cost\": 0.065155}</usage>"},"finish_reason":null}],"created":1795012417,"id":"870ea831-d662-4b09-a90e-d8c16a6f8d5d","object":"chat.completion.chunk","usage":null}
+
+data: {"model":"brave-pro","system_fingerprint":"","choices":[{"delta":{"role":"assistant","content":""},"finish_reason":"stop"}],"created":1795012417,"id":"870ea831-d662-4b09-a90e-d8c16a6f8d5d","object":"chat.completion.chunk","usage":{"completion_tokens":212,"prompt_tokens":12019,"total_tokens":12231,"completion_tokens_details":{"reasoning_tokens":0}}}
+
+data: [DONE]
+

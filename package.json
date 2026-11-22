@@ -1,7 +1,7 @@
 {
   "name": "@brave/brave-search-mcp-server",
   "mcpName": "io.github.brave/brave-search-mcp-server",
-  "version": "2.1.5",
+  "version": "2.2.0",
   "description": "Brave Search MCP Server: web results, images, videos, rich results, AI summaries, and more.",
   "keywords": [
     "api",
@@ -26,7 +26,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "shx rm -rf dist && tsc && shx chmod +x dist/*.js",
+    "build": "node scripts/build.js",
     "prepare": "npm run format && npm run build",
     "watch": "tsc --watch",
     "format": "prettier --write \"src/**/*.ts\"",
@@ -41,6 +41,7 @@
     "@modelcontextprotocol/sdk": "1.32.2",
     "commander": "14.0.3",
     "dotenv": "17.3.1",
+    "eventsource-parser": "3.1.1",
     "express": "5.2.1",
     "zod": "4.6.7"
   },
@@ -50,7 +51,6 @@
     "ajv": "8.20.0",
     "prettier": "3.8.1",
     "semver": "7.7.3",
-    "shx": "0.4.0",
     "tsx": "4.22.4",
     "typescript": "5.9.3"
   }
