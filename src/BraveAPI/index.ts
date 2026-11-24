@@ -1,5 +1,14 @@
 import type { Endpoints } from './types.js';
-import { BASE_URL, buildErrorMessage, mergeRequestHeaders } from './request.js';
+import { BASE_URL, buildErrorMessage, mergeRequestHeaders, readTextCapped } from './request.js';
+
+export const REQUEST_TIMEOUT_MS = 30_000;
+
+export type IssueRequestOptions = {
+  /** Defaults to `REQUEST_TIMEOUT_MS`. */
+  timeoutMs?: number;
+  /** Client cancellation signal, combined with the timeout. */
+  signal?: AbortSignal;
+};
 
 const typeToPathMap: Record<keyof Endpoints, string> = {
   images: '/res/v1/images/search',
@@ -35,7 +44,8 @@ const normalizeGoggle = (value: unknown): string | null => {
 async function issueRequest<T extends keyof Endpoints>(
   endpoint: T,
   parameters: Endpoints[T]['params'],
-  requestHeaders: Endpoints[T]['requestHeaders'] = {} as Endpoints[T]['requestHeaders']
+  requestHeaders: Endpoints[T]['requestHeaders'] = {} as Endpoints[T]['requestHeaders'],
+  { timeoutMs = REQUEST_TIMEOUT_MS, signal: clientSignal }: IssueRequestOptions = {}
 ): Promise<Endpoints[T]['response']> {
   // TODO (Sampson): Add rate-limit logic supporting self-throttling and n-keys
 
@@ -98,20 +108,34 @@ async function issueRequest<T extends keyof Endpoints>(
 
   // Issue Request
   const urlWithParams = url.toString() + '?' + queryParams.toString();
-  const response = await fetch(urlWithParams, {
-    headers: mergeRequestHeaders(requestHeaders),
-  });
+  const timeoutSignal = AbortSignal.timeout(timeoutMs);
+  const signal = clientSignal ? AbortSignal.any([timeoutSignal, clientSignal]) : timeoutSignal;
 
-  // Handle Error
-  if (!response.ok) {
-    // TODO (Sampson): Setup proper error handling, updating state, etc.
-    throw new Error(await buildErrorMessage(response));
+  try {
+    const response = await fetch(urlWithParams, {
+      headers: mergeRequestHeaders(requestHeaders),
+      signal,
+    });
+
+    // Handle Error
+    if (!response.ok) {
+      // TODO (Sampson): Setup proper error handling, updating state, etc.
+      throw new Error(await buildErrorMessage(response));
+    }
+
+    // Return Response
+    const responseBody = JSON.parse(await readTextCapped(response));
+
+    return responseBody as Endpoints[T]['response'];
+  } catch (error) {
+    if (timeoutSignal.aborted) {
+      throw new Error(`Brave API request timed out after ${Math.round(timeoutMs / 1000)} seconds`);
+    }
+    if (clientSignal?.aborted) {
+      throw new Error('Brave API request was cancelled');
+    }
+    throw error;
   }
-
-  // Return Response
-  const responseBody = await response.json();
-
-  return responseBody as Endpoints[T]['response'];
 }
 
 export default {
