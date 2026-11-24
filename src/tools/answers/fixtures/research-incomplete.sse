@@ -1,0 +1,14 @@
+data: {"model":"brave-pro","system_fingerprint":"","choices":[{"delta":{"role":"assistant","content":"<queries>{\"queries\": [\"Compare tokamak and stellarator fusion reactor designs\"]}</queries>"},"finish_reason":null}],"created":1795012434,"id":"81dcc846-90cc-459a-97ca-0540c48d83f2","object":"chat.completion.chunk","usage":null}
+
+data: {"model":"brave-pro","system_fingerprint":"","choices":[{"delta":{"role":"assistant","content":"<analyzing>{\"query\": \"Compare tokamak and stellarator fusion reactor designs\", \"urls\": 27, \"new_urls\": 27}</analyzing>"},"finish_reason":null}],"created":1795012434,"id":"81dcc846-90cc-459a-97ca-0540c48d83f2","object":"chat.completion.chunk","usage":null}
+
+data: {"model":"brave-pro","system_fingerprint":"","choices":[{"delta":{"role":"assistant","content":"<thinking>{\"query\":\"Compare tokamak and stellarator fusion reactor designs\",\"urls_analyzed\":30,\"urls_selected\":[\"https://intnews.it/en/tokamak-vs-stellarator-the-race-to-commercial-energy-in-2026/\",\"https://medium.com/@bhatmuleyshail/stellarators-and-tokamaks-how-fusion-is-done-350d416b0384\",\"https://nhsjs.com/2024/exploring-optimization-of-the-stellarator-over-tokamak-fusion-reactors-a-comparative-analysis/\"]}</thinking>"},"finish_reason":null}],"created":1795012434,"id":"81dcc846-90cc-459a-97ca-0540c48d83f2","object":"chat.completion.chunk","usage":null}
+
+data: {"model":"brave-pro","system_fingerprint":"","choices":[{"delta":{"role":"assistant","content":"<usage>{\"X-Request-Requests\": 1, \"X-Request-Queries\": 1, \"X-Request-Tokens-In\": 13468, \"X-Request-Tokens-Out\": 1717, \"X-Request-Requests-Cost\": 0.0, \"X-Request-Queries-Cost\": 0.004, \"X-Request-Tokens-In-Cost\": 0.06734000000000001, \"X-Request-Tokens-Out-Cost\": 0.008585, \"X-Request-Total-Cost\": 0.07992500000000001}</usage>"},"finish_reason":null}],"created":1795012434,"id":"81dcc846-90cc-459a-97ca-0540c48d83f2","object":"chat.completion.chunk","usage":null}
+
+data: {"model":"brave-pro","system_fingerprint":"","choices":[{"delta":{"role":"assistant","content":"<progress>{\"elasped_seconds\": 44.13228705152869, \"number_of_iterations\": 1, \"number_of_queries\": 1, \"number_of_urls_analyzed\": 30, \"number_of_snippets_analyzed\": 97, \"number_of_input_tokens\": 13468, \"number_of_output_tokens\": 1717, \"number_of_thinking_tokens\": 0}</progress>"},"finish_reason":null}],"created":1795012434,"id":"81dcc846-90cc-459a-97ca-0540c48d83f2","object":"chat.completion.chunk","usage":null}
+
+data: {"model":"brave-pro","system_fingerprint":"","choices":[{"delta":{"role":"assistant","content":""},"finish_reason":"stop"}],"created":1795012434,"id":"81dcc846-90cc-459a-97ca-0540c48d83f2","object":"chat.completion.chunk","usage":{"completion_tokens":1717,"prompt_tokens":13468,"total_tokens":15185,"completion_tokens_details":{"reasoning_tokens":0}}}
+
+data: [DONE]
+
